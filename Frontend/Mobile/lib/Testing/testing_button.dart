@@ -19,10 +19,24 @@ class TestingButton extends StatelessWidget {
         ),
         onPressed: () async {
           //just to access easily
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Homepage()),
-          );
+          bool isSuccessful = await logintext.login("test@example.com", "test");
+
+          if (!context.mounted) return;
+
+          if (isSuccessful) {
+            // Login successful, navigate to the next screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Homepage()),
+            );
+          } else {
+            // Login failed, show an error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Login failed. Please check your credentials.'),
+              ),
+            );
+          }
         },
         child: Text(
           'Testing',
