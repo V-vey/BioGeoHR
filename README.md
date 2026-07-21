@@ -3,6 +3,7 @@
 Needs :: Laragon, Flutter, Laravel, node.js for React.js, android studio
      
 React Command:
+
   npm start
     Starts the development server.
 
