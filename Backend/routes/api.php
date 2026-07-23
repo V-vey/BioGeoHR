@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\LoginAuthController;
 
 //Feature
 use App\Http\Controllers\Feature\GeoFenceController;
+use App\Http\Controllers\Feature\AttendanceService;
 
 Route::apiResource('users', UsersController::class);
 // Public routes
@@ -37,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('balance', LeaveBalanceController::class);
     Route::apiResource('attendance', AttendanceController::class);
     Route::apiResource('userl', UserLocationController::class);
+
+    Route::post('clockOut/{id}', [AttendanceService::class, 'clockOut']);
 
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 });

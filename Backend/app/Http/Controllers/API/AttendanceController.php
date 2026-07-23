@@ -6,9 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Location;
+use App\Http\Controllers\Feature\AttendanceService;
+
 
 class AttendanceController extends Controller
 {
+    public function __construct(AttendanceService $attendance)
+    {
+        $this->attendance = $attendance;
+
+    }
     /**
      * Display a listing of the resource.
      */
@@ -22,24 +29,14 @@ class AttendanceController extends Controller
      */
     public function store(Request $request)
     {
+        
         $request->validate([
             'user_id' => 'required',
             'location_name' => 'required',
-            'date' => 'required|date',
-            'time_in' => 'required',
         ]);
         //service of Status::
 
-
-        $locationId = Location::where("name", $request->location_name)->value('id');
-        $attendance = Attendance::create([
-            'user_id' => $request->user_id,
-            'location_id' => $locationId,
-            'status' => "late",
-            'date' => $request->date,
-            'time_in' => $request->time_in,
-            'time_out' => $request->time_out
-        ]);
+        $attendance = $this->attendance->createAttendance($request);
 
         return response()->json($attendance, 201);
     }
@@ -64,7 +61,7 @@ class AttendanceController extends Controller
     public function update(Request $request, string $id)
     {
         $attendance = Attendance::find($id);
-
+            
         if (!$attendance) {
             return response()->json(['message' => 'Attendance record not found'], 404);
         }
