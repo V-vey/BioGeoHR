@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use App\Models\Location;
 
 class AttendanceController extends Controller
 {
@@ -23,17 +24,18 @@ class AttendanceController extends Controller
     {
         $request->validate([
             'user_id' => 'required',
-            'location_id' => 'required',
-            'user_location_id' => 'required',
+            'location_name' => 'required',
             'date' => 'required|date',
             'time_in' => 'required',
-            'time_out' => 'required'
         ]);
+        //service of Status::
 
+
+        $locationId = Location::where("name", $request->location_name)->value('id');
         $attendance = Attendance::create([
             'user_id' => $request->user_id,
-            'location_id' => $request->location_id,
-            'user_location_id' => $request->user_location_id,
+            'location_id' => $locationId,
+            'status' => "late",
             'date' => $request->date,
             'time_in' => $request->time_in,
             'time_out' => $request->time_out

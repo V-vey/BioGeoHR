@@ -7,7 +7,7 @@ import 'time.dart';
 import 'location_list.dart';
 import 'clock_in_button.dart';
 //testing
-import '../../../../../Controller/Homepage/leave_balance_controller.dart';
+import '../../../../../Service/leave_balance.dart';
 
 class ClockIn extends StatefulWidget {
   const ClockIn({super.key});

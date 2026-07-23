@@ -9,9 +9,14 @@ import '../../../../../Controller/Homepage/ClockIn/biometric.dart';
 
 // import 'package:local_auth/local_auth.dart';
 
+import '../../../../../Service/leave_balance.dart';
+
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();
   final Biometric biometric = Biometric();
+
+  final LeaveBalance balance = LeaveBalance();
+
   //Timer call back
   final VoidCallback timerStart;
   final VoidCallback timerReset;
@@ -36,6 +41,8 @@ class Clockinbutton extends StatelessWidget {
       children: [
         TextButton(
           onPressed: () async {
+            //move this to leave balance
+
             //check if the timer is running
             if (isRunning == true) {
               timerReset();
@@ -48,13 +55,8 @@ class Clockinbutton extends StatelessWidget {
                   timerStart();
                   statusActive();
                 }
-              } else {
-                print("User Not is the range of the location");
-              }
+              } else {}
             }
-            print("Time Value: $isRunning");
-
-            print(isRunning);
           },
 
           child: Text("clock in"),

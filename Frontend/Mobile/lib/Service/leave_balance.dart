@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // import '../../Service/AuthStorage.dart';
-import '../../Service/Url.dart';
+import 'Url.dart';
 
 class LeaveBalance {
   final url api = url();
@@ -25,7 +25,7 @@ class LeaveBalance {
     }
   }
 
-  Future<dynamic> getBalanceLeave(type) async {
+  Future<(String, String, String, String)> getBalanceLeave() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -40,9 +40,15 @@ class LeaveBalance {
         "Content-Type": "application/json",
       },
     );
+    Map<String, dynamic> jsonResponse = await jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return getLeave(jsonDecode(response.body), type);
+      return (
+        jsonResponse['annual_leave'].toString(),
+        jsonResponse['annual_leave'].toString(),
+        jsonResponse['annual_leave'].toString(),
+        jsonResponse['annual_leave'].toString(),
+      );
     } else {
       throw Exception('Failed to load leave balance: ${response.statusCode}');
     }

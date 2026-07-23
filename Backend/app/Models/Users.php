@@ -29,6 +29,7 @@ class Users extends Authenticatable
         'role',
         'position',
         'joined_date',
+        'call_time',
         'contract_type',
         'gender',
         'date_of_birth',

@@ -25,4 +25,9 @@ class url {
   String getGeofence() {
     return "$api/geofence";
   }
+
+  //api to save attendance
+  String postAttendance() {
+    return "$api/attendance";
+  }
 }

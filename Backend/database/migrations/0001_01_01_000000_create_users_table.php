@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('role', ['HR', 'employee']);
             $table->string('position');
             $table->date('joined_date');
+            $table->time('call_time');
             $table->string('contract_type');
             $table->string('gender');
             $table->date('date_of_birth');
