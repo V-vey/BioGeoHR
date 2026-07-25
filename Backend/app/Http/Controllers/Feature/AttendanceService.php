@@ -30,6 +30,7 @@ class AttendanceService
         return $attendance;
     }
     public function clockOut($id){
+        //find the id of the attendance
         $attendance = Attendance::find($id);
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
         $attendance->update([
