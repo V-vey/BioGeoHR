@@ -54,7 +54,7 @@ class Clockinbutton extends StatelessWidget {
               timerReset();
               statusInactive();
 
-              clock.clockIn();
+              clock.clockOut();
             } else {
               //check if the user is in the coordinate
               if (await verifyUserCoordinates() == true) {

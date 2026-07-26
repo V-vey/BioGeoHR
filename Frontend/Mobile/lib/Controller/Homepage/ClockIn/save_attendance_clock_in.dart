@@ -27,7 +27,7 @@ class SaveclockInOut {
   }
 
   void clockOut() async {
-    final url = Uri.parse(_api.clockIn());
+    final url = Uri.parse(_api.clockOut());
     final prefs = await SharedPreferences.getInstance();
     //access the user
     String? token = prefs.getString("token");

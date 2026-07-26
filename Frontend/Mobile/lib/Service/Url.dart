@@ -32,12 +32,12 @@ class url {
   }
 
   //api to ClockIn
-  String ClockIn() {
+  String clockIn() {
     return "$api/clockIn";
   }
 
   //api to ClockIn
-  String ClockOut() {
+  String clockOut() {
     return "$api/clockOut";
   }
 }
