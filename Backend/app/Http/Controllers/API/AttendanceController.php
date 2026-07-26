@@ -11,6 +11,7 @@ use App\Http\Controllers\Feature\AttendanceService;
 
 class AttendanceController extends Controller
 {
+    //For the Service Callback
     public function __construct(AttendanceService $attendance)
     {
         $this->attendance = $attendance;
@@ -31,7 +32,7 @@ class AttendanceController extends Controller
     {
         
         $request->validate([
-            'user_id' => 'required',
+
             'location_name' => 'required',
         ]);
         //service of Status::

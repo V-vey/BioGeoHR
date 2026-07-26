@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('userl', UserLocationController::class);
 
     Route::post('clockIn', [AttendanceController::class, 'store']);
-    Route::post('clockOut/{id}', [AttendanceService::class, 'clockOut']);
+    Route::post('clockOut', [AttendanceService::class, 'clockOut']);
 
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 });
