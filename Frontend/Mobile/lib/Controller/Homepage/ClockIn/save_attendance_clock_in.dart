@@ -14,7 +14,7 @@ class SaveclockInOut {
     String? locationName = prefs.getString("temp");
     String? userId = prefs.getString('id');
 
-    final response = await http.post(
+    await http.post(
       url,
       headers: {
         "Authorization": "Bearer $token",
@@ -23,7 +23,6 @@ class SaveclockInOut {
       },
       body: jsonEncode({"user_id": userId, "location_name": locationName}),
     );
-    print(response);
   }
 
   void clockOut() async {
@@ -33,7 +32,7 @@ class SaveclockInOut {
     String? token = prefs.getString("token");
     String? userId = prefs.getString('id');
 
-    final response = await http.post(
+    await http.post(
       url,
       headers: {
         "Authorization": "Bearer $token",
@@ -42,6 +41,5 @@ class SaveclockInOut {
       },
       body: jsonEncode({"user_id": userId}),
     );
-    print(response);
   }
 }
