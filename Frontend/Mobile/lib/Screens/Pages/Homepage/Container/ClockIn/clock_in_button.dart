@@ -11,6 +11,8 @@ import '../../../../../Controller/Homepage/ClockIn/biometric.dart';
 
 import '../../../../../Service/leave_balance.dart';
 
+import '../../../../../Controller/Homepage/ClockIn/save_attendance_clock_in.dart';
+
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();
   final Biometric biometric = Biometric();
@@ -26,6 +28,10 @@ class Clockinbutton extends StatelessWidget {
   //status
   final VoidCallback statusActive;
   final VoidCallback statusInactive;
+
+  //clockIn Out
+  final SaveclockInOut clock = SaveclockInOut();
+
   Clockinbutton({
     super.key,
     required this.timerStart,
@@ -47,6 +53,8 @@ class Clockinbutton extends StatelessWidget {
             if (isRunning == true) {
               timerReset();
               statusInactive();
+
+              clock.clockIn();
             } else {
               //check if the user is in the coordinate
               if (await verifyUserCoordinates() == true) {
@@ -54,6 +62,8 @@ class Clockinbutton extends StatelessWidget {
                 if (await biometric.authenticateUser() == (true, null)) {
                   timerStart();
                   statusActive();
+
+                  clock.clockIn();
                 }
               } else {}
             }

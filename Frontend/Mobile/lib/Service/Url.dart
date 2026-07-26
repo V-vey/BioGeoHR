@@ -30,4 +30,14 @@ class url {
   String postAttendance() {
     return "$api/attendance";
   }
+
+  //api to ClockIn
+  String ClockIn() {
+    return "$api/clockIn";
+  }
+
+  //api to ClockIn
+  String ClockOut() {
+    return "$api/clockOut";
+  }
 }
