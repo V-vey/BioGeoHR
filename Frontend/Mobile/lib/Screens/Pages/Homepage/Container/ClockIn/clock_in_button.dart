@@ -13,11 +13,14 @@ import '../../../../../Service/leave_balance.dart';
 
 import '../../../../../Controller/Homepage/ClockIn/save_attendance_clock_in.dart';
 
+import '../../../../../Controller/Homepage/late/count_late.dart';
+
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();
   final Biometric biometric = Biometric();
 
   final LeaveBalance balance = LeaveBalance();
+  final CountLate late = CountLate();
 
   //Timer call back
   final VoidCallback timerStart;
@@ -59,7 +62,7 @@ class Clockinbutton extends StatelessWidget {
 
           onPressed: () async {
             //move this to leave balance
-
+            late.countLates();
             //check if the timer is running
             if (isRunning == true) {
               timerReset();

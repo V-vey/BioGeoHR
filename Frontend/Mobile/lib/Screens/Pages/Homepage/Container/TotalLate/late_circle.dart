@@ -1,9 +1,34 @@
 import 'package:flutter/material.dart';
+import '../../../../../Controller/Homepage/late/count_late.dart';
 
-class LateCircle extends StatelessWidget {
+class LateCircle extends StatefulWidget {
+  LateCircle({super.key});
+
+  @override
+  State<LateCircle> createState() => _LateCircleState();
+}
+
+class _LateCircleState extends State<LateCircle> {
+  final CountLate late = CountLate();
+
+  int val = 0; // value of the progression of the late
+  @override
+  void initState() {
+    super.initState();
+
+    _countLate();
+  }
+
+  Future<void> _countLate() async {
+    final result = await late.countLates();
+
+    setState(() {
+      val = result;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    int val = 1; // value of the progression of the late
     //SOON The Circle Should be an arc
     return SizedBox(
       height: 110,

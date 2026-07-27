@@ -20,15 +20,13 @@ class _LeaveBalanceItemState extends State<LeaveBalanceItem> {
   @override
   void initState() {
     super.initState();
-    // 2. Call the async function here without blocking initState
+
     _loadLeaveBalances();
   }
 
-  // 3. Separate async logic into its own method
   Future<void> _loadLeaveBalances() async {
     final result = await balance.getBalanceLeave();
 
-    // 4. Update the UI state using setState
     setState(() {
       annual = result.$1;
       sick = result.$2;

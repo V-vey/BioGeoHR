@@ -40,4 +40,9 @@ class url {
   String clockOut() {
     return "$api/clockOut";
   }
+
+  //api to countLate
+  String countLate() {
+    return "$api/countLate";
+  }
 }
