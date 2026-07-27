@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
     //late count
-    Route::apiResource('countLate', [AttendanceController::class , 'countLate']);
+    Route::post('countLate', [AttendanceController::class , 'countLate']);
 });
 Route::apiResource('location', LocationController::class);
 
