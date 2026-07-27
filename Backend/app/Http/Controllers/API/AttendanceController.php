@@ -8,7 +8,7 @@ use App\Models\Attendance;
 use App\Models\Location;
 use App\Http\Controllers\Feature\AttendanceService;
 
-
+use Laravel\Sanctum\PersonalAccessToken; 
 class AttendanceController extends Controller
 {
     //For the Service Callback
@@ -86,5 +86,17 @@ class AttendanceController extends Controller
             $attendance->delete();
             return response()->json(['message' => 'Attendance record deleted successfully']);
         }
+    }
+    public function countLate(Request $request){
+        //The User Token
+        $rawTokenString = $request->bearerToken();    
+        
+        //Access Token
+        $token = PersonalAccessToken::findToken($rawTokenString);
+        $userId = $token?->tokenable_id;
+
+        // $attendance = Attendance::where("user_id", $userId)->get();
+        $late = Attendance::where("user_id", $userId)->where("status", "Late")->count();
+        return response()->json(['message' => $late]);
     }
 }

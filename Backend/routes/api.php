@@ -41,13 +41,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('attendance', AttendanceController::class);
     Route::apiResource('userl', UserLocationController::class);
 
+    //clock in and out
     Route::post('clockIn', [AttendanceController::class, 'store']);
     Route::post('clockOut', [AttendanceService::class, 'clockOut']);
-
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
+    //late count
+    Route::apiResource('countLate', [AttendanceController::class , 'countLate']);
 });
 Route::apiResource('location', LocationController::class);
 
 //Testing 
-Route::post('test', [SalaryService::class, 'sssContributionTable']);
+Route::post('test', [AttendanceController::class, 'countLate']);
+
