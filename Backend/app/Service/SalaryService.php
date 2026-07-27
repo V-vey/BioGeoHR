@@ -34,13 +34,26 @@ class SalaryService
     //For employee Contribution of 5%
     function employeeCont($salary){
         $employeeContRate = .05;
+        if ($salary > 20000.00){
+            return 20000.00 * $employeeContRate;
+        }
         return $salary * $employeeContRate;
     }
 
     //For employer Contribution of 10%
     function employerCont($salary){
         $employerContRate = .10;
+        if ($salary > 20000.00){
+            return 20000.00 * $employerContRate;
+        }
         return $salary * $employerContRate;
+    }
+    
+    function mpf($salary){
+        if ($salary > 20000.00){
+            return $salary - 20000;
+        }
+        return 0;
     }
 
     //based on 2025 SSS Contribution Table
@@ -49,48 +62,34 @@ class SalaryService
         //Salary is based on monthly salary credit
         $minMSC = 5000.00;
         $maxMSC = 35000.00;
-        $mpf = 0;
+        //Mandatory Provident Fund
+        $mpf = $this->mpf($salary);
         //Employees' Compensation is for employer only 
         $ec = 0;
         $employeeCont = $this->employeeCont($salary); // if not greater than 20K
         $employerCont = $this->employerCont($salary);
+        
+        // deducted the 0.5 and 0.10 of the share
+        $employeeMPF = $this->employeeCont($mpf);
+        $employerMPF = $this->employerCont($mpf);
 
         //Employees' Compensation
         $ec = $this->eeCompensation($salary);
-        if ($salary>20000.00){
-            //Mandatory Provident Fund
-            $mpf = $salary - 20000.00;
-            $employeeCont = $this->employeeCont(20000.00);
-            $employerCont = $this->employerCont(20000.00);
 
-            $employeeMPF = $this->employeeCont($mpf);
-            $employerMPF = $this->employerCont($mpf);
+        $employeeTotal =  $employeeCont + $employeeMPF;
+        $employerTotal = $employerCont + $ec + $employerMPF;
 
-            $employeeTotal =  $employeeCont + $employeeMPF;
-            $employerTotal = $employerCont + $ec + $employerMPF;
+        $total = $employeeTotal + $employerTotal;
 
-            $total = $employeeTotal + $employerTotal;
-
-            return response()->json([
+         return response()->json([
+                'salary' => $salary,
                 'mpf' => $mpf, 
+                'ec' => $ec,
                 'Employee Contribution' => $employeeCont, 
                 'Employee MPF' => $employeeMPF,
                 'Employee Total' => $employeeTotal,
                 'Employer Contribution' => $employerCont, 
                 'Employer MPF' => $employerMPF,
-                'Employer Total' => $employerTotal,
-                'Total' => $total]);
-        };
-        $employeeTotal = $employeeCont;
-        $employerTotal = $employerCont + $ec;
-
-        $total = $employeeTotal + $employerTotal;
-
-        return response()->json([
-                'mpf' => $mpf, 
-                'Employee Contribution' => $employeeCont, 
-                'Employee Total' => $employeeTotal,
-                'Employer Contribution' => $employerCont, 
                 'Employer Total' => $employerTotal,
                 'Total' => $total]);
     }
