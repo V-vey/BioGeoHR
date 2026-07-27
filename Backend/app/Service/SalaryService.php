@@ -94,6 +94,12 @@ class SalaryService
                 'Employer Total' => $employerTotal,
                 'Total' => $total]);
     }
+    function philHealth($salary){
+        return $salary * .025;
+    }
+    function pagIbig($salary){
+        return $salary * .025;
+    }
     
 
 
