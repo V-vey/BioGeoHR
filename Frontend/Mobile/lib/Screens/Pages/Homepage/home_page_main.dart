@@ -26,6 +26,7 @@ class HomePageMain extends StatelessWidget {
             ClockIn(),
             Paycheck(),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   margin: EdgeInsets.only(right: 7.5),

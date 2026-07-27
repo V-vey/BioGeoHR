@@ -46,6 +46,17 @@ class Clockinbutton extends StatelessWidget {
     return Column(
       children: [
         TextButton(
+          style: TextButton.styleFrom(
+            // 1. Remove the standard 48.0 minimum height constraint
+            minimumSize: Size.zero,
+
+            // 2. Clear out all the default internal text padding
+            padding: EdgeInsets.zero,
+
+            // 3. Remove the built-in target interaction tap boundary box size
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+
           onPressed: () async {
             //move this to leave balance
 
@@ -69,7 +80,15 @@ class Clockinbutton extends StatelessWidget {
             }
           },
 
-          child: Text("clock in"),
+          child: Text(
+            "clock in  ",
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3A3A3A),
+            ),
+          ),
         ),
       ],
     );

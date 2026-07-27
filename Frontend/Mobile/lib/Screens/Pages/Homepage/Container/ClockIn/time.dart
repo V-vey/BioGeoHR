@@ -15,13 +15,20 @@ class Time extends StatefulWidget {
 class _TimeState extends State<Time> {
   @override
   Widget build(BuildContext context) {
-    return Text(
-      widget.timerText,
-      style: TextStyle(
-        color: Color(0xFF3A3A3A),
-        fontFamily: 'Roboto',
-        fontWeight: FontWeight.bold,
-        fontSize: 17,
+    return Container(
+      child: Row(
+        children: [
+          SizedBox(width: 5),
+          Text(
+            widget.timerText,
+            style: TextStyle(
+              color: Color(0xFF3A3A3A),
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
       ),
     );
   }

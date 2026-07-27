@@ -16,7 +16,11 @@ class ClockIn extends StatefulWidget {
   State<ClockIn> createState() => _ClockInState();
 }
 
-class _ClockInState extends State<ClockIn> {
+class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
+  //with AutomaticKeepAliveClientMixin and bool get wantKeepAlive will make it run
+  @override
+  bool get wantKeepAlive => true;
+
   final LeaveBalance bal = LeaveBalance();
 
   final GetLocation location = GetLocation();
@@ -87,6 +91,7 @@ class _ClockInState extends State<ClockIn> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     //for the timer to global call function
     return Container(
       width: 350,
@@ -102,8 +107,10 @@ class _ClockInState extends State<ClockIn> {
           ),
         ],
       ),
-      padding: EdgeInsets.all(10),
+
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
       child: Column(
+        spacing: 10,
         children: [
           Row(
             children: [
