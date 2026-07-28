@@ -18,6 +18,7 @@ class SalaryService
     function lateDeduction(){
         //3 lates = 1 day deduction 
         //find all the user attendance in a month
+        $late = Attendance::whereMonth('date', Carbon::now()->month)->where('status', "Late")->count();
         if ($late > 3){
             return true;    
         }
@@ -76,7 +77,7 @@ class SalaryService
         //Employees' Compensation
         $ec = $this->eeCompensation($salary);
 
-        $employeeTotal =  $employeeCont + $employeeMPF;
+        $employeeTotal =  $employeeCont + $employeeMPF; //need for tax in employee
         $employerTotal = $employerCont + $ec + $employerMPF;
 
         $total = $employeeTotal + $employerTotal;
@@ -100,7 +101,21 @@ class SalaryService
         return $salary * .025;
     }
     
+    function paycheck($salary){
+        $dailyWage = $this->dailyWage($salary);
+        $hrRate = $this->hourlyRate($dailyWage);
+        //use the user
+        $lateDeduction = $this->lateDeduction(); //-1 day if true
+        $sss = 1; //the sss table later fix it
+        $philHealth = $this->philHealth($salary);
+        $pagIbig = $this->pagIbig($salary);
+        $tax = $sss + $philHealth + $pagIbig;
 
+        $loan; //unknow i don know later
 
+        $paycheck = $salary - $tax; // this is monthly
+
+        $semiMonth = $paycheck / 2;
+    }
 
 }

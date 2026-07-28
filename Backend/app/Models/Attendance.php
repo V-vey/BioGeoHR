@@ -36,8 +36,4 @@ class Attendance extends Model
     {
         return $this->hasMany(Salary::class);
     }
-    public function userLocation()
-    {
-        return $this->hasOne(UserLocation::class);
-    }
 }
