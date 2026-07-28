@@ -27,7 +27,6 @@ Route::post('login', [LoginAuthController::class, 'auth']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
-
     Route::get('profile', function (Request $request) {
         return $request->user();
     });
@@ -48,7 +47,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //late count
     Route::post('countLate', [AttendanceController::class , 'countLate']);
+
+    //can only access by HR
+    Route::middleware('role:HR')->group(function () {
+
+    });
+
 });
+
+//move to HR later on
 Route::apiResource('location', LocationController::class);
 
 //Testing 

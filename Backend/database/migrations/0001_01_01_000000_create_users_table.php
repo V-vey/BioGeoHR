@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('contact_number');
             $table->string('password');
-            $table->enum('role', ['HR', 'employee']);
+            $table->enum('role', ['HR', 'employee'])->default('employee');
             $table->string('position');
             $table->date('joined_date');
             $table->time('call_time');
