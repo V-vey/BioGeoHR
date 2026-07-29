@@ -46,18 +46,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
     //late count
-    Route::post('countLate', [AttendanceController::class , 'countLate']);
+    Route::get('countLate', [AttendanceController::class , 'countLate']);
 
+    Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
+    
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
 
     });
-
+    //Testing
+    Route::get('test', [AttendanceController::class, 'recentAttendance']);
 });
 
 //move to HR later on
 Route::apiResource('location', LocationController::class);
 
-//Testing 
-Route::post('test', [AttendanceController::class, 'countLate']);
 

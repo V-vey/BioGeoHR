@@ -19,6 +19,11 @@ class TestingButton extends StatelessWidget {
         ),
         onPressed: () async {
           //just to access easily
+          //remove when at home
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => Homepage()),
+          // );
           bool isSuccessful = await logintext.login("test@example.com", "test");
 
           if (!context.mounted) return;
@@ -33,6 +38,7 @@ class TestingButton extends StatelessWidget {
             return;
             // Login successful, navigate to the next screen
           }
+
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => Homepage()),

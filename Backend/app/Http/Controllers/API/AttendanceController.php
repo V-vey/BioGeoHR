@@ -87,9 +87,9 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Attendance record deleted successfully']);
         }
     }
-    public function countLate(Request $request){
+    public function countLate(){
         //The User Token
-        $rawTokenString = $request->bearerToken();    
+        $rawTokenString = request()->bearerToken();    
         
         //Access Token
         $token = PersonalAccessToken::findToken($rawTokenString);
@@ -98,5 +98,16 @@ class AttendanceController extends Controller
         // $attendance = Attendance::where("user_id", $userId)->get();
         $late = Attendance::where("user_id", $userId)->where("status", "Late")->count();
         return response()->json(['message' => $late]);
+    }
+    public function recentAttendance(Request $request){
+        //The User Token
+        $rawTokenString = request()->bearerToken();    
+        
+        //Access Token
+        $token = PersonalAccessToken::findToken($rawTokenString);
+        $userId = $token?->tokenable_id;
+
+        $recent = Attendance::where("user_id", $userId)->whereNotNull("time_out")->latest()->first();
+        return response()->json($recent);
     }
 }
