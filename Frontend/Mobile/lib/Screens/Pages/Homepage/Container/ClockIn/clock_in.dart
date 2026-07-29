@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../../Reusable/Badge/time_badge.dart';
-import '../../../../../Service/GetLocation.dart';
+import '../../../../../Controller/Homepage/ClockIn/get_location.dart';
 import 'time.dart';
 import 'location_list.dart';
 import 'clock_in_button.dart';
 //testing
-import '../../../../../Service/leave_balance.dart';
+import '../../../../../Controller/Homepage/leave_balance.dart';
 
 class ClockIn extends StatefulWidget {
   const ClockIn({super.key});

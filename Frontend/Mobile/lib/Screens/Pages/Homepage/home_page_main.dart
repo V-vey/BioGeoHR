@@ -38,7 +38,7 @@ class HomePageMain extends StatelessWidget {
                 ),
               ],
             ),
-            RecentAttendance(),
+            RecentAttendancePage(),
             RecentLeave(),
           ],
         ),

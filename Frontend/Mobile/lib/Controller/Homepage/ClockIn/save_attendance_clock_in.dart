@@ -1,10 +1,10 @@
-import '../../../Service/Url.dart';
+import '../../../Service/url.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SaveclockInOut {
-  final url _api = url();
+  final Url _api = Url();
 
   void clockIn() async {
     final url = Uri.parse(_api.clockIn());

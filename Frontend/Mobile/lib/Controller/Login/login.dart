@@ -4,14 +4,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 // import 'package:shared_preferences/shared_preferences.dart';
-import '../../Service/AuthStorage.dart';
-import '../../Service/Url.dart';
+import '../../Service/auth_storage.dart';
+import '../../Service/url.dart';
 
 class Logintext {
   late String token;
   late String userId;
   final AuthStorage authStorage = AuthStorage();
-  final url api = url();
+  final Url api = Url();
   String getToken() {
     return token;
   }

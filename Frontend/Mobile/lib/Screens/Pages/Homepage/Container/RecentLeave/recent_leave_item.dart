@@ -2,7 +2,29 @@ import 'package:flutter/material.dart';
 
 import '../../../../Reusable/Badge/leave_badge.dart';
 
-class RecentLeaveItem extends StatelessWidget {
+class RecentLeaveItem extends StatefulWidget {
+  const RecentLeaveItem({super.key});
+
+  @override
+  State<RecentLeaveItem> createState() => _RecentLeaveItemState();
+}
+// final RecentAttendance attendance = RecentAttendance();
+// String location = '';
+// String date =   '';
+// String status = '';
+
+// @override
+// Future<void> _loadRecentAttendance() async {
+//   final result = await attendance.getRecentAttendance();
+
+//   setState(() {
+//     location = result.$1;
+//     date = result.$2;
+//     status = result.$3;
+//   });
+// }
+
+class _RecentLeaveItemState extends State<RecentLeaveItem> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -12,32 +34,30 @@ class RecentLeaveItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(7.5),
         color: Color(0xFFFCFCFC),
       ),
-      child: Container(
-        child: Column(
-          children: [
-            //Top Part
-            Container(
-              padding: EdgeInsets.only(bottom: 5, right: 10, left: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  //Reason
-                  Text(
-                    'Sick Leave',
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF3A3A3A),
-                    ),
+      child: Column(
+        children: [
+          //Top Part
+          Container(
+            padding: EdgeInsets.only(bottom: 5, right: 10, left: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                //Reason
+                Text(
+                  'Sick Leave',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF3A3A3A),
                   ),
+                ),
 
-                  LeaveBadge(status: "Pending"),
-                ],
-              ),
+                LeaveBadge(status: "Pending"),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

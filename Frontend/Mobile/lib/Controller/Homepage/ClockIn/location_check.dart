@@ -5,16 +5,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../Service/Url.dart';
+import '../../../Service/url.dart';
 
-bool _checkPosition(statusCode) {
+bool _checkPosition(int statusCode) {
   if (statusCode == 200) {
     return true;
   }
   return false;
 }
 
-final url _api = url();
+final Url _api = Url();
 
 Future<Position> _determinePosition() async {
   bool serviceEnabled;
@@ -50,8 +50,8 @@ Future<bool> verifyUserCoordinates() async {
   // try {
   Position position = await _determinePosition();
 
-  print(position.longitude);
-  print(position.latitude);
+  // print(position.longitude);
+  // print(position.latitude);
   final prefs = await SharedPreferences.getInstance();
 
   //access the user
@@ -72,7 +72,7 @@ Future<bool> verifyUserCoordinates() async {
       "locationName": locationName,
     }),
   );
-  print(response.body);
+  // print(response.body);
   return _checkPosition(response.statusCode);
   // } catch (e) {
   //   print('Error getting location: $e');

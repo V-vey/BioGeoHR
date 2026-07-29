@@ -1,12 +1,12 @@
-import 'AuthStorage.dart';
+import '../../../Service/auth_storage.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../../Service/Url.dart';
+import '../../../Service/url.dart';
 
 class SaveAttendance {
-  final url api = url();
+  final Url api = Url();
   final AuthStorage store = AuthStorage();
   late Future<String?> userId;
   late Future<String?> location;

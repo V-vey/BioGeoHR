@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../../../Reusable/Badge/attendance_badge.dart';
 
-class RecentAttendanceItem extends StatelessWidget {
+import '../../../../../Controller/Homepage/recent_attendance.dart';
+
+class RecentAttendanceItem extends StatefulWidget {
   const RecentAttendanceItem({super.key});
 
+  @override
+  State<RecentAttendanceItem> createState() => _RecentAttendanceItemState();
+}
+
+class _RecentAttendanceItemState extends State<RecentAttendanceItem> {
+  final RecentAttendance attendance = RecentAttendance();
+  String location = '';
+  String date = '';
+  String status = '';
   @override
   Widget build(BuildContext context) {
     return Container(

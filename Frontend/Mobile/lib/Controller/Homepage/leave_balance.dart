@@ -3,35 +3,34 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // import '../../Service/AuthStorage.dart';
-import 'Url.dart';
+import '../../Service/url.dart';
 
 class LeaveBalance {
-  final url api = url();
+  final Url api = Url();
 
   //Type Of Leave
-  getLeave(data, type) async {
-    if (await type == "annual") {
-      String annual = data['annual_leave'].toString();
-      return annual;
-    } else if (await type == 'sick') {
-      String sick = data['sick_leave'].toString();
-      return sick;
-    } else if (await type == 'patern') {
-      String patern = data['patternity_leave'].toString();
-      return patern;
-    } else if (await type == 'unpaid') {
-      String unpaid = data['unpaid_leave'].toString();
-      return unpaid;
-    }
-  }
+  // getLeave(data, type) async {
+  //   if (await type == "annual") {
+  //     String annual = data['annual_leave'].toString();
+  //     return annual;
+  //   } else if (await type == 'sick') {
+  //     String sick = data['sick_leave'].toString();
+  //     return sick;
+  //   } else if (await type == 'patern') {
+  //     String patern = data['patternity_leave'].toString();
+  //     return patern;
+  //   } else if (await type == 'unpaid') {
+  //     String unpaid = data['unpaid_leave'].toString();
+  //     return unpaid;
+  //   }
+  // }
 
   Future<(String, String, String, String)> getBalanceLeave() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
-    String? userId = prefs.getString("id");
 
-    final url = Uri.parse(api.getLeaveBalance(userId));
+    final url = Uri.parse(api.getLeaveBalance());
     final response = await http.get(
       url,
       headers: {

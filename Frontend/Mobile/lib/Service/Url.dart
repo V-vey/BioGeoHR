@@ -1,4 +1,6 @@
-class url {
+// ignore_for_file: file_names
+
+class Url {
   final String api = 'http://192.168.254.104:8080/api';
 
   //api for login
@@ -17,8 +19,8 @@ class url {
   }
 
   //api for leavebalance
-  String getLeaveBalance(userId) {
-    return "$api/balance/$userId";
+  String getLeaveBalance() {
+    return "$api/balance";
   }
 
   //api for geofence calculation
@@ -44,5 +46,10 @@ class url {
   //api to countLate
   String countLate() {
     return "$api/countLate";
+  }
+
+  //api for RecentAttendance
+  String recentAttendance() {
+    return "$api/recentAttendance";
   }
 }

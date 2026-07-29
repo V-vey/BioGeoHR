@@ -3,16 +3,43 @@ import 'package:flutter_biogeohr/Screens/Reusable/Items/AttendanceItem.dart';
 
 // import 'RecentAttendanceItem.dart';
 // import '../../../../Reusable/Items/AttendanceItem.dart';
+import '../../../../../Controller/Homepage/recent_attendance.dart';
 
-class RecentAttendance extends StatelessWidget {
+class RecentAttendancePage extends StatefulWidget {
+  const RecentAttendancePage({super.key});
+
+  @override
+  State<RecentAttendancePage> createState() => _RecentAttendancePageState();
+}
+
+class _RecentAttendancePageState extends State<RecentAttendancePage> {
+  final RecentAttendance attendance = RecentAttendance();
+  String location = '';
+  String date = '';
+  String status = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadRecentAttendance();
+  }
+
+  Future<void> _loadRecentAttendance() async {
+    final result = await attendance.getRecentAttendance();
+
+    setState(() {
+      location = result.$1;
+      date = result.$2;
+      status = result.$3;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print('Container clicked!');
-        for (int i = 78; i <= 153; i++) {
-          print(i);
-        }
+        //do something
       },
       child: Container(
         width: 350,
@@ -45,9 +72,9 @@ class RecentAttendance extends StatelessWidget {
             Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
             SizedBox(height: 5),
             AttendanceItem(
-              status: "On-Time",
-              location: "TSU San Isidro",
-              date: '2026-07-08',
+              status: status,
+              location: location,
+              date: date,
             ), // Recent
           ],
         ),

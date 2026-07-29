@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_biogeohr/Controller/Homepage/ClockIn/location_check.dart';
 // import '../../../../../Service/GetLocation.dart';
-import '../../../../../Service/AuthStorage.dart';
+import '../../../../../Service/auth_storage.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../Controller/Homepage/ClockIn/biometric.dart';
 // import 'Time.dart';
@@ -9,11 +9,11 @@ import '../../../../../Controller/Homepage/ClockIn/biometric.dart';
 
 // import 'package:local_auth/local_auth.dart';
 
-import '../../../../../Service/leave_balance.dart';
+import '../../../../../Controller/Homepage/leave_balance.dart';
 
 import '../../../../../Controller/Homepage/ClockIn/save_attendance_clock_in.dart';
 
-import '../../../../../Controller/Homepage/late/count_late.dart';
+import '../../../../../Controller/Homepage/count_late.dart';
 
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();

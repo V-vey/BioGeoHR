@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../Service/Url.dart';
+import '../../Service/url.dart';
 
 class Logout {
-  final url api = url();
+  final Url api = Url();
   Future<String> logoutUser() async {
     //get global token and id variables
     final prefs = await SharedPreferences.getInstance();
