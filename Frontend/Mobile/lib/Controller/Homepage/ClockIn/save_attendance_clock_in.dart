@@ -12,7 +12,6 @@ class SaveclockInOut {
     //access the user
     String? token = prefs.getString("token");
     String? locationName = prefs.getString("temp");
-    String? userId = prefs.getString('id');
 
     await http.post(
       url,
@@ -21,7 +20,7 @@ class SaveclockInOut {
         "Accept": "application/json",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({"user_id": userId, "location_name": locationName}),
+      body: jsonEncode({"location_name": locationName}),
     );
   }
 
@@ -30,7 +29,6 @@ class SaveclockInOut {
     final prefs = await SharedPreferences.getInstance();
     //access the user
     String? token = prefs.getString("token");
-    String? userId = prefs.getString('id');
 
     await http.post(
       url,
@@ -39,7 +37,6 @@ class SaveclockInOut {
         "Accept": "application/json",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({"user_id": userId}),
     );
   }
 }

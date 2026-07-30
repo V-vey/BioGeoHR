@@ -40,14 +40,14 @@ class AttendanceService
             'user_id' => $userId,
             'location_id' => $locationId->id,
             'status' => $status, 
-            'date' => today()->toDateString(),
+            'date' => today()->toDateString(), // bug
             'time_in' => $time,
         ]);
         return $attendance;
     }
     public function clockOut(Request $request){
         //The User Token
-        $rawTokenString = $request->bearerToken();    
+        $rawTokenString = request()->bearerToken();    
         
         //Access Token
         $token = PersonalAccessToken::findToken($rawTokenString);

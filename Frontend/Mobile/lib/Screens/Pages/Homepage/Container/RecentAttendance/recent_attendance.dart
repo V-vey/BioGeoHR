@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_biogeohr/Screens/Reusable/Items/AttendanceItem.dart';
+import 'package:flutter_biogeohr/Screens/Reusable/Items/attendance_item_layout.dart';
 
 // import 'RecentAttendanceItem.dart';
 // import '../../../../Reusable/Items/AttendanceItem.dart';
@@ -71,7 +71,7 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
             ),
             Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
             SizedBox(height: 5),
-            AttendanceItem(
+            AttendanceItemLayout(
               status: status,
               location: location,
               date: date,

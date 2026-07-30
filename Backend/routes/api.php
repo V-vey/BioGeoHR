@@ -33,18 +33,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('logout', [LoginAuthController::class, 'logout']);
 
-    // Route::apiResource('users', UsersController::class);
-    Route::apiResource('salary', SalaryController::class);
-    Route::apiResource('leave', LeaveApplicationController::class);
-    Route::apiResource('balance', LeaveBalanceController::class);
-    Route::apiResource('attendance', AttendanceController::class);
-    Route::apiResource('userl', UserLocationController::class);
+    
 
     //clock in and out
     Route::post('clockIn', [AttendanceController::class, 'store']);
     Route::post('clockOut', [AttendanceService::class, 'clockOut']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
+
+    //to be remove
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
 
@@ -52,7 +49,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
-
+        // Route::apiResource('users', UsersController::class);
+        Route::apiResource('salary', SalaryController::class);
+        Route::apiResource('leave', LeaveApplicationController::class);
+        Route::apiResource('balance', LeaveBalanceController::class);
+        Route::apiResource('attendance', AttendanceController::class);
+        Route::apiResource('userl', UserLocationController::class);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'recentAttendance']);

@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import '../Badge/attendance_badge.dart';
 
-class AttendanceItem extends StatelessWidget {
+class AttendanceItemLayout extends StatelessWidget {
   final String status;
   final String location;
   final String date;
 
-  const AttendanceItem({
+  const AttendanceItemLayout({
     super.key,
     required this.status,
     required this.location,

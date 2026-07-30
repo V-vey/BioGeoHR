@@ -4,6 +4,8 @@ import 'attendance.dart';
 import 'monthly_attendance.dart';
 
 class AttendancePageMain extends StatelessWidget {
+  const AttendancePageMain({super.key});
+
   @override
   Widget build(BuildContext context) {
     var items = Container(
@@ -11,6 +13,7 @@ class AttendancePageMain extends StatelessWidget {
       child: Column(
         children: [MonthlyAttendance(), SizedBox(height: 15), Attendance()],
       ),
+      
     );
 
     return items;

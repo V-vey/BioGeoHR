@@ -12,7 +12,7 @@ import 'Container/Welcome/welcome.dart';
 class HomePageMain extends StatelessWidget {
   const HomePageMain({super.key});
 
-  bool get wantKeepAlive => true;
+  // bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {

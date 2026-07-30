@@ -99,7 +99,7 @@ class AttendanceController extends Controller
         $late = Attendance::where("user_id", $userId)->where("status", "Late")->count();
         return response()->json(['message' => $late]);
     }
-    public function recentAttendance(Request $request){
+    public function recentAttendance(){
         //The User Token
         $rawTokenString = request()->bearerToken();    
         
@@ -108,6 +108,11 @@ class AttendanceController extends Controller
         $userId = $token?->tokenable_id;
 
         $recent = Attendance::where("user_id", $userId)->whereNotNull("time_out")->latest()->first();
-        return response()->json($recent);
+        $location = Location::where('id', $recent->location_id)->first();
+        return response()->json([
+            'location' => $location->name,
+            'date' => $recent->date,
+            'status' => $recent->status
+        ]);
     }
 }
