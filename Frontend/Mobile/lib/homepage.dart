@@ -49,45 +49,51 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color.fromARGB(255, 252, 252, 252),
-      appBar: const Header(),
-
-      //what it shows
-      body: PageView(
-        controller: _pageController,
-        physics:
-            const NeverScrollableScrollPhysics(), // just the physical controller to never swipe to the next page maybe should I???
-        children: _widgetList,
-      ),
-
-      //the navigation
-      bottomNavigationBar: Container(
-        //design
-        decoration: BoxDecoration(
-          color: Colors.white, // back culur
-          //shadow ATOMIC
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x30000000), // CULUR sadow
-              blurRadius: 12.0, // Softness :)
-              spreadRadius: 3.0, // Thick!!! of the shadow
-              // Pushes shadow UP into the body screen
-              offset: const Offset(0, -4),
-            ),
-          ],
+    return PopScope(
+      canPop: false, // Prevents the screen from popping
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Optional: Show a warning message or dialog here
+      },
+      child: Scaffold(
+        backgroundColor: Color.fromARGB(255, 252, 252, 252),
+        appBar: const Header(),
+        //what it shows
+        body: PageView(
+          controller: _pageController,
+          physics:
+              const NeverScrollableScrollPhysics(), // just the physical controller to never swipe to the next page maybe should I???
+          children: _widgetList,
         ),
 
-        //main navigation it calls the Reusable navigation.dart
-        child: Navigation(
-          myIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            //jump to the index page
-            _pageController.jumpToPage(index);
-          },
+        //the navigation
+        bottomNavigationBar: Container(
+          //design
+          decoration: BoxDecoration(
+            color: Colors.white, // back culur
+            //shadow ATOMIC
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x30000000), // CULUR sadow
+                blurRadius: 12.0, // Softness :)
+                spreadRadius: 3.0, // Thick!!! of the shadow
+                // Pushes shadow UP into the body screen
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+
+          //main navigation it calls the Reusable navigation.dart
+          child: Navigation(
+            myIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+              //jump to the index page
+              _pageController.jumpToPage(index);
+            },
+          ),
         ),
       ),
     );
