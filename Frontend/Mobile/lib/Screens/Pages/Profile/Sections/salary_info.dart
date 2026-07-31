@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ChangePassword extends StatelessWidget {
-  const ChangePassword({super.key});
+class SalaryInfo extends StatelessWidget {
+  const SalaryInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +22,10 @@ class ChangePassword extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_reset, size: 30),
+          Icon(Icons.payments, size: 30),
           SizedBox(width: 10),
           Text(
-            "Change Password",
+            "Salary Info",
             style: TextStyle(
               color: Color(0xFF3A3A3A),
               fontFamily: 'Roboto',

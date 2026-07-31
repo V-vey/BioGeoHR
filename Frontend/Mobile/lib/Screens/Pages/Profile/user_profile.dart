@@ -10,7 +10,7 @@ class UserProfileDetails extends StatelessWidget {
     late String email = "abdul0690@gmail.com";
     late String contact = "0961-7989-697";
     var items = Container(
-      margin: EdgeInsets.all(20),
+      // margin: EdgeInsets.all(20),
       width: 350,
 
       decoration: BoxDecoration(
