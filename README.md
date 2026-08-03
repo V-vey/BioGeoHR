@@ -6,6 +6,11 @@ check branch = git branch -a
 
 change branch = git checkout <name>
 
+putting in Github
+git add <directory>
+git commit -m "comment"
+git push
+
 testing
 Laravel: cd Backend
 php artisan serve --host=0.0.0.0 --port=8080
