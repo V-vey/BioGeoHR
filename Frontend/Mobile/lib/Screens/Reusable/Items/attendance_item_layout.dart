@@ -7,12 +7,14 @@ class AttendanceItemLayout extends StatelessWidget {
   final String status;
   final String location;
   final String date;
+  final bool isVisible;
 
   const AttendanceItemLayout({
     super.key,
     required this.status,
     required this.location,
     required this.date,
+    required this.isVisible,
   });
 
   @override
@@ -61,7 +63,18 @@ class AttendanceItemLayout extends StatelessWidget {
           ),
 
           SizedBox(height: 5),
-          Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
+          if (isVisible) ...[
+            Container(
+              padding: EdgeInsets.only(left: 15, right: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
+                  SizedBox(height: 5),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

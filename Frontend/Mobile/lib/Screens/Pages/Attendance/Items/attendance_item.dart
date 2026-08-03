@@ -8,6 +8,9 @@ class AttendanceItems extends StatelessWidget {
   String status = "Late";
   String location = "Home";
   String date = "2026-07-30";
+  bool isVisible = false;
+
+  AttendanceItems({super.key});
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -20,6 +23,7 @@ class AttendanceItems extends StatelessWidget {
           status: status,
           location: location,
           date: date,
+          isVisible: isVisible,
         );
       },
     );

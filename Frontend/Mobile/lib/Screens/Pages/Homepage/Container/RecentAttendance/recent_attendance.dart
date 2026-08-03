@@ -35,11 +35,14 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
     });
   }
 
+  bool isVisible = false;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        //do something
+        setState(() {
+          isVisible = !isVisible;
+        });
       },
       child: Container(
         width: 350,
@@ -75,6 +78,7 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
               status: status,
               location: location,
               date: date,
+              isVisible: isVisible,
             ), // Recent
           ],
         ),
