@@ -8,7 +8,7 @@ import '../../Service/url.dart';
 class RecentAttendance {
   final Url _api = Url();
 
-  Future<(String, String, String)> getRecentAttendance() async {
+  Future<(String, String, String, String, String)> getRecentAttendance() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -29,6 +29,8 @@ class RecentAttendance {
         jsonResponse['location'].toString(),
         jsonResponse['date'].toString(),
         jsonResponse['status'].toString(),
+        jsonResponse['clock_in'].toString(),
+        jsonResponse['clock_out'].toString(),
       );
     } else {
       throw Exception('Failed to load leave balance: ${response.statusCode}');

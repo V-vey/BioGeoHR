@@ -87,6 +87,7 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Attendance record deleted successfully']);
         }
     }
+
     public function countLate(){
         //The User Token
         $rawTokenString = request()->bearerToken();    
@@ -109,10 +110,14 @@ class AttendanceController extends Controller
 
         $recent = Attendance::where("user_id", $userId)->whereNotNull("time_out")->latest()->first();
         $location = Location::where('id', $recent->location_id)->first();
+        $timeIn = $recent->time_in->format('g:iA');
+        $timeOut = $recent->time_out->format('g:iA');
         return response()->json([
             'location' => $location->name,
             'date' => $recent->date,
-            'status' => $recent->status
+            'status' => $recent->status,
+            'clock_in' => $timeIn,
+            'clock_out' => $timeOut
         ]);
     }
 }

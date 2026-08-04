@@ -17,6 +17,8 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
   String location = '';
   String date = '';
   String status = '';
+  String clockIn = '';
+  String clockOut = '';
 
   @override
   void initState() {
@@ -32,6 +34,8 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
       location = result.$1;
       date = result.$2;
       status = result.$3;
+      clockIn = result.$4;
+      clockOut = result.$5;
     });
   }
 
@@ -79,6 +83,8 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
               location: location,
               date: date,
               isVisible: isVisible,
+              clockIn: clockIn,
+              clockOut: clockOut,
             ), // Recent
           ],
         ),

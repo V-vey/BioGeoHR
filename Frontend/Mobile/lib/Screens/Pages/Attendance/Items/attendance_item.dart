@@ -9,6 +9,8 @@ class AttendanceItems extends StatelessWidget {
   String location = "Home";
   String date = "2026-07-30";
   bool isVisible = false;
+  String clockIn = "09:00";
+  String clockOut = "17:00";
 
   AttendanceItems({super.key});
   @override
@@ -24,6 +26,8 @@ class AttendanceItems extends StatelessWidget {
           location: location,
           date: date,
           isVisible: isVisible,
+          clockIn: clockIn,
+          clockOut: clockOut,
         );
       },
     );
