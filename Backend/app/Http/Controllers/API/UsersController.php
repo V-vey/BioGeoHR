@@ -112,4 +112,11 @@ class UsersController extends Controller
             return response()->json(['message' => 'User deleted successfully']);
         }
     }
+    public function mobileUI(){
+        //recent 
+        //user profile 
+        //salary
+        //late
+        //all
+    }
 }

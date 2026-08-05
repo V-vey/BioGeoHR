@@ -36,8 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
 
     //clock in and out
-    Route::post('clockIn', [AttendanceController::class, 'store']);
-    Route::post('clockOut', [AttendanceService::class, 'clockOut']);
+    Route::post('clockIn', [AttendanceController::class, 'createAttendance']);
+    Route::post('clockOut', [AttendanceController::class, 'clockOut']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
 
