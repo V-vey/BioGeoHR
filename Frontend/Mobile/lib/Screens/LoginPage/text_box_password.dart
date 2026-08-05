@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TextboxPassword extends StatefulWidget {
   final TextEditingController controller;
 
-  TextboxPassword({super.key, required this.controller});
+  const TextboxPassword({super.key, required this.controller});
 
   @override
   State<TextboxPassword> createState() => _TextboxPasswordState();
