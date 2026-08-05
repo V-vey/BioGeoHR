@@ -78,17 +78,17 @@ class AttendanceItemLayout extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        clockIn, //Clock In
+                        "Clock In: $clockIn", //Clock In
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF3A3A3A),
+                          fontSize: 13,
+                          color: Color(0x503A3A3A),
                         ),
                       ),
                       Spacer(),
                       Text(
-                        clockOut, //Clock Out
+                        "Clock Out: $clockOut", //Clock Out
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.bold,
