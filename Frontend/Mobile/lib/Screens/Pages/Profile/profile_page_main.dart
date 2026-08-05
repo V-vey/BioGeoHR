@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
 
 import 'user_profile.dart';
-import 'Sections/user_profile.dart';
-import 'Sections/change_password.dart';
+import 'Sections/UserProfile/user_profile.dart';
+import 'Sections/ChangePassword/change_password.dart';
 import 'Sections/logout.dart';
-import 'Sections/salary_info.dart';
+import 'Sections/Salary/salary_info.dart';
 
 class ProfilePageMain extends StatelessWidget {
   const ProfilePageMain({super.key});
   @override
   Widget build(BuildContext context) {
-    var items = Column(
-      spacing: 20,
-      children: [
-        Container(), // just for the spacing
-        UserProfileDetails(),
-        UserProfile(),
-        SalaryInfo(),
-        ChangePassword(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [LogoutButton()],
-        ),
-      ],
+    var items = SingleChildScrollView(
+      child: Column(
+        spacing: 20,
+        children: [
+          Container(), // just for the spacing
+          UserProfileDetails(),
+          UserProfile(),
+          SalaryInfo(),
+          ChangePassword(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [LogoutButton()],
+          ),
+        ],
+      ),
     );
     return items;
   }

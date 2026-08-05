@@ -9,6 +9,8 @@ class UserProfileDetails extends StatelessWidget {
     late String name = "Abdul Jackul Salsalani";
     late String email = "abdul0690@gmail.com";
     late String contact = "0961-7989-697";
+    late String role = "Employee";
+    late String department = "IT Department";
     var items = Container(
       // margin: EdgeInsets.all(20),
       width: 350,
@@ -83,7 +85,16 @@ class UserProfileDetails extends StatelessWidget {
                   fontFamily: 'Roboto',
                   fontSize: 15,
                   fontWeight: FontWeight.normal,
-                  letterSpacing: 2,
+                ),
+              ),
+
+              Text(
+                "$role | $department",
+                style: TextStyle(
+                  color: Color(0x803A3A3A),
+                  fontFamily: 'Roboto',
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ],

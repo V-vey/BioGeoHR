@@ -7,12 +7,19 @@ class AttendanceItemLayout extends StatelessWidget {
   final String status;
   final String location;
   final String date;
+  final bool isVisible;
+  // item hidden
+  final String clockIn;
+  final String clockOut;
 
   const AttendanceItemLayout({
     super.key,
     required this.status,
     required this.location,
     required this.date,
+    required this.isVisible,
+    required this.clockIn,
+    required this.clockOut,
   });
 
   @override
@@ -53,15 +60,49 @@ class AttendanceItemLayout extends StatelessWidget {
                     ),
                   ],
                 ),
-                AttendanceBadge(
-                  status: status,
-                ), // change the status to the flexible
+                AttendanceBadge(status: status),
               ],
             ),
           ),
 
           SizedBox(height: 5),
-          Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
+          if (isVisible) ...[
+            Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
+            Container(
+              padding: EdgeInsets.only(left: 15, right: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Clock In: $clockIn", //Clock In
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0x503A3A3A),
+                        ),
+                      ),
+                      Spacer(),
+                      Text(
+                        "Clock Out: $clockOut", //Clock Out
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0x503A3A3A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 0, height: 5),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

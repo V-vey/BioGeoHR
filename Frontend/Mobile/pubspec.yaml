@@ -39,6 +39,7 @@ dependencies:
   geolocator: ^14.0.3
   local_auth: ^3.0.2
   local_auth_android: ^2.0.9
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,9 @@ import 'package:flutter_biogeohr/Screens/Reusable/Items/attendance_item_layout.d
 // import '../../../../Reusable/Items/AttendanceItem.dart';
 import '../../../../../Controller/Homepage/recent_attendance.dart';
 
+//format time
+import 'package:intl/intl.dart';
+
 class RecentAttendancePage extends StatefulWidget {
   const RecentAttendancePage({super.key});
 
@@ -17,6 +20,8 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
   String location = '';
   String date = '';
   String status = '';
+  String clockIn = '';
+  String clockOut = '';
 
   @override
   void initState() {
@@ -32,14 +37,29 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
       location = result.$1;
       date = result.$2;
       status = result.$3;
+      // clockIn = result.$4;
+      // clockOut = result.$5;
+
+      DateFormat inputFormat = DateFormat("HH:mm:ss");
+
+      DateTime parsedTimeClockIn = inputFormat.parse(result.$4);
+      DateTime parsedTimeClockOut = inputFormat.parse(result.$5);
+
+      DateFormat outputFormat = DateFormat("h:mm a");
+
+      clockIn = outputFormat.format(parsedTimeClockIn);
+      clockOut = outputFormat.format(parsedTimeClockOut);
     });
   }
 
+  bool isVisible = false;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        //do something
+        setState(() {
+          isVisible = !isVisible;
+        });
       },
       child: Container(
         width: 350,
@@ -75,6 +95,9 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
               status: status,
               location: location,
               date: date,
+              isVisible: isVisible,
+              clockIn: clockIn,
+              clockOut: clockOut,
             ), // Recent
           ],
         ),

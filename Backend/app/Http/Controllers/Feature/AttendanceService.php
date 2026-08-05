@@ -41,7 +41,7 @@ class AttendanceService
             'location_id' => $locationId->id,
             'status' => $status, 
             'date' => today()->toDateString(), // bug
-            'time_in' => $time,
+            'time_in' => $time->format('g:iA'),
         ]);
         return $attendance;
     }
@@ -62,7 +62,7 @@ class AttendanceService
 
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
         $attendance->update([
-            'time_out' => $time,
+            'time_out' => $time->format('g:iA'),
         ]);
         return $attendance;
     }
