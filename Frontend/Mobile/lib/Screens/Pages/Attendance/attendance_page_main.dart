@@ -13,7 +13,6 @@ class AttendancePageMain extends StatelessWidget {
       child: Column(
         children: [MonthlyAttendance(), SizedBox(height: 15), Attendance()],
       ),
-      
     );
 
     return items;

@@ -46,6 +46,8 @@ class Loginbutton extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => Homepage()),
             );
+
+            //clear the text fields after successful login
             emailController.clear();
             passwordController.clear();
           } else {
