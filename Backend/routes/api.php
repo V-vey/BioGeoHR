@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //to be remove
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
-
+    Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
     
     //can only access by HR
