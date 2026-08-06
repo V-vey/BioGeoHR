@@ -99,7 +99,7 @@ class SalaryService
     }
     function pagIbig($salary){
         return $salary * .025;
-    }
+    } 
     
     function paycheck($salary){
         $dailyWage = $this->dailyWage($salary);

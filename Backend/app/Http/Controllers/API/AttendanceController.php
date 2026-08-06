@@ -100,6 +100,16 @@ class AttendanceController extends Controller
         $late = Attendance::where("user_id", $userId)->where("status", "Late")->count();
         return response()->json(['message' => $late]);
     }
+    /*
+        On Time COUNT FUNCTION
+    */
+    public function countOnTime(){
+        $userId = $this->getUserIdFromToken();
+
+        // $attendance = Attendance::where("user_id", $userId)->get();
+        $late = Attendance::where("user_id", $userId)->where("status", "On-time")->count();
+        return response()->json(['message' => $late]);
+    }
 
     /*
         RECENT ATTENDANCE FUNCTION
