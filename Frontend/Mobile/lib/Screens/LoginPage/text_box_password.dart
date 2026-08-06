@@ -9,47 +9,87 @@ class TextboxPassword extends StatefulWidget {
   State<TextboxPassword> createState() => _TextboxPasswordState();
 }
 
+const Color activeColor = Color(0xFF6675EC); // Color when clicked
+const Color idleTextColor = Color(0xE63A3A3A); // Color Text being typed
+
+bool obscureText = true; // Variable to toggle password visibility
+IconData icon = Icons.visibility; // Variable to toggle password visibility icon
+
 class _TextboxPasswordState extends State<TextboxPassword> {
   @override
   Widget build(BuildContext context) {
-    var text = Container(
-      width: 320,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Color(0xFFFCFCFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0x24000000), width: 2),
+    var textLabel = Text(
+      "Enter your Password",
+      style: TextStyle(
+        fontFamily: 'Roboto',
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+        // color: idleTextColor,
       ),
-      child: TextFormField(
-        keyboardType: TextInputType.visiblePassword,
-        enableSuggestions: false,
-        autocorrect: false,
-        controller: widget.controller,
-        textAlign: TextAlign.center,
-        textAlignVertical: TextAlignVertical.center,
-        style: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF3A3A3A),
+    );
+
+    var text = TextFormField(
+      textAlign: TextAlign.left,
+      keyboardType: TextInputType.visiblePassword,
+      controller: widget.controller, // This is the controller passed through
+      obscureText:
+          obscureText, // This is the variable that toggles password visibility
+      style: TextStyle(
+        //changable color based on focus state
+        fontFamily: 'Roboto',
+        fontWeight: FontWeight.bold,
+        color: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return activeColor;
+          }
+          return idleTextColor;
+        }),
+      ),
+
+      decoration: InputDecoration(
+        // Layout Padding and size
+        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        constraints: BoxConstraints(maxWidth: 320),
+
+        maintainHintSize: true,
+
+        //Text Label
+        label: textLabel,
+
+        //Bordel Outline
+        border: OutlineInputBorder(),
+
+        //Before Clicking
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Color(0x703A3A3A), // Changes the idle line color
+            width: 2.0, // Normal line thickness
+          ),
         ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 9),
-          hintStyle: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: const Color(0x31000000),
+
+        //After Clicking
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Color(0xFF6675EC), // Changes the border color when clicked
+            width: 2.0, // Makes the border pop out a bit thicker
           ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(
-              color: Color(0x503A3A3A), // Changes border to green when focused
-              width: 1.0,
-            ),
-          ),
-          // border: OutlineInputBorder(),
-          hintText: "Enter your Password",
+        ),
+
+        //Background Color
+        fillColor: Color(0xFFFCFCFC),
+        filled: true,
+
+        // Clickable button icon
+        suffixIcon: IconButton(
+          icon: Icon(icon),
+          onPressed: () {
+            setState(() {
+              obscureText = !obscureText; // Toggle the obscureText variable
+              icon = obscureText
+                  ? Icons.visibility
+                  : Icons.visibility_off; // Toggle the icon variable
+            });
+          },
         ),
       ),
     );

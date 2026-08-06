@@ -9,18 +9,40 @@ class TextboxEmail extends StatefulWidget {
   State<TextboxEmail> createState() => _TextboxEmailState();
 }
 
+const Color activeColor = Color(0xFF6675EC); // Color when clicked
+const Color idleTextColor = Color(0xE63A3A3A); // Color Text being typed
+
 class _TextboxEmailState extends State<TextboxEmail> {
   // const TextBoxEmail({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color activeColor = Color(0xFF6675EC); // Color when clicked
-    const Color idleTextColor = Color(0xFF3A3A3A); // Color when not clicked
+    var textLabel = Text(
+      "Enter your Password",
+      style: TextStyle(
+        fontFamily: 'Roboto',
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+        // color: idleTextColor,
+      ),
+    );
 
-    var textField = TextFormField(
-      textAlign: TextAlign.center,
+    var text = TextFormField(
+      textAlign: TextAlign.left,
       keyboardType: TextInputType.emailAddress,
-      controller: widget.controller, // This is the controller passed through
+      controller: widget
+          .controller, // This is the controller passed through // This is the variable that toggles password visibility
+      style: TextStyle(
+        //changable color based on focus state
+        fontFamily: 'Roboto',
+        fontWeight: FontWeight.bold,
+        color: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return activeColor;
+          }
+          return idleTextColor;
+        }),
+      ),
 
       decoration: InputDecoration(
         // Layout Padding and size
@@ -30,14 +52,7 @@ class _TextboxEmailState extends State<TextboxEmail> {
         maintainHintSize: true,
 
         //Text Label
-        label: Text(
-          "Enter your Email",
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        label: textLabel,
 
         //Bordel Outline
         border: OutlineInputBorder(),
@@ -62,16 +77,7 @@ class _TextboxEmailState extends State<TextboxEmail> {
         fillColor: Color(0xFFFCFCFC),
         filled: true,
       ),
-      style: TextStyle(
-        //changable color based on focus state
-        color: WidgetStateColor.resolveWith((states) {
-          if (states.contains(WidgetState.focused)) {
-            return activeColor;
-          }
-          return idleTextColor;
-        }),
-      ),
     );
-    return textField;
+    return text;
   }
 }
