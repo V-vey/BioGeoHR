@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use Laravel\Sanctum\PersonalAccessToken; 
+use Laravel\Sanctum\PersonalAccessToken;                      
 abstract class Controller
 {
     protected function getUserIdFromToken(): ?int
