@@ -46,6 +46,8 @@ class Loginbutton extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => Homepage()),
             );
+            emailController.clear();
+            passwordController.clear();
           } else {
             // Login failed, show an error message
             ScaffoldMessenger.of(context).showSnackBar(
