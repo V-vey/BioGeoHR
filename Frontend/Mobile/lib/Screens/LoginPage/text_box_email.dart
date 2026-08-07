@@ -18,7 +18,7 @@ class _TextboxEmailState extends State<TextboxEmail> {
   @override
   Widget build(BuildContext context) {
     var textLabel = Text(
-      "Enter your Password",
+      "Enter your Email",
       style: TextStyle(
         fontFamily: 'Roboto',
         fontSize: 15,

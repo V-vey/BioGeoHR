@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 
 class Url {
-  final String api = 'http://192.168.254.104:8080/api';
+  final String api = 'https://froth-limes-skid.ngrok-free.dev/api';
 
   //api for login
   String getLogin() {
