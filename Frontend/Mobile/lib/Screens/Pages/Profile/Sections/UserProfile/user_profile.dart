@@ -44,7 +44,7 @@ class _UserProfileState extends State<UserProfile> {
                 Icon(Icons.person, size: 30),
                 SizedBox(width: 10),
                 Text(
-                  "User Profile",
+                  "Personal Details",
                   style: TextStyle(
                     color: Color(0xFF3A3A3A),
                     fontFamily: 'Roboto',
