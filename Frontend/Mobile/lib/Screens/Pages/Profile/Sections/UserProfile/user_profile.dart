@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
-import 'package:flutter_biogeohr/Screens/Pages/Profile/Sections/UserProfile/user_profile_open.dart';
+// import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
+import 'user_profile_open.dart';
+import 'edit_profile_button.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -60,6 +61,8 @@ class _UserProfileState extends State<UserProfile> {
               SizedBox(height: 5),
               Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
               UserProfileOpen(),
+              Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
+              EditProfileButton(),
             ],
           ],
         ),
