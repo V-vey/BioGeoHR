@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 
-class UserProfileDetails extends StatelessWidget {
+class UserProfileDetails extends StatefulWidget {
   const UserProfileDetails({super.key});
 
   @override
+  State<UserProfileDetails> createState() => _UserProfileDetailsState();
+}
+
+class _UserProfileDetailsState extends State<UserProfileDetails> {
+  String name = '';
+  String email = '';
+  String contact = '';
+  String role = '';
+  String department = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    //data needed
-    late String name = "Abdul Jackul Salsalani";
-    late String email = "abdul0690@gmail.com";
-    late String contact = "0961-7989-697";
-    late String role = "Employee";
-    late String department = "IT Department";
     var items = Container(
       // margin: EdgeInsets.all(20),
       width: 350,

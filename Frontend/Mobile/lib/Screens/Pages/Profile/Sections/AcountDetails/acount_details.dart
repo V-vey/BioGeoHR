@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
-import 'user_profile_open.dart';
-import 'edit_profile_button.dart';
 
-class UserProfile extends StatefulWidget {
-  const UserProfile({super.key});
+class AcountDetails extends StatefulWidget {
+  const AcountDetails({super.key});
 
   @override
-  State<UserProfile> createState() => _UserProfileState();
+  State<AcountDetails> createState() => _AccountDetailsState();
 }
 
 bool isVisible = false;
 IconData icon = Icons.chevron_right;
 
-class _UserProfileState extends State<UserProfile> {
+class _AccountDetailsState extends State<AcountDetails> {
   @override
   Widget build(BuildContext context) {
     var items = Container(
@@ -35,10 +32,10 @@ class _UserProfileState extends State<UserProfile> {
         children: [
           Row(
             children: [
-              Icon(Icons.person, size: 30),
+              Icon(Icons.manage_accounts, size: 30),
               SizedBox(width: 10),
               Text(
-                "Personal Details",
+                "Account Details",
                 style: TextStyle(
                   color: Color(0xFF3A3A3A),
                   fontFamily: 'Roboto',
@@ -67,9 +64,6 @@ class _UserProfileState extends State<UserProfile> {
           if (isVisible) ...[
             SizedBox(height: 5),
             Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-            UserProfileOpen(),
-            Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-            EditProfileButton(),
           ],
         ],
       ),

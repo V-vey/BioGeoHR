@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'user_profile.dart';
 import 'Sections/UserProfile/user_profile.dart';
+
+import 'Sections/AcountDetails/acount_details.dart';
 import 'Sections/ChangePassword/change_password.dart';
 import 'Sections/logout.dart';
 import 'Sections/Salary/salary_info.dart';
@@ -17,6 +19,7 @@ class ProfilePageMain extends StatelessWidget {
           Container(), // just for the spacing
           UserProfileDetails(),
           UserProfile(),
+          AcountDetails(),
           SalaryInfo(),
           ChangePassword(),
           Row(
