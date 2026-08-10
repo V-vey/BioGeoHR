@@ -21,9 +21,9 @@ use App\Http\Controllers\Feature\AttendanceService;
 
 //Test
 use App\Service\SalaryService;
-Route::apiResource('users', UsersController::class);
+Route::apiResource('/users', UsersController::class);
 // Public routes
-Route::post('login', [LoginAuthController::class, 'auth']);
+Route::post('/login', [LoginAuthController::class, 'auth']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
