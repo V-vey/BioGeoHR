@@ -43,6 +43,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
           ),
         ],
       ),
+
       child: Row(
         children: [
           //picture

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'change_password_open.dart';
+// import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
+import 'account_details_open.dart';
 
-class ChangePassword extends StatefulWidget {
-  const ChangePassword({super.key});
+class AccountDetails extends StatefulWidget {
+  const AccountDetails({super.key});
 
   @override
-  State<ChangePassword> createState() => _ChangePasswordState();
+  State<AccountDetails> createState() => _AccountDetailsState();
 }
 
 bool isVisible = false;
 IconData icon = Icons.chevron_right;
 
-class _ChangePasswordState extends State<ChangePassword> {
+class _AccountDetailsState extends State<AccountDetails> {
   @override
   Widget build(BuildContext context) {
     var items = Stack(
@@ -35,10 +36,10 @@ class _ChangePasswordState extends State<ChangePassword> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.person, size: 30),
+                  Icon(Icons.manage_accounts, size: 30),
                   SizedBox(width: 10),
                   Text(
-                    "Personal Details",
+                    "Account Details",
                     style: TextStyle(
                       color: Color(0xFF3A3A3A),
                       fontFamily: 'Roboto',
@@ -54,8 +55,7 @@ class _ChangePasswordState extends State<ChangePassword> {
               if (isVisible) ...[
                 SizedBox(height: 5),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-                SizedBox(height: 10),
-                ChangePasswordOpen(),
+                AccountDetailsOpen(),
               ],
             ],
           ),
