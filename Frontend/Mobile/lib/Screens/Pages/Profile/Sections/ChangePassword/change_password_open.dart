@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'change_password_button.dart';
 
 class ChangePasswordOpen extends StatelessWidget {
   const ChangePasswordOpen({super.key});
@@ -30,6 +31,7 @@ class ChangePasswordOpen extends StatelessWidget {
           ),
         ),
         Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
+        ChangePasswordButton(),
       ],
     );
   }

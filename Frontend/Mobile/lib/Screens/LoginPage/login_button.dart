@@ -33,31 +33,37 @@ class Loginbutton extends StatelessWidget {
         onPressed: () async {
           //uncomment to use login function
 
-          bool isSuccessful = await logintext.login(
+          dynamic isSuccessful = await logintext.login(
             emailController.text,
             passwordController.text,
           );
 
           if (!context.mounted) return;
 
-          if (isSuccessful) {
-            // Login successful, navigate to the next screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Homepage()),
+          if (isSuccessful["authenticated"] == "User Not Found") {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Login failed. Please check your email')),
             );
+            return;
+          }
 
-            //clear the text fields after successful login
-            emailController.clear();
-            passwordController.clear();
-          } else {
-            // Login failed, show an error message
+          if (isSuccessful["authenticated"] == "Password Incorrect") {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login failed. Please check your credentials.'),
+                content: Text('Login failed. Please check your password'),
               ),
             );
+            return;
           }
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Homepage()),
+          );
+
+          //clear the text fields after successful login
+          emailController.clear();
+          passwordController.clear();
         },
         child: Text(
           'Log-in',

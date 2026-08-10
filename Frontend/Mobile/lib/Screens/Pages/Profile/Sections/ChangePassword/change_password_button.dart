@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-class EditProfileButton extends StatelessWidget {
-  const EditProfileButton({super.key});
+class ChangePasswordButton extends StatelessWidget {
+  const ChangePasswordButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 350,
-      padding: EdgeInsets.only(top: 10, left: 10, right: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 5,
+
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +26,7 @@ class EditProfileButton extends StatelessWidget {
                   ),
 
                   child: Text(
-                    'Edit Profile',
+                    'Change Password',
                     style: TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 16,
