@@ -3,9 +3,17 @@ import 'package:flutter_biogeohr/Screens/Pages/Attendance/Items/atttendance_page
 
 import 'Items/attendance_item.dart';
 
-class Attendance extends StatelessWidget {
+class Attendance extends StatefulWidget {
   const Attendance({super.key});
 
+  @override
+  State<Attendance> createState() => _AttendanceState();
+}
+
+class _AttendanceState extends State<Attendance> {
+  List resultsList = [];
+  int currentPage = 0;
+  int resultsPerPage = 10;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
