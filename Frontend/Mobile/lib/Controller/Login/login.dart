@@ -17,21 +17,16 @@ class Logintext {
   }
 
   //verify the inside of the body
-  Future<bool> verifyData(dynamic data) async {
-    bool auth = false;
-
-    if (data["authenticated"] == true) {
+  void verifyData(dynamic data) async {
+    if (data["authenticated"] == "Log in Success") {
       token = data["token"];
       userId = data["user"]["id"].toString();
       authStorage.saveUserId(userId);
       authStorage.saveToken(token);
-
-      auth = true;
     }
-    return auth;
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<dynamic> login(String email, String password) async {
     final url = Uri.parse(api.getLogin());
     final response = await http.post(
       url,
@@ -44,10 +39,10 @@ class Logintext {
 
     //response status success
     if (response.statusCode == 201) {
-      bool isAuthenticated = await verifyData(jsonDecode(response.body));
-      return isAuthenticated;
+      verifyData(jsonDecode(response.body));
+      return jsonDecode(response.body);
     }
 
-    return false;
+    return jsonDecode(response.body);
   }
 }

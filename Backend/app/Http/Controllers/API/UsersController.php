@@ -112,7 +112,22 @@ class UsersController extends Controller
             return response()->json(['message' => 'User deleted successfully']);
         }
     }
+    public function userProfileDetails(){
+        $userId = $this->getUserIdFromToken();
+
+        $user = Users::where('id', $userId)->first();
+
+        return response()->json([
+            'name' => $user->name,
+            'email' => $user->email,
+            'contact' => $user->contact_number,
+            'role' => $user->role,
+            'department' => $user->department
+        ]);
+    }
     public function mobileUI(){
+
+        // load all ui
         //recent 
         //user profile 
         //salary

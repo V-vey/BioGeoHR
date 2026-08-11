@@ -63,23 +63,31 @@ class Clockinbutton extends StatelessWidget {
           onPressed: () async {
             //move this to leave balance
             late.countLates();
+
             //check if the timer is running
-            if (isRunning == true) {
+            if (isRunning) {
               timerReset();
               statusInactive();
 
               clock.clockOut();
-            } else {
-              //check if the user is in the coordinate
-              if (await verifyUserCoordinates() == true) {
-                //biometric check in the mobile:
-                if (await biometric.authenticateUser() == (true, null)) {
-                  timerStart();
-                  statusActive();
+              return;
+            }
 
-                  clock.clockIn();
-                }
-              } else {}
+            //check if in range
+            if (!await verifyUserCoordinates()) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('User Not In Range')));
+              return;
+            }
+
+            //the biometric
+            if (await biometric.authenticateUser() == (true, null)) {
+              timerStart();
+              statusActive();
+
+              clock.clockIn();
             }
           },
 

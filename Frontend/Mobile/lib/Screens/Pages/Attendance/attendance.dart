@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_biogeohr/Screens/Pages/Attendance/Items/atttendance_pages.dart';
 
 import 'Items/attendance_item.dart';
 
-class Attendance extends StatelessWidget {
+class Attendance extends StatefulWidget {
   const Attendance({super.key});
 
+  @override
+  State<Attendance> createState() => _AttendanceState();
+}
+
+class _AttendanceState extends State<Attendance> {
+  List resultsList = [];
+  int currentPage = 0;
+  int resultsPerPage = 10;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -44,28 +53,19 @@ class Attendance extends StatelessWidget {
             ),
             Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
             AttendanceItems(),
-            //the items
 
-            // soon change to scrollable
-            // AttendanceItem(
-            //   status: "On-Time",
-            //   location: "TSU San Isidro",
-            //   date: '2026-07-08',
-            // ),
-            // AttendanceItem(
-            //   status: "Absent",
-            //   location: "TSU San Isidro",
-            //   date: '2026-07-07',
-            // ),
-            // AttendanceItem(
-            //   status: "Late",
-            //   location: "TSU Main Campus",
-            //   date: '2026-07-06',
-            // ),
-            // AttendanceItem(
-            //   status: "On-Time",
-            //   location: "TSU San Isidro",
-            //   date: '2026-07-05',
+            Spacer(),
+
+            // Padding(
+            // padding: const EdgeInsets.(
+            //   vertical: 10,
+            // ), // Optional padding
+            Column(
+              children: [
+                Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
+                AttendancePages(pageNum: 1),
+              ],
+            ),
             // ),
           ],
         ),

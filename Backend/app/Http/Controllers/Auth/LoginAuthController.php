@@ -21,28 +21,30 @@ class LoginAuthController extends Controller{
             $token = $this->user->createToken('Mobile')->plainTextToken;
 
             return response()->json([
-                'authenticated' => true,
+                'authenticated' => "Log in Success",
                 'user' => $this->user,
                 'token' => $token
             ], 201);
         }
-
-        return response()->json(['message' => 'The Password is Incorrect'], 301);
+        //Wrong password
+        return response()->json(['authenticated' => 'Password Incorrect'], 301);
     }
     //authenticate
     public function auth(Request $request){
         $this->user = Users::where("email", $request->email)->first();
         if (!$this->user){ 
             return response()->json([
-                'message' => 'The User is Not Found'
+                'authenticated' => 'User Not Found'
             ], 300);
         }
-
+        //This email = to authenticated user not the request
         $this->email = $this->user->email;
         $this->password = $this->user->password;  
         
         return $this->checkPassword($request);   
     }
+
+    //log out
     public function logout(Request $request){
         $request->user()->currentAccessToken()->delete();
 
