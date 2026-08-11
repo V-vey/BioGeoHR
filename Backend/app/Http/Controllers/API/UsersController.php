@@ -116,7 +116,8 @@ class UsersController extends Controller
         $userId = $this->getUserIdFromToken();
 
         $user = Users::where('id', $userId)->first();
-
+        
+        //add pic soon
         return response()->json([
             'name' => $user->name,
             'email' => $user->email,

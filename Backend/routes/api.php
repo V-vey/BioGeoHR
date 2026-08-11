@@ -33,20 +33,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('logout', [LoginAuthController::class, 'logout']);
 
-    
-
     //clock in and out
     Route::post('clockIn', [AttendanceController::class, 'createAttendance']);
     Route::post('clockOut', [AttendanceController::class, 'clockOut']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
 
-
-    //to be remove
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
     Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
     
+    //profile
+    Route::get('userProfile', [UsersController::class , 'userProfileDetails']);
+
+
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
         // Route::apiResource('users', UsersController::class);
