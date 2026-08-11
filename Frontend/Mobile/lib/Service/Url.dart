@@ -52,4 +52,9 @@ class Url {
   String recentAttendance() {
     return "$api/recentAttendance";
   }
+
+  //api for user profile
+  String userProfile() {
+    return "$api/userProfile";
+  }
 }

@@ -14,6 +14,7 @@ class _AttendanceState extends State<Attendance> {
   List resultsList = [];
   int currentPage = 0;
   int resultsPerPage = 10;
+  int startPage = 0;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
