@@ -6,15 +6,15 @@ class UserProfileDetails extends StatefulWidget {
   final String name;
   final String email;
   final String contact;
-  final String role;
   final String department;
+  final String position;
   const UserProfileDetails({
     super.key,
     required this.name,
     required this.email,
     required this.contact,
-    required this.role,
     required this.department,
+    required this.position,
   });
 
   @override
@@ -103,7 +103,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
               ),
 
               Text(
-                "${widget.role} | ${widget.department}",
+                "${widget.department} | ${widget.position}",
                 style: TextStyle(
                   color: Color(0x803A3A3A),
                   fontFamily: 'Roboto',

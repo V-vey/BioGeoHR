@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'user_profile.dart';
 import 'Sections/UserProfile/user_profile.dart';
@@ -18,11 +19,17 @@ class ProfilePageMain extends StatefulWidget {
 
 class _ProfilePageMainState extends State<ProfilePageMain> {
   final UserProfileController userProfile = UserProfileController();
-  String name = '';
-  String email = '';
-  String contact = '';
-  String role = '';
-  String department = '';
+  String name = '----------';
+  String email = '----------';
+  String contact = '----------';
+  String department = '----------';
+  String position = '----------';
+  String dateOfBirth = '----------';
+  String gender = '----------';
+  String nationality = '----------';
+  String address = '----------';
+  String createdAt = '----------';
+  String updatedAt = '----------';
 
   @override
   void initState() {
@@ -37,8 +44,24 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
       name = result.$1;
       email = result.$2;
       contact = result.$3;
-      role = result.$4;
-      department = result.$5;
+      department = result.$4;
+      position = result.$5;
+
+      // Birth Day
+      DateTime parsedDateOfBirth = DateTime.parse(result.$6);
+      dateOfBirth = DateFormat('MMMM d, yyyy').format(parsedDateOfBirth);
+
+      gender = result.$7;
+      nationality = result.$8;
+      address = result.$9;
+
+      // Created At
+      DateTime parsedCreatedAt = DateTime.parse(result.$10);
+      createdAt = DateFormat('MMMM d, yyyy').format(parsedCreatedAt);
+
+      // Updated At
+      DateTime parsedUpdatedAt = DateTime.parse(result.$11);
+      updatedAt = DateFormat('MMMM d, yyyy').format(parsedUpdatedAt);
     });
   }
 
@@ -53,11 +76,24 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
             name: name,
             email: email,
             contact: contact,
-            role: role,
             department: department,
+            position: position,
           ),
-          UserProfile(),
-          AccountDetails(),
+          UserProfile(
+            name: name,
+            dateOfBirth: dateOfBirth,
+            gender: gender,
+            nationality: nationality,
+            address: address,
+            contact: contact,
+            email: email,
+          ),
+          AccountDetails(
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            lastLogin: "SOON",
+            accountStatus: "SOON",
+          ),
           SalaryInfo(),
           ChangePassword(),
           Row(

@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
 
 class UserProfileOpen extends StatelessWidget {
-  const UserProfileOpen({super.key});
+  String name;
+  String dateOfBirth;
+  String gender;
+  String nationality;
+  String address;
+  String contact;
+  String email;
+
+  UserProfileOpen({
+    super.key,
+    required this.name,
+    required this.dateOfBirth,
+    required this.gender,
+    required this.nationality,
+    required this.address,
+    required this.contact,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +42,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "Abdul Jackul Salsalani",
+                name,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -48,7 +65,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "December 28, 2004",
+                dateOfBirth,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -71,7 +88,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "Male",
+                gender,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -94,7 +111,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "Filipino",
+                nationality,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -117,7 +134,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "2302 Rizal, Gerona, Tarlac",
+                address,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -140,7 +157,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "09617989697",
+                contact,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -163,7 +180,7 @@ class UserProfileOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "harveytayag122804@gmail.com",
+                email,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',

@@ -8,7 +8,22 @@ import '../../Service/url.dart';
 class UserProfileController {
   final Url _api = Url();
 
-  Future<(String, String, String, String, String)> getUserProfile() async {
+  Future<
+    (
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+    )
+  >
+  getUserProfile() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -23,7 +38,6 @@ class UserProfileController {
         "Content-Type": "application/json",
       },
     );
-    print(response.body);
     Map<String, dynamic> jsonResponse = await jsonDecode(response.body);
 
     if (response.statusCode == 200) {
@@ -31,8 +45,14 @@ class UserProfileController {
         jsonResponse['name'].toString(),
         jsonResponse['email'].toString(),
         jsonResponse['contact'].toString(),
-        jsonResponse['role'].toString(),
         jsonResponse['department'].toString(),
+        jsonResponse['position'].toString(),
+        jsonResponse['date_of_birth'].toString(),
+        jsonResponse['gender'].toString(),
+        jsonResponse['nationality'].toString(),
+        jsonResponse['address'].toString(),
+        jsonResponse['created_at'].toString(),
+        jsonResponse['updated_at'].toString(),
       );
     } else {
       throw Exception('Failed to load leave balance: ${response.statusCode}');
