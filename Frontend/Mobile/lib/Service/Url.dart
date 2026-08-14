@@ -57,4 +57,9 @@ class Url {
   String userProfile() {
     return "$api/userProfile";
   }
+
+  //api for attendance all
+  String getAllAttendance() {
+    return "$api/getAllAttendance";
+  }
 }
