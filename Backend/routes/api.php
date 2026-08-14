@@ -57,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('userl', UserLocationController::class);
     });
     //Testing
-    Route::get('test', [AttendanceController::class, 'recentAttendance']);
+    Route::get('test', [AttendanceController::class, 'show']);
 });
 
 //move to HR later on
