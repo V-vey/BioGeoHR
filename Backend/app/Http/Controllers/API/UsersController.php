@@ -30,14 +30,14 @@ class UsersController extends Controller
             'email' => 'required|email',
             'contact_number' => 'required',
             'password' => 'required',
-            'role' => 'required',
+            'department' => 'required',
             'position' => 'required',
-            'joined_date' => 'required|date',
             'call_time' => 'required',
             'contract_type' => 'required',
-            'gender' => 'required',
             'date_of_birth' => 'required|date',
-            'address' => 'required',
+            'gender' => 'required',
+            'nationality' => 'required',
+            'address' => 'required'
         ]);
 
         $users = Users::create([
@@ -45,13 +45,13 @@ class UsersController extends Controller
             'email' => $request->email,
             'contact_number' => $request->contact_number,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'department' => $request->department,
             'position' => $request->position,
-            'joined_date' => $request->joined_date,
             'call_time' => $request->call_time,
             'contract_type' => $request->contract_type,
-            'gender' => $request->gender,
             'date_of_birth' => $request->date_of_birth,
+            'gender' => $request->gender,
+            'nationality' => $request->nationality,
             'address' => $request->address,
         ]);
 
@@ -122,8 +122,14 @@ class UsersController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'contact' => $user->contact_number,
-            'role' => $user->role,
-            'department' => $user->department
+            'department' => $user->department,
+            'position' => $user->position,
+            'date_of_birth' => $user->date_of_birth,
+            'gender' => $user->gender,
+            'nationality' => $user->nationality,
+            'address' => $user->address,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at
         ]);
     }
     public function mobileUI(){
