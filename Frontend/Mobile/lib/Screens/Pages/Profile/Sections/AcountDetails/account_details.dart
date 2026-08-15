@@ -3,7 +3,17 @@ import 'package:flutter/material.dart';
 import 'account_details_open.dart';
 
 class AccountDetails extends StatefulWidget {
-  const AccountDetails({super.key});
+  final String createdAt;
+  final String updatedAt;
+  final String lastLogin;
+  final String accountStatus;
+  const AccountDetails({
+    super.key,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.lastLogin,
+    required this.accountStatus,
+  });
 
   @override
   State<AccountDetails> createState() => _AccountDetailsState();
@@ -55,7 +65,12 @@ class _AccountDetailsState extends State<AccountDetails> {
               if (isVisible) ...[
                 SizedBox(height: 5),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-                AccountDetailsOpen(),
+                AccountDetailsOpen(
+                  createdAt: widget.createdAt,
+                  updatedAt: widget.updatedAt,
+                  lastLogin: widget.lastLogin,
+                  accountStatus: widget.accountStatus,
+                ),
               ],
             ],
           ),

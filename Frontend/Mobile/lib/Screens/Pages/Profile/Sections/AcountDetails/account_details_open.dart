@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AccountDetailsOpen extends StatelessWidget {
-  const AccountDetailsOpen({super.key});
+  final String createdAt;
+  final String updatedAt;
+  final String lastLogin;
+  final String accountStatus;
+  const AccountDetailsOpen({
+    super.key,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.lastLogin,
+    required this.accountStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +35,30 @@ class AccountDetailsOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "December 26, 2024",
+                createdAt,
+                style: TextStyle(
+                  color: Color(0xBF3A3A3A),
+                  fontFamily: 'Roboto',
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Text(
+                "Account Updated: ",
+                style: TextStyle(
+                  color: Color(0xBF3A3A3A),
+                  fontFamily: 'Roboto',
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+              Spacer(),
+              Text(
+                updatedAt,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -48,7 +81,7 @@ class AccountDetailsOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "December 28, 2026",
+                lastLogin,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',
@@ -71,7 +104,7 @@ class AccountDetailsOpen extends StatelessWidget {
               ),
               Spacer(),
               Text(
-                "Employee",
+                accountStatus,
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',

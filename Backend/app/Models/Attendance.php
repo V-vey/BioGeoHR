@@ -30,7 +30,7 @@ class Attendance extends Model
     }
     public function location()
     {
-        return $this->hasMany(Location::class);
+        return $this->belongsTo(Location::class, 'location_id');
     }
     public function salary()
     {

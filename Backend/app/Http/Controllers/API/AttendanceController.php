@@ -46,23 +46,33 @@ class AttendanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show()
     {
-        $attendance = Attendance::find($id);
+        $userId = $this->getUserIdFromToken();
+        $attendance = Attendance::with('location')->where('user_id', $userId)->get();;
+
         if (!$attendance) {
             return response()->json(['message' => 'Attendance record not found'], 404);
         }
-        else {
-            return response()->json($attendance);
-        }
+        $formattedData = $attendance->map(function ($attendance) {
+            return [
+                'location'  => $attendance->location ? $attendance->location->name : 'Unknown Location',
+                'date'      => $attendance->date,
+                'status'    => $attendance->status,
+                'clock_in'  => $attendance->time_in,
+                'clock_out' => $attendance->time_out
+            ];
+        });
+        return response()->json($formattedData);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        $attendance = Attendance::find($id);
+        $userId = $this->getUserIdFromToken();
+        $attendance = Attendance::find($userId);
             
         if (!$attendance) {
             return response()->json(['message' => 'Attendance record not found'], 404);
@@ -76,9 +86,10 @@ class AttendanceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy()
     {
-        $attendance = Attendance::find($id);
+        $userId = $this->getUserIdFromToken();
+        $attendance = Attendance::find($userId);
 
         if (!$attendance) {
             return response()->json(['message' => 'Attendance record not found'], 404);

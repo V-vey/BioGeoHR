@@ -52,4 +52,19 @@ class Url {
   String recentAttendance() {
     return "$api/recentAttendance";
   }
+
+  //api for user profile
+  String userProfile() {
+    return "$api/userProfile";
+  }
+
+  //api for attendance all
+  String getAllAttendance() {
+    return "$api/getAllAttendance";
+  }
+
+  //api Change Password
+  String changePassword() {
+    return "$api/changePassword";
+  }
 }

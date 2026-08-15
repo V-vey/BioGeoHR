@@ -4,7 +4,23 @@ import 'user_profile_open.dart';
 import 'edit_profile_button.dart';
 
 class UserProfile extends StatefulWidget {
-  const UserProfile({super.key});
+  String name;
+  String dateOfBirth;
+  String gender;
+  String nationality;
+  String address;
+  String contact;
+  String email;
+  UserProfile({
+    super.key,
+    required this.name,
+    required this.dateOfBirth,
+    required this.gender,
+    required this.nationality,
+    required this.address,
+    required this.contact,
+    required this.email,
+  });
 
   @override
   State<UserProfile> createState() => _UserProfileState();
@@ -56,7 +72,15 @@ class _UserProfileState extends State<UserProfile> {
               if (isVisible) ...[
                 SizedBox(height: 5),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-                UserProfileOpen(),
+                UserProfileOpen(
+                  name: widget.name,
+                  dateOfBirth: widget.dateOfBirth,
+                  gender: widget.gender,
+                  nationality: widget.nationality,
+                  address: widget.address,
+                  contact: widget.contact,
+                  email: widget.email,
+                ),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
                 EditProfileButton(),
               ],

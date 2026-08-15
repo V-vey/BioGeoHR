@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 
+import '../../../Controller/Profile/user_profile_controller.dart';
+
 class UserProfileDetails extends StatefulWidget {
-  const UserProfileDetails({super.key});
+  final String name;
+  final String email;
+  final String contact;
+  final String department;
+  final String position;
+  const UserProfileDetails({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.contact,
+    required this.department,
+    required this.position,
+  });
 
   @override
   State<UserProfileDetails> createState() => _UserProfileDetailsState();
 }
 
 class _UserProfileDetailsState extends State<UserProfileDetails> {
-  String name = '';
-  String email = '';
-  String contact = '';
-  String role = '';
-  String department = '';
-
-  @override
-  void initState() {
-    super.initState();
-
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     var items = Container(
@@ -72,7 +69,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
             children: [
               //Name
               Text(
-                name,
+                widget.name,
                 style: TextStyle(
                   color: Color(0xFF3A3A3A),
                   fontFamily: 'Roboto',
@@ -84,7 +81,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
 
               //Email
               Text(
-                email,
+                widget.email,
                 style: TextStyle(
                   color: Color(0x803A3A3A),
                   fontFamily: 'Roboto',
@@ -96,7 +93,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
 
               //contact
               Text(
-                contact,
+                widget.contact,
                 style: TextStyle(
                   color: Color(0x803A3A3A),
                   fontFamily: 'Roboto',
@@ -106,7 +103,7 @@ class _UserProfileDetailsState extends State<UserProfileDetails> {
               ),
 
               Text(
-                "$role | $department",
+                "${widget.department} | ${widget.position}",
                 style: TextStyle(
                   color: Color(0x803A3A3A),
                   fontFamily: 'Roboto',

@@ -14,6 +14,7 @@ class _AttendanceState extends State<Attendance> {
   List resultsList = [];
   int currentPage = 0;
   int resultsPerPage = 10;
+  int startPage = 0;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -63,7 +64,7 @@ class _AttendanceState extends State<Attendance> {
             Column(
               children: [
                 Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
-                AttendancePages(pageNum: 1),
+                //AttendancePages(pageNum: 1),
               ],
             ),
             // ),
