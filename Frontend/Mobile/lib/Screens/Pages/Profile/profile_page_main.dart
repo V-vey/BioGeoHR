@@ -31,6 +31,8 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
   String createdAt = '----------';
   String updatedAt = '----------';
 
+  //final Logintext logintext = Logintext();
+
   @override
   void initState() {
     super.initState();

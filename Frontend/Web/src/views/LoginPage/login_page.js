@@ -1,5 +1,5 @@
 function LoginPage() {
-  const logo = "Fuck you";
+  const logo = "HI";
   return (
     <div className="App">
       <header className="App-header">

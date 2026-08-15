@@ -63,10 +63,7 @@ class AttendanceController extends Controller
                 'clock_out' => $attendance->time_out
             ];
         });
-        return response()->json([
-            'success' => true,
-            'message' => 'Password has been successfully updated.'
-        ], 200);
+        return response()->json($formattedData);
     }
 
     /**
