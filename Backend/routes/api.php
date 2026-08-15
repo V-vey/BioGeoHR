@@ -12,6 +12,8 @@ use App\Http\Controllers\API\LeaveBalanceController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\UserLocationController;
 
+use App\Http\Controllers\API\PasswordController;
+
 //Auth
 use App\Http\Controllers\Auth\LoginAuthController;
 
@@ -43,9 +45,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
     
+    //attendance
+    Route::get('getAllAttendance', [AttendanceController::class, 'show']);
+
     //profile
     Route::get('userProfile', [UsersController::class , 'userProfileDetails']);
 
+    //password
+    Route::post('changePassword', [PasswordController::class , 'update']);
 
     //can only access by HR
     Route::middleware('role:HR')->group(function () {

@@ -1,8 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'change_password_button.dart';
 
 class ChangePasswordOpen extends StatelessWidget {
-  const ChangePasswordOpen({super.key});
+  final TextEditingController currentPassword;
+  final TextEditingController newPassword;
+  final TextEditingController reTypePassword;
+  const ChangePasswordOpen({
+    super.key,
+    required this.currentPassword,
+    required this.newPassword,
+    required this.reTypePassword,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,6 +20,7 @@ class ChangePasswordOpen extends StatelessWidget {
       children: [
         TextFormField(
           obscureText: true,
+          controller: currentPassword,
           decoration: InputDecoration(
             labelText: 'Current Password',
             border: OutlineInputBorder(),
@@ -18,6 +28,7 @@ class ChangePasswordOpen extends StatelessWidget {
         ),
         TextFormField(
           obscureText: true,
+          controller: newPassword,
           decoration: InputDecoration(
             labelText: 'New Password',
             border: OutlineInputBorder(),
@@ -25,13 +36,18 @@ class ChangePasswordOpen extends StatelessWidget {
         ),
         TextFormField(
           obscureText: true,
+          controller: reTypePassword,
           decoration: InputDecoration(
             labelText: 'Re-Type New Password',
             border: OutlineInputBorder(),
           ),
         ),
         Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-        ChangePasswordButton(),
+        ChangePasswordButton(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+          reTypePassword: reTypePassword,
+        ),
       ],
     );
   }

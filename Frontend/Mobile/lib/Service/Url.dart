@@ -62,4 +62,9 @@ class Url {
   String getAllAttendance() {
     return "$api/getAllAttendance";
   }
+
+  //api Change Password
+  String changePassword() {
+    return "$api/changePassword";
+  }
 }

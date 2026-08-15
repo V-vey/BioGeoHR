@@ -12,6 +12,9 @@ bool isVisible = false;
 IconData icon = Icons.chevron_right;
 
 class _ChangePasswordState extends State<ChangePassword> {
+  final TextEditingController _currentPassword = TextEditingController();
+  final TextEditingController _newPassword = TextEditingController();
+  final TextEditingController _reTypePassword = TextEditingController();
   @override
   Widget build(BuildContext context) {
     var items = Stack(
@@ -55,7 +58,11 @@ class _ChangePasswordState extends State<ChangePassword> {
                 SizedBox(height: 5),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
                 SizedBox(height: 10),
-                ChangePasswordOpen(),
+                ChangePasswordOpen(
+                  currentPassword: _currentPassword,
+                  newPassword: _newPassword,
+                  reTypePassword: _reTypePassword,
+                ),
               ],
             ],
           ),
