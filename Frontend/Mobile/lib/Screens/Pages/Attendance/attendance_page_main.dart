@@ -132,7 +132,7 @@ class _AttendancePageMainState extends State<AttendancePageMain> {
                       Expanded(
                         //ITEMS
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(15),
+                          // padding: const EdgeInsets.all(15),
                           itemCount: pageRecords.length,
                           itemBuilder: (context, index) {
                             final record = pageRecords[index];
