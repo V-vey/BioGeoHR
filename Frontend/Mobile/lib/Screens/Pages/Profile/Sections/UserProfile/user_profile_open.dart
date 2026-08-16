@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 class UserProfileOpen extends StatelessWidget {
-  String name;
-  String dateOfBirth;
-  String gender;
-  String nationality;
-  String address;
-  String contact;
-  String email;
+  final String name;
+  final String dateOfBirth;
+  final String gender;
+  final String nationality;
+  final String address;
+  final String contact;
+  final String email;
 
-  UserProfileOpen({
+  const UserProfileOpen({
     super.key,
     required this.name,
     required this.dateOfBirth,

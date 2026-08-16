@@ -5,8 +5,8 @@ class AttendanceBadge extends StatelessWidget {
   final String status;
   AttendanceBadge({super.key, required this.status});
 
-  late var designBack;
-  late var designCircle;
+  late Color designBack;
+  late Color designCircle;
 
   void statusCheck() {
     if (status == "On-Time") {
@@ -23,7 +23,7 @@ class AttendanceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    this.statusCheck();
+    statusCheck();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(

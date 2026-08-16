@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../Reusable/TextBioGeoHR.dart';
+import '../../../../Reusable/text_biogeohr.dart';
 
 class Welcome extends StatelessWidget {
   const Welcome({super.key});

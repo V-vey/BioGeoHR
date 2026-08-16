@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'leave_balance_item.dart';
 
 class LeaveBalance extends StatelessWidget {
+  const LeaveBalance({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(

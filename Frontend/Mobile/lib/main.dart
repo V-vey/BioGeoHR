@@ -5,7 +5,7 @@ import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
 import 'Controller/Login/login.dart';
 
 //Login Page
-import 'Screens/Reusable/TextBioGeoHR.dart';
+import 'Screens/Reusable/text_biogeohr.dart';
 import 'Screens/LoginPage/text_box_email.dart';
 // import 'Screens/LoginPage/text_box_password.dart';
 import 'Screens/LoginPage/login_button.dart';

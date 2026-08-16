@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// import 'package:shared_preferences/shared_preferences.dart';
-import '../../Service/auth_storage.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Service/url.dart';
 
@@ -30,11 +29,11 @@ class ChangePassword {
         "password_confirmation": reTypePassword,
       }),
     );
-    var result = jsonDecode(response.body);
+    // var result = jsonDecode(response.body);
     if (!(response.statusCode == 201)) {
-      print("incorrect");
+      // print("incorrect");
       return;
     }
-    print("success");
+    // print("success");
   }
 }

@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
-
-//Remove
-import '../../../../Controller/Attendance/attendance_controller.dart';
 
 class AttendancePages extends StatefulWidget {
   final int pageNum;

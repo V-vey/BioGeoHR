@@ -4,6 +4,8 @@ import 'package:flutter_biogeohr/Screens/Pages/Homepage/Container/TotalLate/late
 // import 'LateCircle.dart';
 
 class TotalLate extends StatelessWidget {
+  const TotalLate({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(

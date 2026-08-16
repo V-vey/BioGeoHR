@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class RecentAttendanceDetails extends StatelessWidget {
+  const RecentAttendanceDetails({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

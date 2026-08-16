@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-class  OnTime extends StatelessWidget {
+class OnTime extends StatelessWidget {
+  const OnTime({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -9,36 +10,33 @@ class  OnTime extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.alarm, 
-            size: 70,
-            color: Color(0xFF2AAF56)
-          ),
+          Icon(Icons.alarm, size: 70, color: Color(0xFF2AAF56)),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text( 'On-Time',
+              Text(
+                'On-Time',
                 style: TextStyle(
                   color: Color(0xFF2AAF56),
                   fontFamily: 'Roboto',
                   fontSize: 18,
-                  fontWeight: FontWeight.bold
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
               //Days
-              Text('26 Days',
+              Text(
+                '26 Days',
                 style: TextStyle(
                   color: Color(0xFF3A3A3A),
                   fontFamily: 'Roboto',
                   fontSize: 15,
                 ),
               ),
-
-            ]
-          )
-        ]
-      )
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

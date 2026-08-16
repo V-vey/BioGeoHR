@@ -10,22 +10,22 @@ class Biometric {
     try {
       availableBiometric = await auth.getAvailableBiometrics();
       if (availableBiometric.isNotEmpty) {
-        print("not empty");
+        // print("not empty");
       }
 
       if (availableBiometric.contains(BiometricType.face)) {
-        print("UGLEE");
+        // print("UGLEE");
       }
       if (availableBiometric.contains(BiometricType.fingerprint)) {
-        print("Finger style");
+        // print("Finger style");
       }
       if (availableBiometric.contains(BiometricType.weak)) {
-        print("weakling");
+        // print("weakling");
       }
       if (availableBiometric.contains(BiometricType.strong)) {
-        print("Strong one tap");
+        // print("Strong one tap");
       }
-      print("available Biometric:: $availableBiometric");
+      // print("available Biometric:: $availableBiometric");
       // isAuthenticate = await auth.authenticate(
       //   localizedReason: "Please authenticate to proceed",
       //   biometricOnly: true,

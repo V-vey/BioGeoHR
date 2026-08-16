@@ -7,6 +7,8 @@ import '../Service/auth_storage.dart';
 class TestingButton extends StatelessWidget {
   final Logintext logintext = Logintext();
   final AuthStorage authStorage = AuthStorage();
+
+  TestingButton({super.key});
   @override
   Widget build(BuildContext context) {
     var button = SizedBox(

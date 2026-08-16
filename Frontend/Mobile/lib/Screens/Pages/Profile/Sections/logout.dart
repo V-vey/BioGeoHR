@@ -4,6 +4,8 @@ import '../../../../Controller/Login/logout.dart';
 class LogoutButton extends StatelessWidget {
   final Logout logout = Logout();
 
+  LogoutButton({super.key});
+
   @override
   Widget build(BuildContext context) {
     var items = FilledButton(

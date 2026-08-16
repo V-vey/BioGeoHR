@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_biogeohr/Controller/Attendance/attendance_model.dart';
 
-import 'attendance.dart';
 import 'monthly_attendance.dart';
 import '../../../Controller/Attendance/attendance_controller.dart';
-import '../../../Controller/Attendance/attendance_model.dart';
 
 import '../../Reusable/Items/attendance_item_layout.dart';
 import 'package:flutter_biogeohr/Screens/Pages/Attendance/Items/atttendance_pages.dart';

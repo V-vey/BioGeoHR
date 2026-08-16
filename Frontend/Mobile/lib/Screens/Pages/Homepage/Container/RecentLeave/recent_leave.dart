@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../../Reusable/Items/leave_item.dart';
 
 class RecentLeave extends StatelessWidget {
+  const RecentLeave({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(

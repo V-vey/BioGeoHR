@@ -4,14 +4,14 @@ import 'user_profile_open.dart';
 import 'edit_profile_button.dart';
 
 class UserProfile extends StatefulWidget {
-  String name;
-  String dateOfBirth;
-  String gender;
-  String nationality;
-  String address;
-  String contact;
-  String email;
-  UserProfile({
+  final String name;
+  final String dateOfBirth;
+  final String gender;
+  final String nationality;
+  final String address;
+  final String contact;
+  final String email;
+  const UserProfile({
     super.key,
     required this.name,
     required this.dateOfBirth,

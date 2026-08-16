@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../Controller/Profile/user_profile_controller.dart';
-
 class UserProfileDetails extends StatefulWidget {
   final String name;
   final String email;

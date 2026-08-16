@@ -35,7 +35,7 @@ class ChangePasswordButton extends StatelessWidget {
                       newPassword.text,
                       reTypePassword.text,
                     );
-                    print(currentPassword.text);
+                    // print(currentPassword.text);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xBF2AAF56),

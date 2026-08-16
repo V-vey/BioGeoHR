@@ -5,8 +5,8 @@ class LeaveBadge extends StatelessWidget {
   final String status;
   LeaveBadge({super.key, required this.status});
 
-  late var designBack;
-  late var designCircle;
+  late Color designBack;
+  late Color designCircle;
 
   void statusCheck() {
     if (status == "Approved") {
@@ -23,7 +23,7 @@ class LeaveBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    this.statusCheck();
+    statusCheck();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(

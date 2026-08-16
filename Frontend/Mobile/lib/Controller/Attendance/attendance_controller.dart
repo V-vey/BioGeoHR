@@ -35,7 +35,7 @@ class AttendanceController {
       attendances.add(attendance);
     }
 
-    print(attendances);
+    // print(attendances);
     return attendances;
     // return jsonResponse["message"].toString();
   }

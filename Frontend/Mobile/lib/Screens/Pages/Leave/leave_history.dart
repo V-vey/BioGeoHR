@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../Reusable/Items/leave_item.dart';
 
 class LeaveHistory extends StatelessWidget {
+  const LeaveHistory({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(

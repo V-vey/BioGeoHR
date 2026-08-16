@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_biogeohr/Screens/Pages/Attendance/attendance.dart';
 //Reusable
-import 'Screens/Reusable/Header.dart';
-import 'Screens/Reusable/Navigation.dart';
+import 'Screens/Reusable/header_main.dart';
+import 'Screens/Reusable/navigation_main.dart';
 
 //Homepage
 // import 'Screens/Pages/Homepage/Container/LeaveBalance/LeaveBalance.dart';
@@ -11,7 +11,7 @@ import 'Screens/Reusable/Navigation.dart';
 //Pages
 import 'Screens/Pages/Homepage/home_page_main.dart';
 import 'Screens/Pages/Attendance/attendance_page_main.dart';
-import 'Screens/Pages/Leave/LeavePageMain.dart';
+import 'Screens/Pages/Leave/leave_page_main.dart';
 import 'Screens/Pages/Profile/profile_page_main.dart';
 
 //Global Storage
