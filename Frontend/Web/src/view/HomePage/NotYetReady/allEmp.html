@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BioGeoHR - All Employees</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar navigation, shared across every page -->
+    <aside class="sidebar">
+        <div class="logo">BioGeoHR</div>
+
+        <nav>
+            <a class="nav-item" href="dashboard.html">▦ Dashboard</a>
+
+            <!-- Employee section: currently expanded on this page -->
+            <div class="nav-item nav-parent open" id="empToggle">
+                👤 Employee <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav open" id="empSubNav">
+                <a class="sub-item active" href="allEmp.html">All Employee</a>
+                <a class="sub-item" href="allEmp.html">Leave Request</a>
+                <a class="sub-item" href="allEmp.html">New Employee</a>
+            </div>
+
+            <!-- Attendance section: expands to show its submenu -->
+            <div class="nav-item nav-parent" id="attToggle">
+                📋 Attendance <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav" id="attSubNav">
+                <a class="sub-item" href="attendance.html">Attendance</a>
+                <a class="sub-item" href="attendance.html">Location</a>
+            </div>
+
+            <a class="nav-item" href="#">💵 Payroll</a>
+        </nav>
+
+        <button class="logout">Log-out</button>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h2>Employees</h2>
+        </div>
+
+        <div class="card">
+            <div class="emp-card-header">
+                <h2>All of Employees</h2>
+
+                <!-- Search bar and filter dropdown trigger -->
+                <div class="search-wrap">
+                    <input class="search-box" type="text" placeholder="Search name or ID">
+                    <button class="filter-btn" id="filterBtn">▾</button>
+
+                    <!-- Filter dropdown: availability, contract type, department, join date -->
+                    <div class="filter-panel" id="filterPanel">
+                        <h4>Availability</h4>
+                        <div class="filter-row">
+                            <label><input type="checkbox" checked> Available</label>
+                            <label><input type="checkbox"> Unavailable</label>
+                            <label><input type="checkbox"> Break</label>
+                            <label><input type="checkbox"> Leave</label>
+                        </div>
+
+                        <h4>Contract Type</h4>
+                        <div class="filter-row">
+                            <label><input type="checkbox" checked> Full-time</label>
+                            <label><input type="checkbox"> Freelance</label>
+                            <label><input type="checkbox"> Internship</label>
+                        </div>
+
+                        <h4>Department</h4>
+                        <div class="filter-row">
+                            <label><input type="checkbox"> Product</label>
+                            <label><input type="checkbox"> Engineer</label>
+                            <label><input type="checkbox"> Marketing</label>
+                            <label><input type="checkbox"> Finance</label>
+                        </div>
+
+                        <h4>Joined Date</h4>
+                        <div class="date-row">
+                            <select><option>April 1, 2026</option></select>
+                            <span>-</span>
+                            <select><option>April 5, 2026</option></select>
+                        </div>
+
+                        <button class="confirm-btn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee record cards, rendered by empScript.js -->
+            <div class="emp-grid" id="empGrid"></div>
+
+            <div class="pagination">
+                <span>Page 1</span>
+                <div class="page-nums" id="pageNums"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="common.js"></script>
+    <script src="empScript.js"></script>
+</body>
+</html>

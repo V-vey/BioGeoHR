@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BioGeoHR - Employee Profile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar navigation, shared across every page -->
+    <aside class="sidebar">
+        <div class="logo">BioGeoHR</div>
+
+        <nav>
+            <a class="nav-item" href="dashboard.html">▦ Dashboard</a>
+
+            <!-- Employee section: currently expanded on this page -->
+            <div class="nav-item nav-parent open" id="empToggle">
+                👤 Employee <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav open" id="empSubNav">
+                <a class="sub-item active" href="allEmp.html">All Employee</a>
+                <a class="sub-item" href="allEmp.html">Leave Request</a>
+                <a class="sub-item" href="allEmp.html">New Employee</a>
+            </div>
+
+            <!-- Attendance section: expands to show its submenu -->
+            <div class="nav-item nav-parent" id="attToggle">
+                📋 Attendance <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav" id="attSubNav">
+                <a class="sub-item" href="attendance.html">Attendance</a>
+                <a class="sub-item" href="attendance.html">Location</a>
+            </div>
+
+            <a class="nav-item" href="#">💵 Payroll</a>
+        </nav>
+
+        <button class="logout">Log-out</button>
+    </aside>
+
+    <main class="main">
+        <div class="profile-topbar">
+            <a class="back-btn" href="allEmp.html">⏎ Back</a>
+            <h1>Employees Profile</h1>
+        </div>
+
+        <!-- Tab switcher between Overview and Personal Info -->
+        <div class="profile-tabs">
+            <span class="profile-tab active" id="tabOverview">Overview</span>
+            <span class="profile-tab" id="tabPersonal">Personal Info</span>
+        </div>
+
+        <!-- Overview tab: leave balances, attendance/salary summary, recent leave, profile card -->
+        <div id="overviewPane" class="profile-grid">
+            <div>
+                <!-- Leave balance pills (Annual, Sick, Paternity, Unpaid) -->
+                <div class="leave-pill-row" id="leavePillRow"></div>
+
+                <div class="two-col">
+                    <!-- Attendance summary for the current period -->
+                    <div class="card">
+                        <div class="info-box-header">
+                            <h2>Attendance</h2>
+                            <button class="dots-btn">⋯</button>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-icon">🕐</div>
+                            <div>
+                                <div class="stat-line-label">On-time</div>
+                                <div class="stat-line-sub" id="pOnTimeDays"></div>
+                            </div>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-icon">🕐</div>
+                            <div>
+                                <div class="stat-line-label">Late</div>
+                                <div class="stat-line-sub" id="pLateDuration"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hourly salary summary -->
+                    <div class="card">
+                        <div class="info-box-header">
+                            <h2>Salary</h2>
+                            <button class="dots-btn">⋯</button>
+                        </div>
+                        <div class="stat-line">
+                            <div class="stat-icon">💲</div>
+                            <div>
+                                <div class="stat-line-label">Salary Per Hours</div>
+                                <div class="stat-line-sub" id="pSalaryPerHour"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent leave request cards -->
+                <div class="card">
+                    <div class="info-box-header">
+                        <h2>Recent Leave</h2>
+                        <button class="dots-btn">⋯</button>
+                    </div>
+                    <div class="leave-grid" id="recentLeaveGrid"></div>
+                    <div class="pagination">
+                        <span>Page 1</span>
+                        <div class="page-nums" id="pageNums"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right-hand profile summary card -->
+            <div class="card profile-card">
+                <div class="profile-status" id="profileStatus"></div>
+                <div class="profile-avatar-lg" id="profileAvatar"></div>
+                <div class="profile-name" id="profileName"></div>
+                <div class="profile-email" id="profileEmail"></div>
+
+                <div class="profile-row"><span>Employee ID</span><span id="pEmployeeId"></span></div>
+                <div class="profile-row"><span>Join Date</span><span id="pJoinDate"></span></div>
+                <div class="profile-row"><span>Department</span><span id="pDept"></span></div>
+                <div class="profile-row"><span>Role</span><span id="pRole"></span></div>
+                <div class="profile-row"><span>Contract Type</span><span id="pContract"></span></div>
+
+                <div class="profile-subhead">Personal Information</div>
+                <div class="profile-row"><span>Gender</span><span id="pGender"></span></div>
+                <div class="profile-row"><span>Birth Date</span><span id="pBirth"></span></div>
+                <div class="profile-row"><span>Age</span><span id="pAge"></span></div>
+                <div class="profile-row"><span>Contact No.</span><span id="pContact"></span></div>
+                <div class="profile-row"><span>Education</span><span id="pEducation"></span></div>
+                <div class="profile-row"><span>Degree</span><span id="pDegree"></span></div>
+
+                <button class="view-more-btn" id="viewMoreBtn">View More</button>
+            </div>
+        </div>
+
+        <!-- Personal Info tab: editable employee record form -->
+        <div id="personalPane" class="profile-grid is-hidden">
+            <div class="card pi-header-card">
+                <div class="profile-avatar-lg" id="piAvatar"></div>
+                <div class="pi-header-meta">
+                    <div class="name-line" id="piNameLine"></div>
+                    <div class="pi-salary-row">
+                        <div>Monthly Salary:<b id="piMonthly"></b></div>
+                        <div>Daily Wage:<b id="piDaily"></b></div>
+                        <div>Hourly Rate:<b id="piHourly"></b></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="pi-form-header">
+                    <h2>Personal Information</h2>
+                    <span>▾</span>
+                </div>
+                <div class="pi-form-grid" id="piFormGrid"></div>
+                <div class="pi-form-actions">
+                    <button class="pi-btn refresh">↻ Refresh</button>
+                    <button class="pi-btn save">💾 Save</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="common.js"></script>
+    <script src="empProfileScript.js"></script>
+</body>
+</html>

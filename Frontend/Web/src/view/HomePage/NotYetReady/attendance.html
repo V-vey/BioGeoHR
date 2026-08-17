@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BioGeoHR - Attendance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar navigation, shared across every page -->
+    <aside class="sidebar">
+        <div class="logo">BioGeoHR</div>
+
+        <nav>
+            <a class="nav-item" href="dashboard.html">▦ Dashboard</a>
+
+            <!-- Employee section: expands to show its submenu -->
+            <div class="nav-item nav-parent" id="empToggle">
+                👤 Employee <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav" id="empSubNav">
+                <a class="sub-item" href="allEmp.html">All Employee</a>
+                <a class="sub-item" href="allEmp.html">Leave Request</a>
+                <a class="sub-item" href="allEmp.html">New Employee</a>
+            </div>
+
+            <!-- Attendance section: currently expanded on this page -->
+            <div class="nav-item nav-parent open" id="attToggle">
+                📋 Attendance <span class="chev">▾</span>
+            </div>
+            <div class="sub-nav open" id="attSubNav">
+                <a class="sub-item active" href="attendance.html">Attendance</a>
+                <a class="sub-item" href="attendance.html">Location</a>
+            </div>
+
+            <a class="nav-item" href="#">💵 Payroll</a>
+        </nav>
+
+        <button class="logout">Log-out</button>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h2>Attendance</h2>
+        </div>
+
+        <div class="card">
+            <div class="emp-card-header">
+                <h2>Attendance</h2>
+
+                <!-- Search bar and filter dropdown trigger -->
+                <div class="search-wrap">
+                    <input class="search-box" type="text" placeholder="Search name or ID">
+                    <button class="filter-btn" id="filterBtn">▾</button>
+
+                    <!-- Filter dropdown: status, contract type, department, join date -->
+                    <div class="filter-panel" id="filterPanel">
+                        <h4>Status</h4>
+                        <div class="filter-row">
+                            <label><input type="radio" name="status"> On-time</label>
+                            <label><input type="radio" name="status" checked> Late</label>
+                            <label><input type="radio" name="status"> Leave</label>
+                            <label><input type="radio" name="status"> Absent</label>
+                        </div>
+
+                        <h4>Contract Type</h4>
+                        <div class="filter-row">
+                            <label><input type="checkbox" checked> Full-time</label>
+                            <label><input type="checkbox"> Freelance</label>
+                            <label><input type="checkbox"> Internship</label>
+                        </div>
+
+                        <h4>Department</h4>
+                        <div class="filter-row">
+                            <label><input type="checkbox"> Product</label>
+                            <label><input type="checkbox" checked> Engineer</label>
+                            <label><input type="checkbox"> Marketing</label>
+                            <label><input type="checkbox"> Finance</label>
+                        </div>
+
+                        <h4>Joined Date</h4>
+                        <div class="date-row">
+                            <select><option>April 1, 2026</option></select>
+                            <span>-</span>
+                            <select><option>April 5, 2026</option></select>
+                        </div>
+
+                        <button class="confirm-btn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily attendance record cards, rendered by attendanceScript.js -->
+            <div class="att-grid" id="attGrid"></div>
+
+            <div class="pagination">
+                <span>Page 1</span>
+                <div class="page-nums" id="pageNums"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Shortcut to register a new office location -->
+    <a class="create-location-btn" href="#">Create Location ⊕</a>
+
+    <script src="common.js"></script>
+    <script src="attendanceScript.js"></script>
+</body>
+</html>
