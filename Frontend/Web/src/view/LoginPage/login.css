@@ -1,0 +1,47 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 23px;
+}
+
+input[type="password"],
+input[type="email"] {
+  background-color: #fcfcfc;
+  display: block;
+  width: 500px;
+  height: 30px;
+  margin: -6px auto;
+  /* margin: auto auto; */
+  padding: 15px 15px;
+  box-sizing: border-box;
+  /* BORDER */
+  border-style: solid;
+  border-radius: 5px;
+  /* TEXT */
+  font-size: 1rem;
+  color: #aeaeae;
+  font-weight: bold;
+  text-align: start;
+
+  border-color: #aeaeae;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  color: #aeaeae; /* Changes the text color to vibrant blue while typing */
+  outline: none; /* Optional: removes the default browser blue border outline */
+}
+
+input[type="submit"] {
+  color: #f2f2f2;
+  background-color: #2aaf56;
+  padding: 10px 50px;
+
+  display: block;
+  margin-left: auto;
+  border-radius: 100px;
+  font-size: 20px;
+}
