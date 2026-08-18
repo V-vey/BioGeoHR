@@ -1,0 +1,1281 @@
+/* =============================================================
+   1. VARIABLES
+   ============================================================= */
+
+:root {
+  /* colors */
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --ink: #1f2430;
+  --muted: #8a90a3;
+  --border: #eef0f5;
+
+  --purple: #6c63ff;
+  --green: #22c55e;
+  --yellow: #f5b93d;
+  --amber-text: #c98a15;
+  --red: #ef4444;
+  --blue: #3b82f6;
+
+  /* radii — small to large */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+
+  /* shadows */
+  --shadow-dropdown: 0 10px 30px rgba(20, 20, 40, 0.12);
+  --shadow-fab: 0 8px 20px rgba(34, 197, 94, 0.35);
+}
+
+/* =============================================================
+   2. RESET & BASE
+   ============================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* =============================================================
+   3. PAGE SHELL
+   ============================================================= */
+
+/* Every page is a <Sidebar /> + <main> pair rendered inside this
+   root element, so the side-by-side layout lives here rather than
+   on <body> directly. */
+#root {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  padding: 22px 28px;
+}
+
+h1.title {
+  margin: 0 0 18px;
+  font-size: 22px;
+}
+
+/* =============================================================
+   4. SIDEBAR NAVIGATION
+   ============================================================= */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 210px;
+  min-height: 100vh;
+  padding: 20px 16px;
+  background: #fff;
+  border-right: 1px solid var(--border);
+}
+
+.logo {
+  margin-bottom: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--purple);
+}
+
+/* Top-level nav link/button shared by both plain links (Dashboard,
+   Payroll) and expandable parents (Employee, Attendance). */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+a.nav-item {
+  text-decoration: none;
+}
+
+.nav-item.active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.nav-item:hover:not(.active) {
+  background: #f2f3fb;
+}
+
+.nav-parent {
+  justify-content: space-between;
+}
+
+/* Chevron rotates to show whether a submenu is expanded — the
+   open/closed state itself is toggled in common.js. */
+.nav-parent .chev {
+  margin-left: auto;
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+
+.nav-parent.open .chev {
+  transform: rotate(180deg);
+}
+
+/* Collapsible submenu (e.g. "All Employee", "Leave Request") shown
+   underneath its parent nav item once expanded. */
+.sub-nav {
+  display: none;
+  flex-direction: column;
+  margin-bottom: 4px;
+  padding-left: 26px;
+}
+
+.sub-nav.open {
+  display: flex;
+}
+
+.sub-item {
+  margin-bottom: 2px;
+  padding: 7px 8px;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.sub-item:hover {
+  background: #f2f3fb;
+  color: var(--purple);
+}
+
+.sub-item.active {
+  color: var(--purple);
+  font-weight: 600;
+}
+
+.logout {
+  margin-top: auto;
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--purple);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* =============================================================
+   5. SHARED COMPONENTS
+   (card shell, topbar, search & filter, pagination, status dot)
+   ============================================================= */
+
+.card {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+}
+
+.card h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  color: var(--purple);
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+}
+
+.topbar h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--purple);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
+/* Search box + filter dropdown trigger, shared by the
+   Employees and Attendance pages. */
+.emp-card-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.emp-card-header h2 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--purple);
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-box {
+  width: 220px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fafbfd;
+  font-size: 12px;
+}
+
+.filter-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filter-panel {
+  display: none;
+  position: absolute;
+  top: 42px;
+  right: 0;
+  z-index: 10;
+  width: 260px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-dropdown);
+}
+
+.filter-panel.open {
+  display: block;
+}
+
+.filter-panel h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.filter-row label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.filter-row input {
+  accent-color: var(--purple);
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.date-row select {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 9px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--purple);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Pagination footer, shared by every card-grid page. */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.page-nums {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-nums span {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.page-nums span.active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.page-arrow {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+}
+
+/* Shared pill-style buttons. */
+.view-btn {
+  display: inline-block;
+  padding: 5px 14px;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: var(--green);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-view {
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--purple);
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* =============================================================
+   6. DASHBOARD PAGE
+   ============================================================= */
+
+/* Row of summary metrics at the top of the dashboard (total
+   employees, attendance rate, etc). */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  font-size: 18px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--green);
+}
+
+/* Two-column layout: chart + employee table on the left,
+   calendar + leave requests on the right. */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+/* Weekly attendance bar chart */
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  height: 220px;
+  padding: 0 6px;
+}
+
+.bar-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.bar-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 32px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-col span {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 50%;
+}
+
+.legend i.on-time {
+  background: var(--green);
+}
+.legend i.late {
+  background: var(--yellow);
+}
+.legend i.absent {
+  background: var(--red);
+}
+.legend i.leave {
+  background: var(--blue);
+}
+
+/* Calendar */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.cal-grid .dow {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.cal-grid .day {
+  padding: 6px 0;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+}
+
+.cal-grid .day.muted {
+  color: #c8cbd6;
+}
+
+.cal-grid .day.today {
+  border: 1px solid var(--purple);
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* Employee summary table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  text-align: left;
+}
+
+td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Leave request list */
+.leave-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.leave-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.leave-email {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tag {
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xl);
+  color: #fff;
+  font-size: 11px;
+}
+
+/* =============================================================
+   7. EMPLOYEES PAGE
+   ============================================================= */
+
+/* Responsive grid of employee record cards. */
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.emp-card {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+.emp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.emp-id {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.emp-status {
+  margin-top: 4px;
+  font-size: 11px;
+  text-align: right;
+}
+
+.emp-status .dot {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+.emp-status.available {
+  color: var(--green);
+}
+.emp-status.unavailable {
+  color: var(--red);
+}
+.emp-status.break {
+  color: var(--yellow);
+}
+.emp-status.leave {
+  color: var(--blue);
+}
+
+.emp-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.emp-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ddd;
+  object-fit: cover;
+}
+
+.emp-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.emp-email {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.emp-role {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.emp-foot {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.emp-foot div {
+  line-height: 1.5;
+}
+
+.emp-foot b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* =============================================================
+   8. EMPLOYEE PROFILE PAGE
+   ============================================================= */
+
+.profile-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profile-topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--purple);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--green);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-tab {
+  padding-bottom: 8px;
+  border-bottom: 2px solid transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profile-tab.active {
+  border-color: var(--purple);
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* Two-column layout shared by both profile tabs: the wide content
+   column on the left, summary/details column on the right. The
+   Personal Info tab overrides this to a single column below. */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+  gap: 16px;
+}
+
+/* Hides whichever tab pane (Overview / Personal Info) isn't active.
+   Toggled via JS in empProfileScript.js. */
+.profile-grid.is-hidden {
+  display: none;
+}
+
+/* Leave-balance pill row */
+.leave-pill-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.leave-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.leave-pill span.count {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Attendance / Salary summary row */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.info-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.info-box-header h2 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.dots-btn {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.stat-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.stat-line .stat-icon {
+  background: #f2f3fb;
+}
+
+.stat-line-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-line-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Recent leave cards */
+.leave-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.leave-card {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+.leave-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.leave-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.leave-badge .dot {
+  margin-right: 0;
+}
+
+.leave-badge.pending {
+  color: var(--amber-text);
+}
+.leave-badge.rejected {
+  color: var(--red);
+}
+.leave-badge.approved {
+  color: var(--green);
+}
+
+.leave-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.leave-detail b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Right-hand profile summary card */
+.profile-card {
+  position: relative;
+}
+
+.profile-status {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.profile-avatar-lg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: #ddd;
+  object-fit: cover;
+}
+
+.profile-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.profile-email {
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.profile-row span:first-child {
+  color: var(--muted);
+}
+
+.profile-row span:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+.profile-subhead {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.view-more-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 9px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--green);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Personal Info tab */
+#personalPane {
+  grid-template-columns: 1fr;
+}
+
+.pi-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pi-header-card .profile-avatar-lg {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0;
+}
+
+.pi-header-meta {
+  flex: 1;
+}
+
+.pi-header-meta .name-line {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pi-header-meta .name-line span {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.pi-salary-row {
+  display: flex;
+  gap: 36px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pi-salary-row b {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pi-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.pi-form-header h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.pi-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px 16px;
+}
+
+.pi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pi-field input,
+.pi-field select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fafbfd;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pi-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.pi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pi-btn.refresh {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.pi-btn.save {
+  background: var(--green);
+  color: #fff;
+}
+
+/* =============================================================
+   9. ATTENDANCE PAGE
+   ============================================================= */
+
+/* Responsive grid of daily attendance record cards. */
+.att-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.att-card {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+.att-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.att-id {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.office-badge {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.att-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.att-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.att-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.att-status .dot {
+  margin-right: 0;
+}
+
+.att-status.on-time {
+  color: var(--green);
+}
+.att-status.late {
+  color: var(--amber-text);
+}
+
+.att-role {
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.att-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.att-detail-grid b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Floating action button for registering a new office location. */
+.create-location-btn {
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--green);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-fab);
+  cursor: pointer;
+}
+
+/* =============================================================
+   10. RESPONSIVE STYLES
+   ============================================================= */
+
+/* Tablet / small laptop: keep the sidebar as a left column but
+   thin out the card grids so content doesn't feel cramped. */
+@media (max-width: 1100px) {
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .emp-grid,
+  .att-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pi-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid,
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile: the sidebar moves above the page content and becomes a
+   horizontal, wrapping bar instead of a fixed-height left column. */
+@media (max-width: 720px) {
+  #root {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    min-height: auto;
+    padding: 12px 16px;
+  }
+
+  .logo {
+    margin: 0 auto 0 0;
+  }
+
+  .logout {
+    width: auto;
+    margin: 0 0 0 auto;
+    padding: 8px 14px;
+  }
+
+  .sub-nav {
+    padding-left: 12px;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  /* Collapse every multi-column grid down to a single column. */
+  .stat-row,
+  .emp-grid,
+  .att-grid,
+  .leave-pill-row,
+  .two-col,
+  .leave-grid,
+  .pi-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-wrap {
+    flex-wrap: wrap;
+  }
+
+  .profile-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pi-header-card {
+    flex-wrap: wrap;
+  }
+}
