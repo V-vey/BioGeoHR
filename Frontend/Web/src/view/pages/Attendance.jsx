@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import Pagination from "../components/Pagination.jsx";
 import { useFilterPanel } from "../../hooks/useFilterPanel.js";
 
+import "../HomePage/Homepage.css";
 // Maps an attendance status to a badge style — presentation config,
 // not attendance data.
 const STATUS_META = {

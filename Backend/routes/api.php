@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
         // Route::apiResource('users', UsersController::class);
+        Route::apiResource('users', UsersController::class);
         Route::apiResource('salary', SalaryController::class);
         Route::apiResource('leave', LeaveApplicationController::class);
         Route::apiResource('balance', LeaveBalanceController::class);

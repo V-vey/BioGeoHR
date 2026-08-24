@@ -1,3 +1,29 @@
+/* 1. Force the React root container to expand across the full window */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* ADD THIS */
+  min-height: 100vh;
+}
+
+/* 2. Update your login container styles */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ensure this stretches to allow centering */
+}
+
+/* 3. Keep your form stretching block intact */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 500px;
+}
+
 .login-container {
   display: flex;
   flex-direction: column;

@@ -4,6 +4,9 @@ import Sidebar from "../components/Sidebar.jsx";
 import Pagination from "../components/Pagination.jsx";
 import { useFilterPanel } from "../../hooks/useFilterPanel.js";
 
+import { Map, MapControls } from "@/components/ui/map";
+import { Card } from "@/components/ui/card/index.jsx";
+
 import "../HomePage/Homepage.css";
 // Maps an employee's availability status to a badge style —
 // presentation config, not employee data.
@@ -36,6 +39,13 @@ export default function AllEmployees() {
         </div>
         <div className="card">
           {/* map */}
+          <Card className="h-[550px] w-full border shadow-sm rounded-xl overflow-hidden bg-slate-50">
+            <div className="h-[320px] p-0 overflow-hidden">
+              <Map center={[-74.006, 40.7128]} zoom={11}>
+                <MapControls />
+              </Map>
+            </div>
+          </Card>
           <div className="card">
             <input
               type="text"

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import Pagination from "../components/Pagination.jsx";
 
+import "../HomePage/Homepage.css";
 // TODO: replace with a real API call keyed by the employee id, e.g.
 //   fetchEmployeeProfile(id).then(setEmployee);
 // Expected shape — see the JSX below for every field this page reads:
