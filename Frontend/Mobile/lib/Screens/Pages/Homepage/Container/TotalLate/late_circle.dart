@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_biogeohr/Screens/Pages/Profile/Sections/AcountDetails/account_details.dart';
 import '../../../../../Controller/Homepage/count_late.dart';
 
 class LateCircle extends StatefulWidget {
@@ -10,7 +11,8 @@ class LateCircle extends StatefulWidget {
 
 class _LateCircleState extends State<LateCircle> {
   final CountLate late = CountLate();
-
+  bool isLateMax = false;
+  Color color = Color(0xFFEACA3A);
   int val = 0; // value of the progression of the late
   @override
   void initState() {
@@ -24,6 +26,10 @@ class _LateCircleState extends State<LateCircle> {
 
     setState(() {
       val = result;
+      if (val >= 3) {
+        isLateMax = true;
+        color = Color(0xFFEC6668);
+      }
     });
   }
 
@@ -52,21 +58,30 @@ class _LateCircleState extends State<LateCircle> {
             height: 110,
             padding: EdgeInsets.all(10),
             child: CircularProgressIndicator(
-              color: Color(0xFFEACA3A),
+              color: color,
+
               value: val / 3,
               strokeWidth: 5,
             ),
           ),
-          Center(
-            child: Text(
-              "$val / 3",
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+          //if not max
+          if (!isLateMax) ...[
+            Center(
+              child: Text(
+                "$val / 3",
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
             ),
-          ),
+          ],
+          if (isLateMax) ...[
+            Center(
+              child: Icon(Icons.warning, size: 40, color: Color(0xFFEC6668)),
+            ),
+          ],
         ],
       ),
     );
