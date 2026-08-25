@@ -8,7 +8,7 @@ import AllEmployees from "./view/pages/AllEmployees.jsx";
 import EmployeeProfile from "./view/pages/EmployeeProfile.jsx";
 import Attendance from "./view/pages/Attendance.jsx";
 import LeaveRequest from "./view/pages/LeaveRequest.jsx";
-import Location from "./view/pages/Location.jsx";
+import Location from "./view/pages/Location/Location.jsx";
 import NewEmployee from "./view/pages/NewEmployee.jsx";
 import Payroll from "./view/pages/Payroll.jsx";
 

@@ -1,23 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Sidebar from "../components/Sidebar.jsx";
-import Pagination from "../components/Pagination.jsx";
-import { useFilterPanel } from "../../hooks/useFilterPanel.js";
+import Sidebar from "../../components/Sidebar.jsx";
+import Pagination from "../../components/Pagination.jsx";
+import { useFilterPanel } from "../../../hooks/useFilterPanel.js";
 
 import { Map, MapControls } from "@/components/ui/map";
-import { Card } from "@/components/ui/card/index.jsx";
 
-import "../HomePage/Homepage.css";
-// Maps an employee's availability status to a badge style —
-// presentation config, not employee data.
-const STATUS_META = {
-  Available: { cls: "available", color: "var(--green)" },
-  Unavailable: { cls: "unavailable", color: "var(--red)" },
-  Break: { cls: "break", color: "var(--yellow)" },
-  Leave: { cls: "leave", color: "var(--blue)" },
-};
+import Header from "../../components/Header.jsx";
 
-export default function AllEmployees() {
+export default function Location() {
   // TODO: replace with a real API call, e.g.
   //   fetchEmployees().then(setEmployees);
   // Expected shape per entry:
@@ -34,18 +25,18 @@ export default function AllEmployees() {
       <Sidebar />
 
       <main className="main">
-        <div className="topbar">
-          <h2>Location</h2>
+        <p className="text-5xl font-bold text-red-600 animate-bounce">
+          Tailwind Check!
+        </p>
+        <Header text="Location" />
+        <div className="h-[420px] w-[100px]">
+          <Map center={[-74.006, 40.7128]} zoom={11}>
+            <MapControls />
+          </Map>
         </div>
         <div className="card">
           {/* map */}
-          <Card className="h-[550px] w-full border shadow-sm rounded-xl overflow-hidden bg-slate-50">
-            <div className="h-[320px] p-0 overflow-hidden">
-              <Map center={[-74.006, 40.7128]} zoom={11}>
-                <MapControls />
-              </Map>
-            </div>
-          </Card>
+
           <div className="card">
             <input
               type="text"

@@ -1,17 +1,19 @@
 import React, { Component } from "react";
 import "./logo.css";
+import { useTestContext } from "@/context/TestContext";
 
-class Logo extends Component {
-  render() {
-    return (
-      <>
-        <div>
-          <span className="bio-geo">BioGeo</span>
-          <span className="hr">HR</span>
-        </div>
-      </>
-    );
-  }
+function Logo({ size }) {
+  //pass
+  size("111");
+  const { token, asd } = useTestContext();
+  return (
+    <>
+      <div>
+        <span className="bio-geo">BioGeo</span>
+        <span className="hr">HR</span>
+      </div>
+    </>
+  );
 }
 
 export default Logo;

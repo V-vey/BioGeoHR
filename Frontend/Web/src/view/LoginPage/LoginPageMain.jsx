@@ -3,6 +3,7 @@ import React, { useState } from "react";
 
 import "./login.css";
 import Logo from "../../assets/Logo/Logo";
+import TestProvider from "@/context/TestContext";
 
 // 1. FIXED: Removed the broken empty import string from line 7
 
@@ -18,11 +19,17 @@ function LoginPageMain() {
     navigate("/dashboard");
     console.log("Logged in successfully!");
   };
+  //pass
+  const test = (text) => {
+    console.log(text);
+  };
 
   return (
     <>
       <div className="login-container">
-        <Logo />
+        <TestProvider>
+          <Logo size={test} />
+        </TestProvider>
         <form onSubmit={handleSubmit}>
           <input
             type="email"
