@@ -1,0 +1,76 @@
+/* 1. Force the React root container to expand across the full window */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* ADD THIS */
+  min-height: 100vh;
+}
+
+/* 2. Update your login container styles */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ensure this stretches to allow centering */
+}
+
+/* 3. Keep your form stretching block intact */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 500px;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 23px;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  color: #3a3a3a; /* Changes the text color to vibrant blue while typing */
+  outline: none; /* Optional: removes the default browser blue border outline */
+}
+
+input[type="password"],
+input[type="email"] {
+  background-color: #fcfcfc;
+  display: block;
+  width: 500px;
+  height: 30px;
+  margin: -6px auto;
+  /* margin: auto auto; */
+  padding: 15px 15px;
+  box-sizing: border-box;
+  /* BORDER */
+  border-style: solid;
+  border-radius: 5px;
+  /* TEXT */
+  font-size: 1rem;
+  color: #3a3a3a;
+  font-weight: bold;
+  text-align: start;
+
+  border-color: #aeaeae;
+}
+
+input[type="submit"] {
+  color: #f2f2f2;
+  background-color: #2aaf56;
+  padding: 7px 40px;
+
+  display: block;
+  margin-left: auto;
+  margin-top: -6px;
+  border-width: 0px;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: bold;
+}
