@@ -21,7 +21,7 @@ export default function Sidebar() {
   };
   return (
     <aside className="sidebar">
-      <div className="logo">BioGeoHR</div>
+      {/* <div className="logo">BioGeoHR</div> */}
 
       <nav>
         <a
