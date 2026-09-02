@@ -30,7 +30,7 @@ export default function ControlledMapExample() {
   }, [is3D]);
 
   return (
-    <div className="relative h-[500px] w-full">
+    <div className="relative h-500px w-full">
       <Map
         viewport={viewport}
         onViewportChange={setViewport}
