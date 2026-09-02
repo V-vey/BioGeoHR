@@ -20,6 +20,7 @@ function LoginPageMain() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Being Posted
   const loginForm = {
     email: email,
     password: password,
@@ -31,6 +32,26 @@ function LoginPageMain() {
     try {
       await axios.post(url + "/login", loginForm).then((response) => {
         console.log("Success! Created item:", response.data);
+
+        //block the user if they are not HR
+        if (response.data.user !== "HR") {
+          alert(
+            "You are not authorized to access this page. Only HR users can log in.",
+          );
+          return;
+        }
+        if (response.status === 300) {
+          alert("User not found. Please check your email.");
+        }
+        if (response.status === 301) {
+          alert("Password is incorrect. Please try again.");
+        }
+        if (response.data.authenticated === "Log in Success") {
+          console.log("Login successful for HR user.");
+          navigate("/dashboard");
+        } else {
+          alert("Please try again.");
+        }
       });
     } catch (error) {
       console.error("Error during login:", error);
