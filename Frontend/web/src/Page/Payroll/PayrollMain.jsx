@@ -1,10 +1,10 @@
 import Sidebar from "@/components/layout";
-export default function AllEmployee() {
-  const nav = "All Employee";
+export default function PayrollMain() {
+  const nav = "Payroll";
   return (
     <>
       <Sidebar nav={nav}>
-        <div>All Employee</div>
+        <div>Payroll</div>
       </Sidebar>
     </>
   );

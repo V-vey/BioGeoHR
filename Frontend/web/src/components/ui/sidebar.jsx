@@ -235,6 +235,7 @@ function SidebarTrigger({ className, onClick, nav, ...props }) {
     <>
       <div
         className=" flex 
+                    flexDirection: 'column'
                     items-center
                     w-full 
                   bg-[#FCFCFC] 
@@ -256,7 +257,11 @@ function SidebarTrigger({ className, onClick, nav, ...props }) {
         >
           <PanelLeftIcon />
         </Button>
-        <span className="justify-end">{nav}</span>
+
+        {/* act us spacer() */}
+        <div style={{ flexGrow: 1 }} />
+
+        <span className="text-[#6675EC] font-bold">{nav}</span>
       </div>
     </>
   );

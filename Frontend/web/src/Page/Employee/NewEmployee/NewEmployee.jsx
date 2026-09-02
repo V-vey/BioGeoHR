@@ -1,6 +1,5 @@
-import Map from "./Map";
 import Sidebar from "@/components/layout";
-export default function Location() {
+export default function NewEmployee() {
   const nav = "New Employee";
   return (
     <>

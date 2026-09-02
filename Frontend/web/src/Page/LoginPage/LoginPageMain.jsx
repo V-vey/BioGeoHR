@@ -1,23 +1,40 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 
+import axios from "axios";
+import { url } from "@/resources/api";
 import "./login.css";
-import Logo from "../../assets/Logo/Logo";
-import TestProvider from "@/context/TestContext";
 
 // 1. FIXED: Removed the broken empty import string from line 7
+function Logo() {
+  return (
+    <div className="font-bold text-[3rem] m-3">
+      <span className="text-[#2aaf56]">BioGeo</span>
+      <span className="text-[#6675ec]">HR</span>
+    </div>
+  );
+}
 
 function LoginPageMain() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // 2. ADDED: Stops the browser from refreshing the page on submit
+  const loginForm = {
+    email: email,
+    password: password,
+  };
 
-    // 3. FIXED: Changed target to '/home' to match our combined App.jsx routing setup
-    navigate("/dashboard");
-    console.log("Logged in successfully!");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.post(url + "/login", loginForm).then((response) => {
+        console.log("Success! Created item:", response.data);
+      });
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
   //pass
   const test = (text) => {
@@ -27,9 +44,7 @@ function LoginPageMain() {
   return (
     <>
       <div className="login-container">
-        <TestProvider>
-          <Logo size={test} />
-        </TestProvider>
+        <Logo />
         <form onSubmit={handleSubmit}>
           <input
             type="email"

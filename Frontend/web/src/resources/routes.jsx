@@ -16,59 +16,59 @@ import Payroll from "@/Page/Payroll/PayrollMain";
 export const router = createBrowserRouter([
   {
     // path to where it should go
-    path: "/",
-    element: <PublicModule />,
+    // path: "/",
+    // element: <PublicModule />,
+    // errorElement: <ErrorPage />,
+    // children: [
+    //   {
+    path: "login",
+    element: <Login />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "dashboard",
+    element: <Dashboard />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "employee",
+    element: <AllEmployee />,
     errorElement: <ErrorPage />,
     children: [
       {
-        path: "login",
-        element: <Login />,
+        path: "leave-request",
+        element: <LeaveRequest />,
         errorElement: <ErrorPage />,
       },
       {
-        path: "dashboard",
-        element: <Dashboard />,
+        path: "new-employee",
+        element: <NewEmployee />,
         errorElement: <ErrorPage />,
-      },
-      {
-        path: "employee",
-        element: <AllEmployee />,
-        errorElement: <ErrorPage />,
-        children: [
-          {
-            path: "leave-request",
-            element: <LeaveRequest />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "new-employee",
-            element: <NewEmployee />,
-            errorElement: <ErrorPage />,
-          },
-        ],
-      },
-      {
-        path: "attendance",
-        element: <Attendance />,
-        errorElement: <ErrorPage />,
-        children: [
-          {
-            path: "location",
-            element: <Location />,
-            errorElement: <ErrorPage />,
-          },
-        ],
-      },
-      {
-        path: "payroll",
-        element: <Payroll />,
-        errorElement: <ErrorPage />,
-      },
-
-      {
-        index: true,
-        element: <Navigate to={"home"} replace />,
       },
     ],
   },
+  {
+    path: "attendance",
+    element: <Attendance />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "location",
+        element: <Location />,
+        errorElement: <ErrorPage />,
+      },
+    ],
+  },
+  {
+    path: "payroll",
+    element: <Payroll />,
+    errorElement: <ErrorPage />,
+  },
+
+  {
+    index: true,
+    element: <Navigate to={"login"} replace />,
+  },
+  //   ],
+  // },
 ]);

@@ -1,6 +1,5 @@
-import Map from "./Map";
 import Sidebar from "@/components/layout";
-export default function Location() {
+export default function LeaveRequest() {
   const nav = "Leave Request";
   return (
     <>

@@ -35,15 +35,20 @@ form {
 
 input[type="email"]:focus,
 input[type="password"]:focus {
-  color: #3a3a3a; /* Changes the text color to vibrant blue while typing */
-  outline: none; /* Optional: removes the default browser blue border outline */
+  color: #3a3a3a;
+  outline: 3px solid #2aaf56;
+}
+
+input:-webkit-autofill {
+  -webkit-text-fill-color: #3a3a3a !important; /* Dark text */
+  box-shadow: inset 0 0 0px 1000px #fcfcfc !important; /* White background */
 }
 
 input[type="password"],
 input[type="email"] {
   background-color: #fcfcfc;
   display: block;
-  width: 500px;
+  width: 530px;
   height: 30px;
   margin: -6px auto;
   /* margin: auto auto; */

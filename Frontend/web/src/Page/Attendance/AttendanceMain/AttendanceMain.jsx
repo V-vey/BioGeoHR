@@ -1,4 +1,3 @@
-import Map from "./Map";
 import Sidebar from "@/components/layout";
 export default function Attendance() {
   const nav = "Attendance";
