@@ -63,14 +63,23 @@ export default function DashboardOutlet() {
           }
         />
       </div>
-      <div className="h-4" />
-      <div className="flex flex-row gap-4">
-        {/* Weekly Overview */}
+      <div className="h-4 bg-" />
+      <div className="flex gap-4">
+        {/* 1. Weekly Attendance Card (Bigger) */}
+        <div className="flex-2">
+          <WeeklyAttendance />
+        </div>
 
-        <WeeklyAttendance />
-        {/* Calendar */}
-        <Calendar />
+        {/* 2. Calendar Card (Smaller) */}
+        <div className="flex-1">
+          <Calendar />
+        </div>
       </div>
+
+      {/* Weekly Overview */}
+
+      {/* Calendar */}
+      {/* </div> */}
 
       {/* List Employee */}
       {/* Leave Requests */}
