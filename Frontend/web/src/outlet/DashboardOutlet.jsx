@@ -1,5 +1,6 @@
 import Counts from "@/components/Dashboard/counts";
 import Calendar from "@/components/Dashboard/calendar";
+import WeeklyAttendance from "@/components/Dashboard/weekly-attendance";
 import { useState, useEffect } from "react";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
@@ -62,10 +63,15 @@ export default function DashboardOutlet() {
           }
         />
       </div>
+      <div className="h-4" />
+      <div className="flex flex-row gap-4">
+        {/* Weekly Overview */}
 
-      {/* Weekly Overview */}
-      {/* Calendar */}
-      <Calendar />
+        <WeeklyAttendance />
+        {/* Calendar */}
+        <Calendar />
+      </div>
+
       {/* List Employee */}
       {/* Leave Requests */}
     </>

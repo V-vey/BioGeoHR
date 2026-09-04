@@ -43,7 +43,7 @@ export default function Calendar() {
   }
 
   return (
-    <div className="w-[350px] bg-white rounded-lg shadow-md p-4 font-sans select-none">
+    <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
       {/* Calendar Header */}
       <h2 className="text-center text-indigo-500 font-semibold text-2xl mb-4">
         Calendar
