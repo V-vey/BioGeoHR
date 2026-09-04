@@ -47,17 +47,16 @@ export function AppSidebar() {
         <SidebarContent>
           <SidebarGroup>
             {items.map((item) => {
-              // 3. Check if this item is currently active
+              // Check if this item is currently active
               const isActive = location.pathname === item.url;
 
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive}>
-                    {" "}
-                    {/* 4. Pass isActive if your Sidebar component supports it */}
+                    {/* Pass isActive if your Sidebar component supports it */}
                     <Link
                       to={item.url}
-                      // 5. Apply conditional styling for background and text colors
+                      // Apply conditional styling for background and text colors
                       className={`flex items-center gap-2 p-2 rounded-lg transition-colors w-full ${
                         isActive
                           ? "bg-[#6675EC]/10 text-[#6675EC] font-medium" // Active style (tinted green background)

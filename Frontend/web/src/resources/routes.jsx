@@ -3,7 +3,9 @@ import ErrorPage from "@/components/error-page";
 
 import Login from "@/Page/LoginPage/LoginPageMain";
 
-import Dashboard from "@/Page/Dashboard/DashboardMain";
+import DashboardModule from "@/Page/Dashboard/DashboardMain";
+
+import DashboardOutlet from "@/outlet/DashboardOutlet";
 
 import AllEmployee from "@/Page/Employee/AllEmployee/AllEmployeeMain";
 import LeaveRequest from "@/Page/Employee/LeaveRequest/LeaveRequestMain";
@@ -27,8 +29,14 @@ export const router = createBrowserRouter([
   },
   {
     path: "dashboard",
-    element: <Dashboard />,
+    element: <DashboardModule />,
     errorElement: <ErrorPage />,
+    children: [
+      {
+        index: true,
+        element: <DashboardOutlet />,
+      },
+    ],
   },
   {
     path: "employee",
