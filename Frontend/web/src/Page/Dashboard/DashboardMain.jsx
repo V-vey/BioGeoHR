@@ -7,7 +7,7 @@ export default function Dashboard() {
   return (
     <>
       <Sidebar nav={nav}>
-        <div className="h-6.25" />
+        <div className="h-4" />
         <div>
           <Outlet />
         </div>

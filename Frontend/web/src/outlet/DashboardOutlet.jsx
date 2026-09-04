@@ -1,4 +1,5 @@
 import Counts from "@/components/Dashboard/counts";
+import Calendar from "@/components/Dashboard/calendar";
 import { useState, useEffect } from "react";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
@@ -18,6 +19,7 @@ export default function DashboardOutlet() {
 
   return (
     <>
+      {/* Dashboard Metrics Counts */}
       <div class="flex w-full justify-between gap-4">
         <Counts
           className="flex-1 "
@@ -60,6 +62,12 @@ export default function DashboardOutlet() {
           }
         />
       </div>
+
+      {/* Weekly Overview */}
+      {/* Calendar */}
+      <Calendar />
+      {/* List Employee */}
+      {/* Leave Requests */}
     </>
   );
 }
