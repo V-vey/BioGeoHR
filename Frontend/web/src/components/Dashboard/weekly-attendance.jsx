@@ -10,43 +10,49 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "#2563eb",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "#60a5fa",
-  },
-};
-
-export default function ChartBarDemoLegend() {
+export default function ChartBarDemoLegend({ chartData }) {
+  const chartConfig = {
+    ontime: {
+      label: "On-Time",
+      color: "#2AAF56",
+    },
+    late: {
+      label: "Late",
+      color: "#EACA3A",
+    },
+    absent: {
+      label: "Absent",
+      color: "#EC6668",
+    },
+    leave: {
+      label: "Leave",
+      color: "#6675EC",
+    },
+  };
   return (
-    <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
-      <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+    <div className="flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
+      <p className="p-1 font-bold text-[#6675EC] text-[20px]">
+        Weekly Attendance
+      </p>
+      <div className="h-[2px] w-full bg-[#E0E0E0] my-0.5" />
+      <ChartContainer config={chartConfig} className="min-h-50 w-full">
         <BarChart accessibilityLayer data={chartData}>
-          <CartesianGrid vertical={false} />
+          <CartesianGrid vertical={false} stroke="#E5E7EB" />
           <XAxis
-            dataKey="month"
+            dataKey="day"
             tickLine={false}
             tickMargin={10}
             axisLine={false}
             tickFormatter={(value) => value.slice(0, 3)}
           />
+
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
-          <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-          <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+
+          <Bar dataKey="ontime" fill="var(--color-ontime)" radius={4} />
+          <Bar dataKey="late" fill="var(--color-late)" radius={4} />
+          <Bar dataKey="absent" fill="var(--color-absent)" radius={4} />
+          <Bar dataKey="leave" fill="var(--color-leave)" radius={4} />
         </BarChart>
       </ChartContainer>
     </div>
