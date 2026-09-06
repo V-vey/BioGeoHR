@@ -78,7 +78,7 @@ const Calendar = () => {
   }
 
   return (
-    <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
+    <div className=" min-h-[400px] w-full flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
       {/* Navigation Header */}
       <div className="flex items-center justify-between mb-4">
         <button
@@ -109,16 +109,6 @@ const Calendar = () => {
 
       {/* Days Grid Grid Layout */}
       <div className="grid grid-cols-7 gap-1 text-center">{calendarCells}</div>
-
-      {/* Selected Date Summary Output */}
-      {selectedDate && (
-        <div className="mt-4 pt-3 border-t border-gray-100 text-center text-sm text-gray-600">
-          Selected Date:{" "}
-          <span className="font-semibold text-blue-600">
-            {selectedDate.toLocaleDateString()}
-          </span>
-        </div>
-      )}
     </div>
   );
 };

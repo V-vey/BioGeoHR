@@ -35,7 +35,7 @@ export default function ChartBarDemoLegend({ chartData }) {
         Weekly Attendance
       </p>
       <div className="h-[2px] w-full bg-[#E0E0E0] my-0.5" />
-      <ChartContainer config={chartConfig} className="min-h-50 w-full">
+      <ChartContainer config={chartConfig} className="min-h-[50px] w-full">
         <BarChart accessibilityLayer data={chartData}>
           <CartesianGrid vertical={false} stroke="#E5E7EB" />
           <XAxis

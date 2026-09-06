@@ -5,6 +5,8 @@ import LeaveRequestLayout from "@/components/Dashboard/leave-request";
 import { useState, useEffect } from "react";
 
 import Test from "@/components/Dashboard/testingCard";
+
+import CalendarV from "@/components/Dashboard/calendarV2";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Page/Employee/LeaveRequest/LeaveRequestMain";
@@ -85,7 +87,7 @@ export default function DashboardOutlet() {
         <div className="flex-1">
           <Calendar />
         </div>
-        <div className="flex-2">
+        <div className="flex-1">
           <LeaveRequestLayout />
         </div>
       </div>
