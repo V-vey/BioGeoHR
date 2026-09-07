@@ -30,12 +30,10 @@ export default function ChartBarDemoLegend({ chartData }) {
     },
   };
   return (
-    <div className="flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
-      <p className="p-1 font-bold text-[#6675EC] text-[20px]">
-        Weekly Attendance
-      </p>
+    <div className="min-h-[400px] w-full flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
+      <h2>Weekly Attendance</h2>
       <div className="h-[2px] w-full bg-[#E0E0E0] my-0.5" />
-      <ChartContainer config={chartConfig} className="min-h-[50px] w-full">
+      <ChartContainer config={chartConfig} className="w-full">
         <BarChart accessibilityLayer data={chartData}>
           <CartesianGrid vertical={false} stroke="#E5E7EB" />
           <XAxis

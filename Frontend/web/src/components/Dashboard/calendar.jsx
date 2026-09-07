@@ -87,7 +87,7 @@ const Calendar = () => {
         >
           &lt;
         </button>
-        <h2 className="text-lg font-bold text-gray-800">
+        <h2 className="text-lg font-bold text-[#6675EC]">
           {months[month]} {year}
         </h2>
         <button
@@ -97,7 +97,6 @@ const Calendar = () => {
           &gt;
         </button>
       </div>
-
       {/* Weekday Row Labels */}
       <div className="grid grid-cols-7 text-center font-semibold text-gray-500 text-xs mb-2">
         {daysOfWeek.map((day) => (

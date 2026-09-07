@@ -1,7 +1,8 @@
 import Counts from "@/components/Dashboard/counts";
 import Calendar from "@/components/Dashboard/calendar";
 import WeeklyAttendance from "@/components/Dashboard/weekly-attendance";
-import LeaveRequestLayout from "@/components/Dashboard/leave-request";
+import BirthdayLayout from "@/components/Dashboard/birthday";
+import LeaveLayout from "@/components/Dashboard/leave-request";
 import { useState, useEffect } from "react";
 
 import Test from "@/components/Dashboard/testingCard";
@@ -87,8 +88,8 @@ export default function DashboardOutlet() {
         <div className="flex-1">
           <Calendar />
         </div>
-        <div className="flex-1">
-          <LeaveRequestLayout />
+        <div className="flex-2">
+          <LeaveLayout />
         </div>
       </div>
       <Test />
