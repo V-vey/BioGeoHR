@@ -15,17 +15,20 @@ const styles = {
   fiord: "https://tiles.openfreemap.org/styles/fiord",
 };
 
-export default function ControlledMapExample() {
+export default function ControlledMapExample({
+  centerLng,
+  centerLat,
+  zoom,
+  viewport,
+  setViewport,
+}) {
   // Corrected the inverted naming convention to avoid state glitches
-  let centerLng = 124.66181861;
-  let centerLat = 13.26533063;
-  let zoom = 4.0;
 
   // MapLibre uses a structural [lng, lat] coordinate array format
-  const [viewport, setViewport] = useState({
-    center: [centerLng, centerLat],
-    zoom: zoom,
-  });
+  // const [viewport, setViewport] = useState({
+  //   center: [centerLng, centerLat],
+  //   zoom: zoom,
+  // });
 
   const mapRef = useRef(null);
   const [style, setStyle] = useState("default");
