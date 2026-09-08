@@ -3,18 +3,21 @@ import ErrorPage from "@/components/error-page";
 
 import Login from "@/Page/LoginPage/LoginPageMain";
 
-import DashboardModule from "@/Page/Dashboard/DashboardMain";
+import DashboardModule from "@/Module/DashboardMain";
 
-import DashboardOutlet from "@/outlet/DashboardOutlet";
+import AllEmployee from "@/Module/AllEmployeeMain";
+import LeaveRequest from "@/Module/LeaveRequestMain";
+import NewEmployee from "@/Module/NewEmployee";
 
-import AllEmployee from "@/Page/Employee/AllEmployee/AllEmployeeMain";
-import LeaveRequest from "@/Page/Employee/LeaveRequest/LeaveRequestMain";
-import NewEmployee from "@/Page/Employee/NewEmployee/NewEmployee";
+import Attendance from "@/Module/AttendanceMain";
 
-import Attendance from "@/Page/Attendance/AttendanceMain/AttendanceMain";
-import Location from "@/Page/Attendance/Location/LocationMain";
+import Location from "@/Module/LocationMain";
 
-import Payroll from "@/Page/Payroll/PayrollMain";
+import Payroll from "@/Module/PayrollMain";
+
+import DashboardOutlet from "@/Outlet/DashboardOutlet";
+import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
+import LocationOutlet from "@/Outlet/LocationOutlet";
 export const router = createBrowserRouter([
   {
     // path to where it should go
@@ -64,9 +67,20 @@ export const router = createBrowserRouter([
         path: "location",
         element: <Location />,
         errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            element: <LocationOutlet />,
+          },
+        ],
+      },
+      {
+        index: true,
+        element: <AttendanceOutlet />,
       },
     ],
   },
+
   {
     path: "payroll",
     element: <Payroll />,

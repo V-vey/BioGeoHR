@@ -11,8 +11,8 @@ export default function Layout({ children, nav }) {
       {/* ITEM INSIDE */}
       <AppSidebar />
 
-      <main className="w-full px-8 py-6">
-        <SidebarTrigger className="flex items-center" nav={nav} />
+      <main className="flex-1 p-[16px] md:p-[22px_28px]">
+        <SidebarTrigger nav={nav} />
         {children}
       </main>
     </SidebarProvider>

@@ -233,16 +233,7 @@ function SidebarTrigger({ className, onClick, nav, ...props }) {
 
   return (
     <>
-      <div
-        className=" flex 
-                    flexDirection: 'column'
-                    items-center
-                    w-full 
-                  bg-[#FCFCFC] 
-                    shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]
-                    rounded-[10px]
-                    px-5"
-      >
+      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
         <Button
           data-sidebar="trigger"
           data-slot="sidebar-trigger"
@@ -261,7 +252,7 @@ function SidebarTrigger({ className, onClick, nav, ...props }) {
         {/* act us spacer() */}
         <div style={{ flexGrow: 1 }} />
 
-        <span className="text-[#6675EC] font-bold">{nav}</span>
+        <h2 className="text-[#6675EC] font-bold ">{nav}</h2>
       </div>
     </>
   );

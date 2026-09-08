@@ -4,7 +4,9 @@ export default function LeaveRequest() {
   return (
     <>
       <Sidebar nav={nav}>
-        <div>Leave Request</div>
+        <div className="h-4" />
+
+        <Outlet />
       </Sidebar>
     </>
   );

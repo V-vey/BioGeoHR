@@ -3,6 +3,7 @@ import Calendar from "@/components/Dashboard/calendar";
 import WeeklyAttendance from "@/components/Dashboard/weekly-attendance";
 import BirthdayLayout from "@/components/Dashboard/birthday";
 import LeaveLayout from "@/components/Dashboard/leave-request";
+import EmployeeList from "@/components/Dashboard/list-of-employee";
 import { useState, useEffect } from "react";
 
 import Test from "@/components/Dashboard/testingCard";
@@ -10,7 +11,7 @@ import Test from "@/components/Dashboard/testingCard";
 import CalendarV from "@/components/Dashboard/calendarV2";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
-import LeaveRequest from "@/Page/Employee/LeaveRequest/LeaveRequestMain";
+import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
   const num = 1;
   const [metrics, setMetrics] = useState({
@@ -77,10 +78,11 @@ export default function DashboardOutlet() {
           icon={<DoorOpen className="text-[#6675EC] w-10 h-10 text-[10px] " />}
         />
       </div>
-      <div className="h-4 bg-" />
+      <div className="h-4" />
       <div className="flex flex-wrap gap-4">
         {/* 1. Weekly Attendance Card (Bigger) */}
-        <div className="flex-2 ">
+
+        <div className="flex-2">
           <WeeklyAttendance chartData={chartData} />
         </div>
 
@@ -88,18 +90,21 @@ export default function DashboardOutlet() {
         <div className="flex-1">
           <Calendar />
         </div>
+
         <div className="flex-2">
           <LeaveLayout />
         </div>
       </div>
-      <Test />
-      {/* Weekly Overview */}
+      <div className="h-4" />
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-3">
+          <EmployeeList />
+        </div>
 
-      {/* Calendar */}
-      {/* </div> */}
-
-      {/* List Employee */}
-      {/* Leave Requests */}
+        <div className="flex-1">
+          <BirthdayLayout />
+        </div>
+      </div>
     </>
   );
 }

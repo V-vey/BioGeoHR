@@ -4,7 +4,9 @@ export default function PayrollMain() {
   return (
     <>
       <Sidebar nav={nav}>
-        <div>Payroll</div>
+        <div className="h-4" />
+
+        <Outlet />
       </Sidebar>
     </>
   );

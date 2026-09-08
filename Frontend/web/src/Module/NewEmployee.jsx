@@ -4,7 +4,9 @@ export default function NewEmployee() {
   return (
     <>
       <Sidebar nav={nav}>
-        <div>New Employee</div>
+        <div className="h-4" />
+
+        <Outlet />
       </Sidebar>
     </>
   );
