@@ -1,5 +1,6 @@
-import Maps from "@/components/Map";
-import MapControllers from "@/components/map-controller";
+import Maps from "@/components/Attendance/Location/Map";
+import MapControllers from "@/components/Attendance/Location/map-controller";
+import Items from "@/components/Attendance/Location/location-items";
 
 import { useEffect, useRef, useState } from "react";
 import { Map, MapControls } from "@/components/ui/map";
@@ -32,6 +33,13 @@ export default function Location() {
             zoom={zoom}
           />
         </div>
+      </div>
+      <div>
+        <Items
+          centerLat={viewport.center[1]?.toFixed(8)}
+          centerLng={viewport.center[0]?.toFixed(8)}
+          zoom={zoom}
+        />
       </div>
     </div>
   );

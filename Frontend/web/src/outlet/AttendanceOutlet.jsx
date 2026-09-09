@@ -239,6 +239,7 @@ export default function Attendance() {
       <Link
         className="fixed right-[26px] bottom-[26px] inline-flex items-center gap-2 p-[12px_22px] border-none rounded-[10px] bg-[#22c55e] text-white text-sm font-bold no-underline shadow-[0_8px_20px_rgba(34,197,94,0.35)] cursor-pointer hover:bg-opacity-95"
         to="/location"
+        // still not working
       >
         Create Location ⊕
       </Link>

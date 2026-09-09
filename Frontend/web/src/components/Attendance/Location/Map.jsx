@@ -64,7 +64,7 @@ export default function ControlledMapExample({
       </Map>
 
       {/* Coordinates Status Badge */}
-      <div className="bg-background/80 absolute top-2 right-10 z-10 flex flex-wrap gap-x-3 gap-y-1 rounded border px-2 py-1.5 font-mono text-xs backdrop-blur select-none">
+      {/* <div className="bg-background/80 absolute top-2 right-10 z-10 flex flex-wrap gap-x-3 gap-y-1 rounded border px-2 py-1.5 font-mono text-xs backdrop-blur select-none">
         <span>
           <span className="text-muted-foreground">lng:</span>{" "}
           {viewport.center[0]?.toFixed(8)}
@@ -77,7 +77,7 @@ export default function ControlledMapExample({
           <span className="text-muted-foreground">zoom:</span>{" "}
           {viewport.zoom?.toFixed(1)}
         </span>
-      </div>
+      </div> */}
 
       {/* Style Dropdown Selector */}
       <div className="absolute top-2 left-2 z-10">
