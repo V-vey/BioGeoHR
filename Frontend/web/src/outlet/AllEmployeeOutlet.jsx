@@ -1,4 +1,5 @@
 import Containers from "@/components/container";
+import Item from "@/components/Employee/AllEmployee/item-container";
 import { useState } from "react";
 
 export default function AllEmployee({}) {
@@ -34,6 +35,14 @@ export default function AllEmployee({}) {
       onFilterApply={(filters) => console.log(filters)}
     >
       {/* your table/list rows */}
+      <Item
+        id={202430004}
+        name={"Abdul Jackul"}
+        department={"HR"}
+        position={"Product Manager"}
+        contType={"Full-Time"}
+        joinDate={"April 7, 2026"}
+      />
     </Containers>
   );
 }

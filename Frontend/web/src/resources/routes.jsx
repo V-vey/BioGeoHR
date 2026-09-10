@@ -19,6 +19,8 @@ import DashboardOutlet from "@/Outlet/DashboardOutlet";
 
 import AllEmployeeOutlet from "@/outlet/AllEmployeeOutlet";
 import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
+
+import NewEmployeeOutlet from "@/outlet/NewEmployeeOutlet";
 import LocationOutlet from "@/Outlet/LocationOutlet";
 
 import PayrollOutlet from "@/outlet/PayrollOutlet";
@@ -26,6 +28,7 @@ import RunPayrollOutlet from "@/outlet/RunPayrollOutlet";
 import PayslipsOutlet from "@/outlet/PayslipsOutlet";
 import PayrollSettingsOutlet from "@/outlet/PayrollSettingsOutlet";
 import LoansOutlet from "@/outlet/LoansOutlet";
+
 export const router = createBrowserRouter([
   {
     // path to where it should go
@@ -63,6 +66,12 @@ export const router = createBrowserRouter([
         path: "new-employee",
         element: <NewEmployee />,
         errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            element: <NewEmployeeOutlet />,
+          },
+        ],
       },
       {
         index: true,
