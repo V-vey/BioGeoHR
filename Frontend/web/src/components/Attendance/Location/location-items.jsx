@@ -10,6 +10,8 @@ export default function Items({ centerLng, centerLat, zoom }) {
       currentPage={currentPage}
       setCurrentPage={setCurrentPage}
       arrowSize={40}
-    />
+    >
+      <div></div>
+    </Containers>
   );
 }
