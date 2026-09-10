@@ -16,8 +16,16 @@ import Location from "@/Module/LocationMain";
 import Payroll from "@/Module/PayrollMain";
 
 import DashboardOutlet from "@/Outlet/DashboardOutlet";
+
+import AllEmployeeOutlet from "@/outlet/AllEmployeeOutlet";
 import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
 import LocationOutlet from "@/Outlet/LocationOutlet";
+
+import PayrollOutlet from "@/outlet/PayrollOutlet";
+import RunPayrollOutlet from "@/outlet/RunPayrollOutlet";
+import PayslipsOutlet from "@/outlet/PayslipsOutlet";
+import PayrollSettingsOutlet from "@/outlet/PayrollSettingsOutlet";
+import LoansOutlet from "@/outlet/LoansOutlet";
 export const router = createBrowserRouter([
   {
     // path to where it should go
@@ -56,6 +64,10 @@ export const router = createBrowserRouter([
         element: <NewEmployee />,
         errorElement: <ErrorPage />,
       },
+      {
+        index: true,
+        element: <AllEmployeeOutlet />,
+      },
     ],
   },
   {
@@ -85,6 +97,32 @@ export const router = createBrowserRouter([
     path: "payroll",
     element: <Payroll />,
     errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "run",
+        element: <RunPayrollOutlet />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "payslips",
+        element: <PayslipsOutlet />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "settings",
+        element: <PayrollSettingsOutlet />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "loans",
+        element: <LoansOutlet />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        index: true,
+        element: <PayrollOutlet />,
+      },
+    ],
   },
 
   {

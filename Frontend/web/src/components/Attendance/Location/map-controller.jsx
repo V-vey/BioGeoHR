@@ -36,7 +36,7 @@ export default function MapController({ centerLng, centerLat, zoom }) {
             </div>
             <input type="range" name="radius" id="radius" />
             <br />
-            <div className="flex w-full bg-amber-100">
+            <div className="flex w-full">
               <input type="button" value="submit" className="items-end" />
             </div>
           </div>
