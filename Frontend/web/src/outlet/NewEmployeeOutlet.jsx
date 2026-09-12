@@ -16,7 +16,7 @@ function Field({ label, required, span = 1, children }) {
 }
 
 const inputClass =
-  "h-11 px-3 border border-[#eef0f5] rounded-xl text-sm outline-none focus:border-[#6675EC] focus:ring-2 focus:ring-[#6675EC]/20 transition-colors";
+  "w-full h-11 px-3 border border-[#eef0f5] rounded-xl text-sm outline-none focus:border-[#6675EC] focus:ring-2 focus:ring-[#6675EC]/20 transition-colors";
 
 function Section({ title, children }) {
   return (
@@ -106,7 +106,7 @@ export default function NewEmployeeForm({ onCancel, onSubmit }) {
             <Field label="Gender" required>
               <div className="relative">
                 <select
-                  className={`${inputClass} w-full appearance-none pr-8`}
+                  className={`${inputClass} appearance-none pr-8`}
                   onChange={update("gender")}
                 >
                   <option value="">Select</option>
@@ -122,7 +122,7 @@ export default function NewEmployeeForm({ onCancel, onSubmit }) {
               <div className="relative">
                 <input
                   type="date"
-                  className={`${inputClass} w-full pr-9`}
+                  className={`${inputClass} pr-9`}
                   onChange={update("dob")}
                 />
                 <Calendar className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -149,7 +149,7 @@ export default function NewEmployeeForm({ onCancel, onSubmit }) {
             <Field label="Status" required>
               <div className="relative">
                 <select
-                  className={`${inputClass} w-full appearance-none pr-8`}
+                  className={`${inputClass} appearance-none pr-8`}
                   onChange={update("status")}
                 >
                   <option value="">Select</option>
