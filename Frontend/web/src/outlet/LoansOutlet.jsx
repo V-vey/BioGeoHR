@@ -106,7 +106,9 @@ export default function LoansOutlet() {
       {/* Stat row */}
       <div className="flex w-full justify-between gap-4">
         <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
-          <div className="font-medium text-[#6675EC] text-left">Active Loans</div>
+          <div className="font-medium text-[#6675EC] text-left">
+            Active Loans
+          </div>
           <div className="flex items-start justify-between">
             <span className="text-[24px] font-regular text-[#3A3A3A]">
               {activeCount}
@@ -142,11 +144,11 @@ export default function LoansOutlet() {
       <div className="flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
-          Loans are interest-free with a fixed monthly deduction taken on an agreed
-          date each month, repaid within a fixed term. An employee may hold only one
-          active loan or cash advance at a time — a new one can't be issued until the
-          existing balance is fully paid off. When a balance reaches ₱0, HR stops the
-          deduction manually.
+          Loans are interest-free with a fixed monthly deduction taken on an
+          agreed date each month, repaid within a fixed term. An employee may
+          hold only one active loan or cash advance at a time — a new one can't
+          be issued until the existing balance is fully paid off. When a balance
+          reaches ₱0, HR stops the deduction manually.
         </span>
       </div>
 
@@ -158,7 +160,8 @@ export default function LoansOutlet() {
               Loans &amp; Cash Advances
             </h2>
             <div className="text-xs text-[#8a90a3] mt-0.5">
-              SSS, Pag-IBIG, company loans, and cash advances — all tracked the same way
+              SSS, Pag-IBIG, company loans, and cash advances — all tracked the
+              same way
             </div>
           </div>
           <button

@@ -5,7 +5,7 @@ import BirthdayLayout from "@/components/Dashboard/birthday";
 import LeaveLayout from "@/components/Dashboard/leave-request";
 import EmployeeList from "@/components/Dashboard/list-of-employee";
 import { useState, useEffect } from "react";
-
+import Containers from "@/components/container";
 import Test from "@/components/Dashboard/testingCard";
 
 import CalendarV from "@/components/Dashboard/calendarV2";
@@ -13,6 +13,7 @@ import CalendarV from "@/components/Dashboard/calendarV2";
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
+  const [currentPage, setCurrentPage] = useState(1);
   const num = 1;
   const [metrics, setMetrics] = useState({
     countEmployees: 0,
@@ -39,6 +40,9 @@ export default function DashboardOutlet() {
 
   return (
     <>
+      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
+        <h2 className="text-[#6675EC] font-bold justify-end">Dashboard</h2>
+      </div>
       {/* Dashboard Metrics Counts */}
       <div class="flex w-full justify-between gap-4">
         <Counts
@@ -92,7 +96,13 @@ export default function DashboardOutlet() {
         </div>
 
         <div className="flex-2">
-          <LeaveLayout />
+          {/* <LeaveLayout /> */}
+          <Containers
+            name="Leave"
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            arrowSize={32}
+          ></Containers>
         </div>
       </div>
       <div className="h-4" />

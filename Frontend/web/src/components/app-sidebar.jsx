@@ -39,7 +39,16 @@ const items = [
       { title: "New Employee", url: "/employee/new-employee" },
     ],
   },
-  { title: "Attendance", url: "/attendance", icon: Calendar },
+  {
+    title: "Attendance",
+    url: "/attendance",
+    icon: Calendar,
+    children: [
+      { title: "All Attendance", url: "/attendance" },
+      { title: "Location Log", url: "/attendance/attendance-log" },
+      { title: "Location", url: "/attendance/location" },
+    ],
+  },
   {
     title: "Payroll",
     url: "/payroll",

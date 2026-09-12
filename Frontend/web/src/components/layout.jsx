@@ -12,7 +12,7 @@ export default function Layout({ children, nav }) {
       <AppSidebar />
 
       <main className="flex-1 p-[16px] md:p-[22px_28px]">
-        <SidebarTrigger nav={nav} />
+        {/* <SidebarTrigger nav={nav} /> */}
         {children}
       </main>
     </SidebarProvider>

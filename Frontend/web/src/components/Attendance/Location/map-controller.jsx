@@ -15,7 +15,7 @@ export default function MapController({ centerLng, centerLat, zoom }) {
               className="w-full border-1"
             />
             <div className="flex flex-row flex-wrap gap-4 w-full justify-center w-full">
-              <div className="flex flex-col border-1">
+              <div className="flex flex-1 flex-col border-1">
                 <p className="flex justify-start">Latitude:</p>
                 <div className="h-[1px] w-full m-0 bg-[#E0E0E0] my-0.5" />
                 <input
@@ -26,7 +26,9 @@ export default function MapController({ centerLng, centerLat, zoom }) {
                   value={centerLat}
                 />
               </div>
-              <div>
+              <div className="flex flex-1 flex-col border-1">
+                <p className="flex justify-start">Longitude:</p>
+                <div className="h-[1px] w-full m-0 bg-[#E0E0E0] my-0.5" />
                 <input
                   type="number"
                   name="longitude"
@@ -36,11 +38,24 @@ export default function MapController({ centerLng, centerLat, zoom }) {
                 />
               </div>
             </div>
-
-            <input type="range" name="radius" id="radius" />
-            <br />
-            <div className="flex w-full">
-              <input type="button" value="submit" className="items-end" />
+            <div className="flex flex-col border-1">
+              <p className="flex items-start">Radius:</p>
+              <input
+                type="range"
+                name="radius"
+                id="radius"
+                min={100}
+                max={200}
+                // value={1}
+                className="w-full"
+              />
+            </div>
+            <div className="flex w-full border-1">
+              <input
+                type="button"
+                value="Submit"
+                className="flex justify-end items-end bg-amber-400"
+              />
             </div>
           </div>
         </form>
