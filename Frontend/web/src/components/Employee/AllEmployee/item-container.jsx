@@ -6,6 +6,10 @@ export default function ItemContainer({
   contType,
   joinDate,
 }) {
+  const token = localStorage.getItem("token");
+  const test = async (e) => {
+    alert(token);
+  };
   return (
     <>
       <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] p-2 rounded-[5px]">
@@ -14,6 +18,7 @@ export default function ItemContainer({
             <p className="text-[16px]">ID - {id}</p>
           </div>
           <button
+            onClick={test}
             type="button"
             className="w-20 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
           >

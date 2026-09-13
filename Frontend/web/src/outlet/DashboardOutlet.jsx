@@ -13,6 +13,16 @@ import CalendarV from "@/components/Dashboard/calendarV2";
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
+  const token = localStorage.getItem("token");
+  try {
+    console.log(token);
+    axios.get(url + "/users").then((response) => {
+      console.log(response.data);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
   const [currentPage, setCurrentPage] = useState(1);
   const num = 1;
   const [metrics, setMetrics] = useState({

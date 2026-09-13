@@ -19,7 +19,6 @@ function LoginPageMain() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   // Being Posted
   const loginForm = {
     email: email,
@@ -31,8 +30,6 @@ function LoginPageMain() {
 
     try {
       await axios.post(url + "/login", loginForm).then((response) => {
-        console.log("Success! Created item:", response.data);
-
         //block the user if they are not HR
         if (response.data.user !== "HR") {
           alert(
@@ -40,21 +37,21 @@ function LoginPageMain() {
           );
           return;
         }
-        if (response.status === 300) {
-          alert("User not found. Please check your email.");
-        }
-        if (response.status === 301) {
-          alert("Password is incorrect. Please try again.");
-        }
         if (response.data.authenticated === "Log in Success") {
-          console.log("Login successful for HR user.");
+          localStorage.setItem("token", response.data.token);
           navigate("/dashboard");
         } else {
-          alert("Please try again.");
+          alert("Please try again. Something went Wrong");
         }
       });
     } catch (error) {
-      console.error("Error during login:", error);
+      if (error.response?.status === 300) {
+        alert("User not found. Please check your email.");
+      } else if (error.response?.status === 301) {
+        alert("Password is incorrect. Please try again.");
+      } else {
+        console.error("Error during login:", error);
+      }
     }
   };
   //pass
