@@ -9,19 +9,31 @@ import Containers from "@/components/container";
 import Test from "@/components/Dashboard/testingCard";
 
 import CalendarV from "@/components/Dashboard/calendarV2";
+
+import axios from "axios";
+import { url } from "@/resources/api";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
-  const token = localStorage.getItem("token");
-  try {
-    console.log(token);
-    axios.get(url + "/users").then((response) => {
-      console.log(response.data);
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(url + "/users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          "ngrok-skip-browser-warning": "true",
+        });
+        console.log(response.data);
+      } catch (error) {
+        console.error("Something went wrong", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const [currentPage, setCurrentPage] = useState(1);
   const num = 1;
@@ -54,7 +66,7 @@ export default function DashboardOutlet() {
         <h2 className="text-[#6675EC] font-bold justify-end">Dashboard</h2>
       </div>
       {/* Dashboard Metrics Counts */}
-      <div class="flex w-full justify-between gap-4">
+      <div className="flex w-full justify-between gap-4">
         <Counts
           className="flex-1 "
           display="Total Employees"
