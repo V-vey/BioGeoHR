@@ -16,27 +16,6 @@ import { url } from "@/resources/api";
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(url + "/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-          "ngrok-skip-browser-warning": "true",
-        });
-        console.log(response.data);
-      } catch (error) {
-        console.error("Something went wrong", error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const num = 1;
   const [metrics, setMetrics] = useState({
     countEmployees: 0,
     countAttendance: 0,
@@ -49,6 +28,44 @@ export default function DashboardOutlet() {
     percentageAbsent: 0,
     percentageLeave: 0,
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(url + "/attendanceCounts", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          "ngrok-skip-browser-warning": "true",
+        });
+        console.log(response.data);
+
+        setMetrics({
+          countEmployees: response.data.employees,
+          countAttendance: response.data.on_time,
+          countLate: response.data.late,
+          countAbsent: response.data.absent,
+          countLeave: response.data.leave,
+
+          percentageAttendance:
+            (response.data.on_time / response.data.employees) * 100,
+          percentageLate: (response.data.late / response.data.employees) * 100,
+          percentageAbsent:
+            (response.data.absent / response.data.employees) * 100,
+          percentageLeave:
+            (response.data.leave / response.data.employees) * 100,
+        });
+      } catch (error) {
+        console.error("Something went wrong", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const num = 1;
 
   const chartData = [
     { day: "Sunday", ontime: num, late: num, absent: num, leave: num },
@@ -75,7 +92,7 @@ export default function DashboardOutlet() {
         />
         <Counts
           className="flex-1"
-          display="Total Attendance"
+          display="On-Time Employees"
           count={metrics.countAttendance}
           percentage={`${metrics.percentageAttendance}% of Employees`}
           icon={<Clock className="text-[#2AAF56] w-10 h-10 text-[10px] " />}

@@ -2,6 +2,7 @@ import Maps from "@/components/Attendance/Location/Map";
 import MapControllers from "@/components/Attendance/Location/map-controller";
 import Items from "@/components/Attendance/Location/location-items";
 
+import TestMap from "@/components/Attendance/Location/testMap";
 import { useEffect, useRef, useState } from "react";
 import { Map, MapControls } from "@/components/ui/map";
 export default function Location() {
@@ -21,13 +22,15 @@ export default function Location() {
       </div>
       <div className="flex flex-row  justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px] gap-4">
         <div className="flex-2">
-          <Maps
+          {/* <Maps
             centerLat={centerLat}
             centerLng={centerLng}
             zoom={zoom}
             viewport={viewport}
             setViewport={setViewport}
-          />
+            geofenceCircle={geofenceCircle}
+          /> */}
+          <TestMap radiusMeters={100} />
         </div>
         <div className="flex-1">
           <MapControllers

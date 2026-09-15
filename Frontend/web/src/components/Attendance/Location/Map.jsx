@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Map, MapControls } from "@/components/ui/map";
+import { Map, MapControls, MapGeoJSON } from "@/components/ui/map";
 
 // Ensure MapLibre styles are loaded
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -21,6 +21,7 @@ export default function ControlledMapExample({
   zoom,
   viewport,
   setViewport,
+  geofenceCircle,
 }) {
   // Corrected the inverted naming convention to avoid state glitches
 
@@ -60,6 +61,11 @@ export default function ControlledMapExample({
           showCompass
           showLocate
           showFullscreen
+        />
+        <MapGeoJSON
+          data={geofenceCircle}
+          fillPaint={{ "fill-color": "#6675EC", "fill-opacity": 0.2 }}
+          linePaint={{ "line-color": "#6675EC", "line-width": 2 }}
         />
       </Map>
 
