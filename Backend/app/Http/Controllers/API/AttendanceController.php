@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Users;
 use App\Models\Location;
+use App\Models\LeaveApplication;
 use App\Http\Controllers\Feature\AttendanceService;
 
 use Laravel\Sanctum\PersonalAccessToken; 
@@ -206,6 +207,11 @@ class AttendanceController extends Controller
         $absent = 0;
         $leave = 0;
         
+        $leave = LeaveApplication::where("status", "approved")
+            ->whereDate("start_date", "<=", today())
+            ->whereDate("end_date", ">=", today())
+            ->count();
+        // $leaveData = LeaveApplication::all();
         //verify avoid dup
         $usersVer = [];
         foreach ($attendanceToday as $value) {
@@ -229,7 +235,6 @@ class AttendanceController extends Controller
             'absent' => $absent, 
             'leave' => $leave
         ]);
-        // return response()->json($attendanceToday);
         
     }
 }
