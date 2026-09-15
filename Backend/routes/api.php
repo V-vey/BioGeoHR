@@ -63,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('balance', LeaveBalanceController::class);
         Route::apiResource('attendance', AttendanceController::class);
         Route::apiResource('userl', UserLocationController::class);
+
+        Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

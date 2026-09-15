@@ -190,8 +190,46 @@ class AttendanceController extends Controller
             'date' => today()->toDateString(), // bug
             'time_in' => $time,
         ]);
+        
         return response()->json($attendance, 201);
     }
 
+    public function getCounts(){
+        $attendanceToday = Attendance::whereDate('date', today())
+            ->select('status', 'user_id')
+            ->get()
+            ->unique('user_id');
+        
+        $employeesCount = Users::All()->count();
+        $onTime = 0;
+        $late = 0;
+        $absent = 0;
+        $leave = 0;
+        
+        //verify avoid dup
+        $usersVer = [];
+        foreach ($attendanceToday as $value) {
+        
+            if($value->status == "On-Time" ){
+                $onTime = $onTime + 1;
+            }
+            elseif($value->status == "Late"){
+                $late = $late + 1;
+            }
 
+        }
+
+        $totalAttedance = $onTime + $late;
+        $absent = $employeesCount - $totalAttedance;
+        
+        return response()->json([
+            'employees' => $employeesCount,
+            'on_time' => $onTime,
+            'late' => $late,
+            'absent' => $absent, 
+            'leave' => $leave
+        ]);
+        // return response()->json($attendanceToday);
+        
+    }
 }
