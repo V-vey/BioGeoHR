@@ -1,4 +1,9 @@
-export default function MapController({ centerLng, centerLat, zoom }) {
+export default function MapController({
+  centerLng,
+  centerLat,
+  setRadius,
+  radius,
+}) {
   return (
     <div className="flex justify-end min-h-[500px] mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
       <div className="flex-col w-full">
@@ -46,15 +51,19 @@ export default function MapController({ centerLng, centerLat, zoom }) {
               </div>
             </div>
             <div className="flex flex-1 flex-col gap-2 border rounded-[7px] border-[#4C4C4C] p-2">
-              <p className="flex items-start">Radius:</p>
+              <div className="flex justify-between">
+                <p>Radius:</p>
+                <p>{radius}</p>
+              </div>
 
               <input
                 type="range"
                 name="radius"
                 id="radius"
-                // min={100}
-                // max={200}
-                // value={1}
+                min={100}
+                max={200}
+                value={radius}
+                onChange={(e) => setRadius(Number(e.target.value))}
                 className="
                     w-full h-1.5 rounded-full 
                 

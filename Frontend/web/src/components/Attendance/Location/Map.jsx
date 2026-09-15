@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Map, MapControls, MapGeoJSON } from "@/components/ui/map";
-
+import {
+  Map,
+  MapControls,
+  MapGeoJSON,
+  useMap,
+  MapMarker,
+} from "@/components/ui/map";
+import circle from "@turf/circle";
 // Ensure MapLibre styles are loaded
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -15,13 +21,32 @@ const styles = {
   fiord: "https://tiles.openfreemap.org/styles/fiord",
 };
 
-export default function ControlledMapExample({
+function MapClickHandler({ onClick }) {
+  const { map } = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    const handleClick = (e) => {
+      onClick({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+    };
+
+    map.on("click", handleClick);
+    return () => map.off("click", handleClick);
+  }, [map, onClick]);
+
+  return null;
+}
+
+export default function ViewMap({
   centerLng,
   centerLat,
   zoom,
   viewport,
   setViewport,
   geofenceCircle,
+  setCenter,
+  center,
 }) {
   // Corrected the inverted naming convention to avoid state glitches
 
@@ -55,6 +80,7 @@ export default function ControlledMapExample({
             : undefined
         }
       >
+        <MapClickHandler onClick={({ lng, lat }) => setCenter([lng, lat])} />
         <MapControls
           position="top-right"
           showZoom
@@ -62,11 +88,16 @@ export default function ControlledMapExample({
           showLocate
           showFullscreen
         />
-        <MapGeoJSON
-          data={geofenceCircle}
-          fillPaint={{ "fill-color": "#6675EC", "fill-opacity": 0.2 }}
-          linePaint={{ "line-color": "#6675EC", "line-width": 2 }}
-        />
+        {center && (
+          <>
+            <MapMarker longitude={center[0]} latitude={center[1]} />
+            <MapGeoJSON
+              data={geofenceCircle}
+              fillPaint={{ "fill-color": "#6675EC", "fill-opacity": 0.2 }}
+              linePaint={{ "line-color": "#6675EC", "line-width": 2 }}
+            />
+          </>
+        )}
       </Map>
 
       {/* Coordinates Status Badge */}
