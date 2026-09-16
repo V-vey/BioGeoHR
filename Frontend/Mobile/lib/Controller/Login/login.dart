@@ -20,8 +20,8 @@ class Logintext {
   void verifyData(dynamic data) async {
     if (data["authenticated"] == "Log in Success") {
       token = data["token"];
-      userId = data["user"]["id"].toString();
-      authStorage.saveUserId(userId);
+      // userId = data["user"]["id"].toString();
+      // authStorage.saveUserId(userId);
       authStorage.saveToken(token);
     }
   }

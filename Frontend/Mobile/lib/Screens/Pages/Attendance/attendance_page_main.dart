@@ -25,7 +25,7 @@ class _AttendancePageMainState extends State<AttendancePageMain> {
   @override
   void initState() {
     super.initState();
-    attendance = attendanceController.getAttendance();
+    // attendance = attendanceController.getAttendance();
     _loadData();
   }
 

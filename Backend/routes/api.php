@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('clockIn', [AttendanceController::class, 'createAttendance']);
     Route::post('clockOut', [AttendanceController::class, 'clockOut']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
+    Route::get('location', [LocationController::class, 'index']);
 
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
@@ -63,14 +64,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('balance', LeaveBalanceController::class);
         Route::apiResource('attendance', AttendanceController::class);
         Route::apiResource('userl', UserLocationController::class);
-
+        
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
+
+        Route::apiResource('location', LocationController::class);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);
 });
 
-//move to HR later on
-Route::apiResource('location', LocationController::class);
 
 
