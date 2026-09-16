@@ -67,7 +67,7 @@ export default function ViewMap({
 
   return (
     // Fixed Tailwind arbitrary bracket height syntax from h-500px to h-[500px]
-    <div className="relative h-[500px] w-full border rounded-lg overflow-hidden">
+    <div className="relative h-[500px] w-full rounded-lg overflow-hidden">
       <Map
         viewport={viewport}
         onViewportChange={setViewport}
