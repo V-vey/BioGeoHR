@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
     Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
+    
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
     
     //attendance
