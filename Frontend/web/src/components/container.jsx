@@ -9,13 +9,16 @@ export default function Containers({
   filterConfig,
   onFilterApply,
   contH,
+  totalPages = 1,
+  setSearch,
+  search,
 }) {
   const handleBack = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const handleNext = () => {
-    setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   return (
@@ -30,6 +33,8 @@ export default function Containers({
               name="search"
               id="search"
               placeholder="Search Name"
+              value={search}
+              onChange={(e) => setSearch?.(e.target.value)}
               className="border-[#8E8E8E] border-1 rounded-2xl w-100 px-3"
             />
             {filterConfig && (
@@ -51,7 +56,9 @@ export default function Containers({
 
         <div className="h-[1px] w-full m-0 bg-[#E0E0E0] my-0.5" />
         <div className="pt-2 flex items-center justify-between w-full">
-          <p className="text-s text-gray-600">Page: {currentPage}</p>
+          <p className="text-s text-gray-600">
+            Page: {currentPage} to {totalPages}
+          </p>
 
           <div className="flex flex-row gap-2">
             <button

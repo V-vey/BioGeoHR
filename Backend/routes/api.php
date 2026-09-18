@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
 
         Route::apiResource('location', LocationController::class);
+        // Route::get('location', [LocationController::class, "index"]);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

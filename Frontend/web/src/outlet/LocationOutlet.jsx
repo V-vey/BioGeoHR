@@ -2,9 +2,12 @@ import Maps from "@/components/Attendance/Location/Map";
 import MapControllers from "@/components/Attendance/Location/map-controller";
 import Items from "@/components/Attendance/Location/location-items";
 import circle from "@turf/circle";
+import Containers from "@/components/container";
 import TestMap from "@/components/Attendance/Location/testMap";
 import { useEffect, useRef, useState } from "react";
 import { Map, MapControls } from "@/components/ui/map";
+import { url } from "@/resources/api";
+import axios from "axios";
 
 export default function Location() {
   let centerLng = 124.66181861;
@@ -13,6 +16,7 @@ export default function Location() {
 
   const [center, setCenter] = useState(null);
   const [radius, setRadius] = useState(100);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const geofenceCircle = center
     ? circle(center, radius / 1000, { steps: 64, units: "kilometers" })
@@ -22,6 +26,50 @@ export default function Location() {
     center: [centerLng, centerLat],
     zoom: zoom,
   });
+
+  const [location, setLocation] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    const fetchLocations = async () => {
+      try {
+        const response = await axios.get(url + "/location", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        setLocation(response.data);
+      } catch (error) {
+        console.error("Failed to Load Locations:", error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  // LocationOutlet.jsx
+  const [search, setSearch] = useState("");
+  const handleSearch = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const filteredLocations = location.filter((loc) =>
+    loc.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const itemsPerPage = 3;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredLocations.length / itemsPerPage),
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageItems = filteredLocations.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   return (
     <div className="flex flex-col">
@@ -45,6 +93,7 @@ export default function Location() {
         </div>
         <div className="flex-1">
           <MapControllers
+            name={"Abdul"}
             centerLat={center?.[1]?.toFixed(8)}
             centerLng={center?.[0]?.toFixed(8)}
             setRadius={setRadius}
@@ -53,11 +102,25 @@ export default function Location() {
         </div>
       </div>
       <div>
-        <Items
-          centerLat={viewport.center[1]?.toFixed(8)}
-          centerLng={viewport.center[0]?.toFixed(8)}
-          zoom={zoom}
-        />
+        <Containers
+          name="Location"
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          arrowSize={32}
+          totalPages={totalPages}
+          search={search}
+          setSearch={handleSearch}
+        >
+          {pageItems.map((loc) => (
+            <Items
+              key={loc.id}
+              name={loc.name}
+              centerLat={loc.latitude}
+              centerLng={loc.longitude}
+              radius={loc.radius}
+            />
+          ))}
+        </Containers>
       </div>
     </div>
   );
