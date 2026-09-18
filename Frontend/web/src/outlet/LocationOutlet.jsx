@@ -49,7 +49,6 @@ export default function Location() {
     fetchLocations();
   }, []);
 
-  // LocationOutlet.jsx
   const [search, setSearch] = useState("");
   const handleSearch = (value) => {
     setSearch(value);

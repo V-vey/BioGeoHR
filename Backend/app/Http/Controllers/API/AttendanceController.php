@@ -24,8 +24,20 @@ class AttendanceController extends Controller
      */
     public function index()
     {
-        $attendances = Attendance::all();
-        return response()->json($attendances);
+        $attendances = Attendance::with(['user', 'location'])->get();
+         $formatted = $attendances->map(function ($a) {
+        return [
+            'date' => $a->date,
+            'location' => $a->location?->name ?? 'Unknown Location',
+            'name' => $a->user?->name,
+            'department' => $a->user?->department,
+            'position' => $a->user?->position,
+            'status' => $a->status,
+            'clockIn' => $a->time_in,
+            'clockOut' => $a->time_out,
+        ];
+    });
+        return response()->json($formatted);
     }
     /**
      * Store a newly created resource in storage.

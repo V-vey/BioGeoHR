@@ -4,12 +4,55 @@ import Item from "@/components/Attendance/item-container.jsx";
 import { useFilterPanel } from "../hooks/useFilterPanel.js";
 import { Link } from "react-router-dom";
 
+import { url } from "@/resources/api";
+import axios from "axios";
+
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [attendance, setAttendance] = useState([]);
+
   useEffect(() => {
-    // Data fetching goes here once the backend is connected.
+    const token = localStorage.getItem("token");
+
+    const fetchAttendance = async () => {
+      try {
+        const response = await axios.get(url + "/attendance", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        setAttendance(response.data);
+      } catch (error) {
+        console.error("Failed to Load Locations:", error);
+      }
+    };
+
+    fetchAttendance();
   }, []);
+
+  const [search, setSearch] = useState("");
+  const handleSearch = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const filteredAttendance = attendance.filter((att) =>
+    att.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const itemsPerPage = 16;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAttendance.length / itemsPerPage),
+  );
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageItems = filteredAttendance.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   return (
     <>
@@ -22,194 +65,27 @@ export default function Attendance() {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         arrowSize={32}
-        filterConfig={[
-          {
-            key: "availability",
-            label: "Availabilty",
-            type: "radio",
-            options: ["Available", "Unavailable", "Break", "Leave"],
-          },
-          {
-            key: "contractType",
-            label: "Contract Type",
-            type: "radio",
-            options: ["Full-time", "Freelance", "Internship"],
-          },
-          {
-            key: "department",
-            label: "Department",
-            type: "radio",
-            options: ["Product", "Engineer", "Marketing", "Finance"],
-          },
-          { key: "joinedDate", label: "Joined Date", type: "dateRange" },
-        ]}
-        onFilterApply={(filters) => console.log(filters)}
+        filterConfig={[]}
+        // onFilterApply={(filters) => console.log(filters)}
+        totalPages={totalPages}
+        search={search}
+        setSearch={handleSearch}
       >
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-        <Item
-          date={"April 7, 2026"}
-          location={"Office"}
-          name={"Abdul Jackul"}
-          department={"HR"}
-          position={"Product Manager"}
-          status={"On-Time"}
-          clockIn={"10:00 AM"}
-          clockOut={"4:00 PM"}
-        />
-
-        {/* your table/list rows */}
+        {pageItems.map((att, i) => (
+          <Item
+            key={i}
+            date={att.date}
+            location={att.location}
+            name={att.name}
+            department={att.department}
+            position={att.position}
+            status={att.status}
+            clockIn={att.clockIn}
+            clockOut={att.clockOut}
+          />
+        ))}
       </Containers>
 
-      {/* Floating Action Button (FAB) */}
       <Link
         className="fixed right-[26px] bottom-[26px] inline-flex items-center gap-2 p-[12px_22px] border-none rounded-[10px] bg-[#22c55e] text-white text-sm font-bold no-underline shadow-[0_8px_20px_rgba(34,197,94,0.35)] cursor-pointer hover:bg-opacity-95"
         to="location"

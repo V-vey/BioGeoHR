@@ -15,6 +15,7 @@ class Attendance extends Model
      *
      * @var list<string>
      */
+    
     protected $fillable = [
         'user_id',
         'location_id',
@@ -26,7 +27,7 @@ class Attendance extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+       return $this->belongsTo(Users::class, 'user_id', 'id');
     }
     public function location()
     {
