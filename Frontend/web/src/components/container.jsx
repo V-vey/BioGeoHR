@@ -22,10 +22,10 @@ export default function Containers({
   };
 
   return (
-    <div className="flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
-      <div className="flex flex-col w-full">
+    <div className="flex flex-col justify-end mb-4   bg-white border border-[#b2b2b2] rounded-[10px]">
+      <div className="flex flex-col w-full px-4 py-3 justify-center">
         <div className="flex flex-row justify-between items-center">
-          <h2 className="flex items-start">{name}</h2>
+          <h2 className="flex items-start ">{name}</h2>
 
           <div className="flex flex-row items-center gap-2">
             <input
@@ -46,16 +46,18 @@ export default function Containers({
             )}
           </div>
         </div>
+      </div>
+      <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
 
-        <div className="h-2" />
-        <div className="h-[1px] w-full m-0 bg-[#E0E0E0] my-0.5" />
-
+      <div className="flex flex-col">
         <div className="flex-1 flex flex-wrap gap-4 content-start justify-center py-4">
           {children}
         </div>
+      </div>
 
-        <div className="h-[1px] w-full m-0 bg-[#E0E0E0] my-0.5" />
-        <div className="pt-2 flex items-center justify-between w-full">
+      <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
+      <div className="flex flex-col w-full px-4 py-2 justify-center">
+        <div className="flex items-center justify-between w-full">
           <p className="text-s text-gray-600">
             Page: {currentPage} to {totalPages}
           </p>
@@ -64,14 +66,14 @@ export default function Containers({
             <button
               onClick={handleBack}
               style={{ width: arrowSize, height: arrowSize }}
-              className="border border-[#eef0f5] rounded-[6px] bg-white cursor-pointer flex items-center justify-center text-sm text-[#8a90a3] hover:bg-gray-50"
+              className="border border-[#b2b2b2] rounded-[6px] bg-white cursor-pointer flex items-center justify-center text-sm text-[#b2b2b2] hover:bg-gray-50"
             >
               ‹
             </button>
             <button
               onClick={handleNext}
               style={{ width: arrowSize, height: arrowSize }}
-              className="border border-[#eef0f5] rounded-[6px] bg-white cursor-pointer flex items-center justify-center text-sm text-[#8a90a3] hover:bg-gray-50"
+              className="border border-[#b2b2b2] rounded-[6px] bg-white cursor-pointer flex items-center justify-center text-sm text-[#b2b2b2] hover:bg-gray-50"
             >
               ›
             </button>

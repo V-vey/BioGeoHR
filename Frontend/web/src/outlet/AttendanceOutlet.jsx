@@ -7,6 +7,14 @@ import { Link } from "react-router-dom";
 import { url } from "@/resources/api";
 import axios from "axios";
 
+import { format, parse } from "date-fns";
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return "--:--";
+  const parsed = parse(timeStr, "HH:mm:ss", new Date());
+  return format(parsed, "h:mma"); // "11:00PM"
+};
+
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -38,9 +46,9 @@ export default function Attendance() {
     setCurrentPage(1);
   };
 
-  const filteredAttendance = attendance.filter((att) =>
-    att.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredAttendance = attendance
+    .filter((att) => att.name.toLowerCase().includes(search.toLowerCase()))
+    .reverse();
 
   const itemsPerPage = 16;
   const totalPages = Math.max(
@@ -53,7 +61,6 @@ export default function Attendance() {
     startIndex,
     startIndex + itemsPerPage,
   );
-
   return (
     <>
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
@@ -74,14 +81,14 @@ export default function Attendance() {
         {pageItems.map((att, i) => (
           <Item
             key={i}
-            date={att.date}
+            date={format(new Date(att.date), "MMMM d, yyyy")}
             location={att.location}
             name={att.name}
             department={att.department}
             position={att.position}
             status={att.status}
-            clockIn={att.clockIn}
-            clockOut={att.clockOut}
+            clockIn={formatTime(att.clockIn)}
+            clockOut={formatTime(att.clockOut)}
           />
         ))}
       </Containers>

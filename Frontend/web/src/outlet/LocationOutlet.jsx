@@ -55,9 +55,9 @@ export default function Location() {
     setCurrentPage(1);
   };
 
-  const filteredLocations = location.filter((loc) =>
-    loc.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredLocations = location
+    .filter((loc) => loc.name.toLowerCase().includes(search.toLowerCase()))
+    .reverse();
 
   const itemsPerPage = 3;
   const totalPages = Math.max(
