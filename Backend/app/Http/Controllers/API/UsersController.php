@@ -37,9 +37,11 @@ class UsersController extends Controller
             'date_of_birth' => 'required|date',
             'gender' => 'required',
             'nationality' => 'required',
-            'address' => 'required'
+            'address' => 'required',
+            'image' => 'nullable|image|max:2048'
         ]);
-
+        $imagePath = $request->hasFile('image') ? $request->file('image')->store('avatars', 'public') : null;
+        
         $users = Users::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -53,8 +55,9 @@ class UsersController extends Controller
             'gender' => $request->gender,
             'nationality' => $request->nationality,
             'address' => $request->address,
+            'image_path' => $imagePath
         ]);
-
+        
         //Create a Balance
         LeaveBalance::create([
             'user_id' => $users->id,

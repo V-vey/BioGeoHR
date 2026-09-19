@@ -140,6 +140,7 @@ export default function DashboardOutlet() {
             name="Leave"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            searchShow={false}
             arrowSize={32}
           ></Containers>
         </div>

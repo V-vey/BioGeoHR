@@ -72,6 +72,7 @@ export default function Attendance() {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         arrowSize={32}
+        searchShow={true}
         filterConfig={[]}
         // onFilterApply={(filters) => console.log(filters)}
         totalPages={totalPages}

@@ -36,6 +36,7 @@ export default function AllEmployee({}) {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         arrowSize={32}
+        searchShow={true}
         filterConfig={
           [
             /* ...unchanged... */
