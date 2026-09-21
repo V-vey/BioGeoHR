@@ -137,7 +137,7 @@ export default function DashboardOutlet() {
         <div className="flex-2">
           {/* <LeaveLayout /> */}
           <Containers
-            name="Leave"
+            name="Pending Leave"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             searchShow={false}

@@ -17,15 +17,18 @@ class LeaveBalance extends Model
      */
     protected $fillable = [
         'user_id',
-        'annual_leave',
-        'sick_leave',
-        'patternity_leave',
-        'unpaid_leave',
+        'sick',
+        'vacation',
+        'emergency',
+        'birthday',
+        'solo_parent',
+        'paternity',
+        'maternity',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(Users::class, 'user_id', 'id');
     }
 
     public function leaveApplication()

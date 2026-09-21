@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Users;
 use Illuminate\Support\Facades\Hash;
 use App\Models\LeaveBalance;
+use App\Models\Salary;
 
 class UsersController extends Controller
 {
@@ -33,12 +34,16 @@ class UsersController extends Controller
             'department' => 'required',
             'position' => 'required',
             'call_time' => 'required',
-            'contract_type' => 'required',
+            'contract_type' => 'required|in:Probationary,Regular',
             'date_of_birth' => 'required|date',
             'gender' => 'required',
             'nationality' => 'required',
             'address' => 'required',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
+
+            'monthly_salary' => 'required',
+            'working_hours_per_day' => 'required',
+            'working_days_per_month' => 'required'
         ]);
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('avatars', 'public') : null;
         
@@ -57,18 +62,40 @@ class UsersController extends Controller
             'address' => $request->address,
             'image_path' => $imagePath
         ]);
-        
+
+        Salary::create([
+            'user_id' => $users->id,
+            'salary_basis' => $request->monthly_salary,
+            'working_hours_per_day' => $request->working_hours_per_day,
+            'working_days_per_month' => $request->working_days_per_month
+        ]);
         //Create a Balance
+        if($users->contract_type == "Regular"){
+            LeaveBalance::create([
+                'user_id' => $users->id,
+                'sick' => 2,
+                'vacation' => 2,
+                'emergency' => 2,
+                'birthday' => 1,
+                'solo_parent' => 7,
+                'paternity' => 7,
+                'maternity' => 120,
+            ]);
+        } 
         LeaveBalance::create([
             'user_id' => $users->id,
-            'annual_leave' => 5,
-            'sick_leave' => 5,
-            'patternity_leave' => 7,
-            'unpaid_leave' => 9,
+            'sick' => 0,
+            'vacation' => 0,
+            'emergency' => 0,
+            'birthday' => 0,
+            'solo_parent' => 0,
+            'paternity' => 0,
+            'maternity' => 0,
         ]);
+       
 
+        
         return response()->json($users, 201);
-
     }
 
     /**

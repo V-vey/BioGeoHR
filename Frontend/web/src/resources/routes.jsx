@@ -118,21 +118,24 @@ export const router = createBrowserRouter([
     element: <Payroll />,
     errorElement: <ErrorPage />,
     children: [
-      {
-        path: "run",
-        element: <RunPayrollOutlet />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "payslips",
-        element: <PayslipsOutlet />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "settings",
-        element: <PayrollSettingsOutlet />,
-        errorElement: <ErrorPage />,
-      },
+      // {
+      //   path: "run",
+      //   element: <RunPayrollOutlet />,
+      //   errorElement: <ErrorPage />,
+      // },
+
+      //MAYBE
+      // {
+      //   path: "payslips",
+      //   element: <PayslipsOutlet />,
+      //   errorElement: <ErrorPage />,
+      // },
+
+      // {
+      //   path: "settings",
+      //   element: <PayrollSettingsOutlet />,
+      //   errorElement: <ErrorPage />,
+      // },
       {
         path: "loans",
         element: <LoansOutlet />,

@@ -55,10 +55,7 @@ const items = [
     icon: Wallet,
     children: [
       { title: "Overview", url: "/payroll" },
-      { title: "Run Payroll", url: "/payroll/run" },
-      { title: "Payslips", url: "/payroll/payslips" },
       { title: "Loans", url: "/payroll/loans" },
-      { title: "Settings", url: "/payroll/settings" },
     ],
   },
 ];

@@ -15,15 +15,14 @@ class SalaryService
         return $hrlyRate = $dailyWage / hrsPerDay;
     }
 
-    function lateDeduction(){
-        //3 lates = 1 day deduction 
-        //find all the user attendance in a month
-        $late = Attendance::whereMonth('date', Carbon::now()->month)->where('status', "Late")->count();
-        if ($late > 3){
-            return true;    
-        }
-        return false;
-    }
+    function lateDeduction($userId){
+    $late = Attendance::where('user_id', $userId)
+        ->whereMonth('date', Carbon::now()->month)
+        ->where('status', 'Late')
+        ->count();
+
+    return intdiv($late, 3); 
+}
 
     //Employees' Compensation
     function eeCompensation($salary){
@@ -63,19 +62,22 @@ class SalaryService
         //Salary is based on monthly salary credit
         $minMSC = 5000.00;
         $maxMSC = 35000.00;
+
+        $msc = max($minMSC, min($salary, $maxMSC));
+
         //Mandatory Provident Fund
-        $mpf = $this->mpf($salary);
+        $mpf = $this->mpf($msc);
         //Employees' Compensation is for employer only 
         $ec = 0;
-        $employeeCont = $this->employeeCont($salary); // if not greater than 20K
-        $employerCont = $this->employerCont($salary);
+        $employeeCont = $this->employeeCont($msc); // if not greater than 20K
+        $employerCont = $this->employerCont($msc);
         
         // deducted the 0.5 and 0.10 of the share
         $employeeMPF = $this->employeeCont($mpf);
         $employerMPF = $this->employerCont($mpf);
 
         //Employees' Compensation
-        $ec = $this->eeCompensation($salary);
+        $ec = $this->eeCompensation($msc);
 
         $employeeTotal =  $employeeCont + $employeeMPF; //need for tax in employee
         $employerTotal = $employerCont + $ec + $employerMPF;
@@ -84,6 +86,7 @@ class SalaryService
 
          return response()->json([
                 'salary' => $salary,
+                'msc' => $msc,
                 'mpf' => $mpf, 
                 'ec' => $ec,
                 'Employee Contribution' => $employeeCont, 

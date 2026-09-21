@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Salary;
 
+use App\Service\SalaryService;
+
 class SalaryController extends Controller
 {
     /**
@@ -24,7 +26,6 @@ class SalaryController extends Controller
     {
         $request->validate([
             'user_id' => 'required',
-            'attendance_id' => 'required',
             'salary_basis' => 'required',
             'working_hours_per_day' => 'required',
             'working_days_per_month' => 'required',
@@ -32,7 +33,6 @@ class SalaryController extends Controller
 
         $salary = Salary::create([
             'user_id' => $request->user_id,
-            'attendance_id' => $request->attendance_id,
             'salary_basis' => $request->salary_basis,
             'working_hours_per_day' => $request->working_hours_per_day,
             'working_days_per_month' => $request->working_days_per_month,
@@ -82,7 +82,7 @@ class SalaryController extends Controller
             $salary->delete();
             return response()->json(['message' => 'Salary record deleted successfully']);
         }
-
-        
     }
+
+    
 }

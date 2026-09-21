@@ -61,6 +61,10 @@ export default function NewEmployeeForm() {
     data.append("gender", formData.gender);
     data.append("nationality", formData.nationality);
     data.append("address", formData.address);
+
+    data.append("monthly_salary", formData.salary);
+    data.append("working_hours_per_day", formData.wrkHrsPD);
+    data.append("working_days_per_month", formData.wrkDPM);
     if (photoFile) data.append("image", photoFile);
 
     try {
@@ -69,10 +73,8 @@ export default function NewEmployeeForm() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "ngrok-skip-browser-warning": "true",
         },
-        // no "Content-Type" here — axios sets the correct multipart boundary
-        // automatically when the body is a FormData instance; setting it
-        // manually breaks the boundary and the upload silently fails.
       });
+      alert("New Employee Success");
     } catch (error) {
       console.error("Failed to create employee:", error);
     }
@@ -197,24 +199,36 @@ export default function NewEmployeeForm() {
             <Field label="Nationality" required>
               <input className={inputClass} onChange={update("nationality")} />
             </Field>
+            <Field label="Contact No." required>
+              <input
+                type="tel"
+                className={inputClass}
+                onChange={update("contactNumber")}
+              />
+            </Field>
             <Field label="Address" required span={2}>
               <input className={inputClass} onChange={update("address")} />
             </Field>
           </Section>
 
           <Section title="Employment Details">
-            <Field label="Role" required>
-              <input className={inputClass} onChange={update("role")} />
+            <Field label="Department" required>
+              <input className={inputClass} onChange={update("department")} />
             </Field>
             <Field label="Position" required>
               <input className={inputClass} onChange={update("position")} />
             </Field>
-            <Field label="Status" required>
+            <Field label="Contract Type" required>
               <div className="relative">
-                <input
+                <select
                   className={`${inputClass} appearance-none pr-8`}
-                  onChange={update("status")}
-                />
+                  onChange={update("contractType")}
+                >
+                  <option value="">Select</option>
+                  <option>Probationary</option>
+                  <option>Regular</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </Field>
             <Field label="Monthly Salary" required>
@@ -229,6 +243,20 @@ export default function NewEmployeeForm() {
                 type="time"
                 className={inputClass}
                 onChange={update("callTime")}
+              />
+            </Field>
+            <Field label="Working Hours Per Day" required>
+              <input
+                type="number"
+                className={inputClass}
+                onChange={update("wrkHrsPD")}
+              />
+            </Field>
+            <Field label="Working Days Per Month" required>
+              <input
+                type="number"
+                className={inputClass}
+                onChange={update("wrkDPM")}
               />
             </Field>
           </Section>

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 
+
 class Salary extends Model
 {
     use HasFactory, Notifiable;
@@ -17,7 +18,6 @@ class Salary extends Model
      */
     protected $fillable = [
         'user_id',
-        'attendance_id',
         'salary_basis',
         'working_hours_per_day',
         'working_days_per_month',
@@ -26,6 +26,6 @@ class Salary extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(Users::class, 'user_id', 'id');
     }
 }

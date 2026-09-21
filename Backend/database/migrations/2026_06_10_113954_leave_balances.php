@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('leave_balances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->integer('annual_leave')->default(0);
-            $table->integer('sick_leave')->default(0);
-            $table->integer('patternity_leave')->default(0);
-            $table->integer('unpaid_leave')->default(0);
+            $table->integer('sick')->default(0);
+            $table->integer('vacation')->default(0);
+            $table->integer('emergency')->default(0);
+            $table->integer('birthday')->default(0);
+            $table->integer('solo_parent')->default(0);
+            $table->integer('paternity')->default(0);
+            $table->integer('maternity')->default(0);
             $table->timestamps();
         });
     }

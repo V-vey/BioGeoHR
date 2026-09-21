@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries' , function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->decimal('salary_basis');
-            $table->integer('working_hours_per_day');
-            $table->integer('working_days_per_month');
-            $table->timestamps();
+        Schema::table('leave_balances', function (Blueprint $table) {
+            //
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::table('leave_balances', function (Blueprint $table) {
+            //
+        });
     }
 };
