@@ -62,7 +62,7 @@ class AttendanceController extends Controller
     public function show()
     {
         $userId = $this->getUserIdFromToken();
-        $attendance = Attendance::with('location')->where('user_id', $userId)->get();;
+        $attendance = Attendance::with('location')->where('user_id', $userId)->get();
 
         if (!$attendance) {
             return response()->json(['message' => 'Attendance record not found'], 404);

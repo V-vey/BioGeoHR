@@ -11,7 +11,7 @@ use App\Http\Controllers\API\LeaveApplicationController;
 use App\Http\Controllers\API\LeaveBalanceController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\UserLocationController;
-
+use App\Http\Controllers\API\LoanController;
 use App\Http\Controllers\API\PasswordController;
 
 //Auth
@@ -56,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //password
     Route::post('changePassword', [PasswordController::class , 'update']);
 
+    Route::get('myLoans', [LoanController::class, 'myLoans']);
+
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
         // Route::apiResource('users', UsersController::class);
@@ -65,6 +67,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('balance', LeaveBalanceController::class);
         Route::apiResource('attendance', AttendanceController::class);
         Route::apiResource('userl', UserLocationController::class);
+
+        Route::apiResource('loans', LoanController::class);
+        Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
         
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
 
