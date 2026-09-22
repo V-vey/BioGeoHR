@@ -26,7 +26,7 @@ class LocationController extends Controller
             'name' => 'required',
             'longitude' => 'required',
             'latitude' => 'required',
-            'radius' => 'required',
+            'radius' => 'required|numeric|min:100|max:200',
         ]);
 
         $locations = Location::create([
@@ -58,14 +58,17 @@ class LocationController extends Controller
      */
     public function update(Request $request, string $id)
     {
+
         $locations = Location::find($id);
         if (!$locations) {
             return response()->json(['message' => 'Location not found'], 404);
         }
-        else{
-            $locations->update($request->all());
-            return response()->json($locations);
-        }
+        $request->validate([
+            'radius' => 'sometimes|numeric|min:100|max:200',
+        ]);
+        $locations->update($request->all());
+        return response()->json($locations);
+        
         
     }
 
