@@ -27,8 +27,8 @@ class TestingButton extends StatelessWidget {
           //   MaterialPageRoute(builder: (context) => Homepage()),
           // );
           dynamic isSuccessful = await logintext.login(
-            "test@example.com",
-            "testing!",
+            "hr@biogeohr.test",
+            "password123",
           );
 
           if (!context.mounted) return;

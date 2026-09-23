@@ -9,6 +9,7 @@ use App\Models\Location;
 use App\Models\UserLocation;
 use App\Models\Users;
 use App\Models\Attendance;
+use App\Models\FlaggedAttendance;
 
 class GeoFenceController extends Controller
 {
@@ -70,11 +71,34 @@ class GeoFenceController extends Controller
         );
 
         if ($distance > $location->radius) {
-            $attendance->out_of_boundary = true;
-            $attendance->out_of_boundary_at = now();
-            $attendance->save();
+            $openExcursion = FlaggedAttendance::where('attendance_id', $attendance->id)
+                ->whereNull('in_at')
+                ->latest()
+                ->first();
+
+            if (!$openExcursion) {
+                FlaggedAttendance::create([
+                    'attendance_id' => $attendance->id,
+                    'out_at' => now(),
+                ]);
+
+                $this->logAudit(
+                    'out_of_boundary',
+                    "Flagged outside geofence at {$location->name}, distance: {$distance}m"
+                );
+            }
 
             return response()->json(['message' => 'Out of boundary flagged', 'distance' => $distance]);
+        }
+
+        $openExcursion = FlaggedAttendance::where('attendance_id', $attendance->id)
+            ->whereNull('in_at')
+            ->latest()
+            ->first();
+
+        if ($openExcursion) {
+            $openExcursion->in_at = now();
+            $openExcursion->save();
         }
 
         return response()->json(['message' => 'Within boundary', 'distance' => $distance]);

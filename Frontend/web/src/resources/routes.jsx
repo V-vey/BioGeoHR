@@ -12,7 +12,7 @@ import NewEmployee from "@/Module/NewEmployee";
 import Attendance from "@/Module/AttendanceMain";
 
 import Location from "@/Module/LocationMain";
-import LocationLog from "@/Module/LocationLogMain";
+import FlaggedAttendance from "@/Module/FlaggedAttendance";
 import Payroll from "@/Module/PayrollMain";
 
 import DashboardOutlet from "@/Outlet/DashboardOutlet";
@@ -22,7 +22,7 @@ import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
 
 import NewEmployeeOutlet from "@/outlet/NewEmployeeOutlet";
 import LocationOutlet from "@/Outlet/LocationOutlet";
-import LocationLogOutlet from "@/Outlet/LocationLogOutlet";
+import FlaggedAttendanceOutlet from "@/outlet/FlaggedAttendanceOutlet";
 import PayrollOutlet from "@/outlet/PayrollOutlet";
 import RunPayrollOutlet from "@/outlet/RunPayrollOutlet";
 import PayslipsOutlet from "@/outlet/PayslipsOutlet";
@@ -96,15 +96,21 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        path: "location-log",
-        element: <LocationLog />,
+        // path: "location-log",
+        // element: <LocationLog />,
+        // errorElement: <ErrorPage />,
+        // children: [
+        //   {
+        //     index: true,
+        //     element: <LocationLogOutlet />,
+        //   },
+        // ],
+      },
+      {
+        path: "flagged",
+        element: <FlaggedAttendance />,
         errorElement: <ErrorPage />,
-        children: [
-          {
-            index: true,
-            element: <LocationLogOutlet />,
-          },
-        ],
+        children: [{ index: true, element: <FlaggedAttendanceOutlet /> }],
       },
       {
         index: true,

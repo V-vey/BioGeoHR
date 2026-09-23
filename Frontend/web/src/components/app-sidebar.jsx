@@ -45,7 +45,7 @@ const items = [
     icon: Calendar,
     children: [
       { title: "All Attendance", url: "/attendance" },
-      { title: "Location Log", url: "/attendance/attendance-log" },
+      { title: "Flagged Attendance", url: "/attendance/flagged" },
       { title: "Location", url: "/attendance/location" },
     ],
   },

@@ -37,4 +37,8 @@ class Attendance extends Model
     {
         return $this->hasMany(Salary::class);
     }
+    public function flaggedAttendances()
+    {
+        return $this->hasMany(FlaggedAttendance::class);
+    }
 }

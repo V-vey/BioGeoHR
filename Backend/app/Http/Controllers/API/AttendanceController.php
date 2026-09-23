@@ -251,8 +251,9 @@ class AttendanceController extends Controller
     }
     public function flaggedAttendance()
     {
-        $flagged = Attendance::where('out_of_boundary', true)
+        $flagged = Attendance::whereHas('flaggedAttendances')
             ->with(['user', 'location'])
+            ->withCount('flaggedAttendances')
             ->get();
         return response()->json($flagged);
     }

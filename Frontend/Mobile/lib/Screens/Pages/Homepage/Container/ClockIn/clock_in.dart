@@ -40,7 +40,8 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
       setState(() => addTimer());
     });
 
-    geofenceTimer = Timer.periodic(Duration(minutes: 30), (timer) {
+    //change min to 30 later or the data
+    geofenceTimer = Timer.periodic(Duration(minutes: 1), (timer) {
       checkGeofencePeriodically();
     });
   }
