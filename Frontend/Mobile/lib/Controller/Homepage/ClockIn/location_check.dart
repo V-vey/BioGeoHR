@@ -16,17 +16,17 @@ bool _checkPosition(int statusCode) {
 
 final Url _api = Url();
 
-Future<Position> _determinePosition() async {
+Future<Position> determinePosition() async {
   bool serviceEnabled;
   LocationPermission permission;
 
-  // 1. Test if location services are enabled.
+  // Test if location services are enabled.
   serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
     return Future.error('Location services are disabled.');
   }
 
-  // 2. Check current permission status.
+  // Check current permission status.
   permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
     // Prompt the user for permission.
@@ -48,7 +48,7 @@ Future<Position> _determinePosition() async {
 
 Future<bool> verifyUserCoordinates() async {
   // try {
-  Position position = await _determinePosition();
+  Position position = await determinePosition();
 
   // print(position.longitude);
   // print(position.latitude);

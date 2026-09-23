@@ -6,6 +6,7 @@ import '../../../../../Controller/Homepage/ClockIn/get_location.dart';
 import 'time.dart';
 import 'location_list.dart';
 import 'clock_in_button.dart';
+import '../../../../../Controller/Homepage/ClockIn/geofence_periodic_check.dart';
 //testing
 import '../../../../../Controller/Homepage/leave_balance.dart';
 
@@ -30,6 +31,36 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
   Timer? timer;
   bool isRunning = false;
 
+  Timer? geofenceTimer;
+
+  void start() {
+    if (isRunning == true) return;
+    isRunning = true;
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() => addTimer());
+    });
+
+    geofenceTimer = Timer.periodic(Duration(minutes: 30), (timer) {
+      checkGeofencePeriodically();
+    });
+  }
+
+  void reset() {
+    setState(() {
+      isRunning = false;
+      duration = Duration();
+      timer?.cancel();
+      geofenceTimer?.cancel();
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    geofenceTimer?.cancel();
+    super.dispose();
+  }
+
   void addTimer() {
     setState(() {
       final seconds = duration.inSeconds + 1;
@@ -38,32 +69,32 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
     });
   }
 
-  //call to start
-  void start() {
-    if (isRunning == true) return;
+  // //call to start
+  // void start() {
+  //   if (isRunning == true) return;
 
-    isRunning = true;
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        addTimer();
-      });
-    });
-  }
+  //   isRunning = true;
+  //   timer = Timer.periodic(Duration(seconds: 1), (timer) {
+  //     setState(() {
+  //       addTimer();
+  //     });
+  //   });
+  // }
 
-  //call to Reset
-  void reset() {
-    setState(() {
-      isRunning = false;
-      duration = Duration();
-      timer?.cancel();
-    });
-  }
+  // //call to Reset
+  // void reset() {
+  //   setState(() {
+  //     isRunning = false;
+  //     duration = Duration();
+  //     timer?.cancel();
+  //   });
+  // }
 
-  @override
-  void dispose() {
-    timer?.cancel(); // Always clean up your timer to prevent memory leaks
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   timer?.cancel(); // Always clean up your timer to prevent memory leaks
+  //   super.dispose();
+  // }
 
   //timer text format
   String timerText() {

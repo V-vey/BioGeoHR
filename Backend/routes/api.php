@@ -58,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('myLoans', [LoanController::class, 'myLoans']);
 
+    //periodic check
+    Route::post('geofenceCheck', [GeoFenceController::class, 'periodicCheck']);
+
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
         // Route::apiResource('users', UsersController::class);
@@ -75,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('location', LocationController::class);
         // Route::get('location', [LocationController::class, "index"]);
+        Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

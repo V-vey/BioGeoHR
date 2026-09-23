@@ -67,4 +67,8 @@ class Url {
   String changePassword() {
     return "$api/changePassword";
   }
+
+  String geofenceCheck() {
+    return "$api/geofenceCheck";
+  }
 }

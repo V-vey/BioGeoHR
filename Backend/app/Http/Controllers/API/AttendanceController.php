@@ -249,7 +249,11 @@ class AttendanceController extends Controller
         ]);
         
     }
-    public function weeklyAttendance(){
-        
+    public function flaggedAttendance()
+    {
+        $flagged = Attendance::where('out_of_boundary', true)
+            ->with(['user', 'location'])
+            ->get();
+        return response()->json($flagged);
     }
 }
