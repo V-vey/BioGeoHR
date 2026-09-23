@@ -73,10 +73,12 @@ export default function FlaggedAttendanceOutlet() {
             position={record.user?.position}
             location={record.location?.name}
             date={format(new Date(record.date), "MMMM d, yyyy")}
+            flagCount={record.flagged_attendances_count}
+            excursions={record.flagged_attendances}
             flaggedAt={
-              record.out_of_boundary_at
+              record.flagged_attendances?.[0]?.out_at
                 ? format(
-                    new Date(record.out_of_boundary_at),
+                    new Date(record.flagged_attendances[0].out_at),
                     "MMM d, yyyy h:mm a",
                   )
                 : "--"

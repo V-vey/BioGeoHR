@@ -252,9 +252,12 @@ class AttendanceController extends Controller
     public function flaggedAttendance()
     {
         $flagged = Attendance::whereHas('flaggedAttendances')
-            ->with(['user', 'location'])
+            ->with(['user', 'location', 'flaggedAttendances' => function ($query) {
+                $query->latest('out_at');
+            }])
             ->withCount('flaggedAttendances')
             ->get();
+            
         return response()->json($flagged);
     }
 }

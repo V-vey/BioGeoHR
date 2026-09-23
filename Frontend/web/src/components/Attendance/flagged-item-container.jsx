@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { format } from "date-fns";
+
 export default function FlaggedItemContainer({
   name,
   department,
@@ -5,7 +8,11 @@ export default function FlaggedItemContainer({
   location,
   date,
   flaggedAt,
+  flagCount,
+  excursions = [],
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#EC6668] p-2 rounded-[5px]">
       <div className="flex justify-between">
@@ -24,16 +31,44 @@ export default function FlaggedItemContainer({
             </p>
           </div>
           <div className="flex gap-1 items-center font-semibold">
-            <p className="text-[13px] text-[#EC6668]">Out of Boundary</p>
+            <p className="text-[13px] text-[#EC6668]">
+              Out of Boundary{flagCount ? ` (${flagCount}x)` : ""}
+            </p>
             <div className="w-4 h-4 rounded-full bg-[#EC6668]" />
           </div>
         </div>
       </div>
       <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5" />
-      <div className="flex justify-between">
-        <p className="font-semibold text-[16px]">Flagged At:</p>
-        <p className="text-[16px]">{flaggedAt}</p>
-      </div>
+
+      {isExpanded && (
+        <>
+          <div className="flex flex-col gap-1">
+            {excursions.map((ex) => (
+              <div
+                key={ex.id}
+                className="flex justify-between text-[13px] text-[#3A3A3A]"
+              >
+                <span>{format(new Date(ex.out_at), "h:mm a")}</span>
+                <span>→</span>
+                <span>
+                  {ex.in_at
+                    ? format(new Date(ex.in_at), "h:mm a")
+                    : "Still out"}
+                </span>
+              </div>
+            ))}
+            <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5" />
+          </div>
+        </>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setIsExpanded((v) => !v)}
+        className="self-start text-[12px] text-[#6675EC] hover:underline"
+      >
+        {isExpanded ? "Hide" : "Show"} Flags ({flagCount})
+      </button>
     </div>
   );
 }
