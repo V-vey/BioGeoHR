@@ -10,7 +10,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-export default function ChartBarDemoLegend({ chartData }) {
+export default function weeklyItems({ chartData }) {
   const chartConfig = {
     ontime: {
       label: "On-Time",
@@ -29,30 +29,19 @@ export default function ChartBarDemoLegend({ chartData }) {
       color: "#6675EC",
     },
   };
+
   return (
-    <div className="min-h-[400px] w-full flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl ">
-      <h2>Weekly Attendance</h2>
-      <div className="h-[2px] w-full bg-[#E0E0E0] my-0.5" />
-      <ChartContainer config={chartConfig} className="w-full">
-        <BarChart accessibilityLayer data={chartData}>
-          <CartesianGrid vertical={false} stroke="#E5E7EB" />
-          <XAxis
-            dataKey="day"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            tickFormatter={(value) => value.slice(0, 3)}
-          />
-
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
-
-          <Bar dataKey="ontime" fill="var(--color-ontime)" radius={4} />
-          <Bar dataKey="late" fill="var(--color-late)" radius={4} />
-          <Bar dataKey="absent" fill="var(--color-absent)" radius={4} />
-          <Bar dataKey="leave" fill="var(--color-leave)" radius={4} />
-        </BarChart>
-      </ChartContainer>
-    </div>
+    <ChartContainer config={chartConfig} className="w-full mt-1 h-[280px]">
+      <BarChart data={chartData}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="day" tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="ontime" fill="var(--color-ontime)" radius={4} />
+        <Bar dataKey="late" fill="var(--color-late)" radius={4} />
+        <Bar dataKey="absent" fill="var(--color-absent)" radius={4} />
+        <Bar dataKey="leave" fill="var(--color-leave)" radius={4} />
+      </BarChart>
+    </ChartContainer>
   );
 }

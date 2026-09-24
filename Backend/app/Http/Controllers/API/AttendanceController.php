@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Models\LeaveApplication;
 use App\Http\Controllers\Feature\AttendanceService;
 
+use Carbon\Carbon;
 use Laravel\Sanctum\PersonalAccessToken; 
 class AttendanceController extends Controller
 {
@@ -32,6 +33,7 @@ class AttendanceController extends Controller
             'name' => $a->user?->name,
             'department' => $a->user?->department,
             'position' => $a->user?->position,
+            'contractType' => $a->user?->contract_type,
             'status' => $a->status,
             'clockIn' => $a->time_in,
             'clockOut' => $a->time_out,
@@ -259,5 +261,44 @@ class AttendanceController extends Controller
             ->get();
             
         return response()->json($flagged);
+    }
+    
+    public function weeklyAttendance()
+    {
+        $employeesCount = Users::all()->count();
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::SUNDAY);
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        $result = [];
+
+        foreach ($days as $i => $dayName) {
+            $date = $startOfWeek->copy()->addDays($i);
+
+            $attendanceForDay = Attendance::whereDate('date', $date)
+                ->select('status', 'user_id')
+                ->get()
+                ->unique('user_id');
+
+            $onTime = 0;
+            $late = 0;
+            foreach ($attendanceForDay as $value) {
+                if ($value->status == "On-Time") $onTime++;
+                elseif ($value->status == "Late") $late++;
+            }
+
+            $leave = LeaveApplication::where("status", "approved")
+                ->whereDate("start_date", "<=", $date)
+                ->whereDate("end_date", ">=", $date)
+                ->count();
+
+            $result[] = [
+                'day' => $dayName,
+                'ontime' => $onTime,
+                'late' => $late,
+                'absent' => max($employeesCount - ($onTime + $late), 0),
+                'leave' => $leave,
+            ];
+        }
+
+        return response()->json($result);
     }
 }

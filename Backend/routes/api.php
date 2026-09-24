@@ -75,7 +75,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
         
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
-
+        
+        Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
+        
         Route::apiResource('location', LocationController::class);
         // Route::get('location', [LocationController::class, "index"]);
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);

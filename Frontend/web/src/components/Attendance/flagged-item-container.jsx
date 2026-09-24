@@ -14,7 +14,7 @@ export default function FlaggedItemContainer({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#EC6668] p-2 rounded-[5px]">
+    <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] p-2 rounded-[5px]">
       <div className="flex justify-between">
         <p className="text-[16px] font-semibold text-[#3A3A3A]">{date}</p>
         <p className="text-[16px] font-semibold">{location}</p>
@@ -31,9 +31,9 @@ export default function FlaggedItemContainer({
             </p>
           </div>
           <div className="flex gap-1 items-center font-semibold">
-            <p className="text-[13px] text-[#EC6668]">
+            <div className="text-[13px] font-normal text-[#EC6668]">
               Out of Boundary{flagCount ? ` (${flagCount}x)` : ""}
-            </p>
+            </div>
             <div className="w-4 h-4 rounded-full bg-[#EC6668]" />
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function FlaggedItemContainer({
 
       {isExpanded && (
         <>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col ">
             {excursions.map((ex) => (
               <div
                 key={ex.id}
@@ -65,7 +65,7 @@ export default function FlaggedItemContainer({
       <button
         type="button"
         onClick={() => setIsExpanded((v) => !v)}
-        className="self-start text-[12px] text-[#6675EC] hover:underline"
+        className="self-start text-[12px] text-[#6675EC] hover:underline mt-1"
       >
         {isExpanded ? "Hide" : "Show"} Flags ({flagCount})
       </button>

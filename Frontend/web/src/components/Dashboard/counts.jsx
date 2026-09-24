@@ -4,7 +4,7 @@
 export default function countsLayout({ display, count, icon, percentage }) {
   return (
     <>
-      <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl ">
+      <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-[#b2b2b2] rounded-xl ">
         <span className="flex items-start font-medium text-[#6675EC]">
           {display}
         </span>
