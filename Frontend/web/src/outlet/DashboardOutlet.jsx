@@ -93,7 +93,7 @@ export default function DashboardOutlet() {
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Pending Leave</h2>
       <Link
-        to="/attendance/leave-request"
+        to="/employee/leave-request"
         className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
       >
         View All
@@ -109,22 +109,22 @@ export default function DashboardOutlet() {
 
   const calendarHeader = (
     // justify-between when there is a button
-    <div className="flex items-center justify-center ">
-      {/* <button
+    <div className="flex items-center justify-between ">
+      <button
         onClick={prevMonth}
         className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm focus:outline-none"
       >
         &lt;
-      </button> */}
+      </button>
       <h2 className="text-lg font-bold text-[#6675EC] items-center">
         {months[month]} {year}
       </h2>
-      {/* <button
+      <button
         onClick={nextMonth}
         className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm focus:outline-none"
       >
         &gt;
-      </button> */}
+      </button>
     </div>
   );
 
@@ -188,12 +188,15 @@ export default function DashboardOutlet() {
     const token = localStorage.getItem("token");
     const fetchFlagged = async () => {
       try {
-        const response = await axios.get(url + "/flaggedAttendance", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
+        const response = await axios.get(
+          url + "/flaggedAttendance?today=true",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
           },
-        });
+        );
         setFlagged(response.data);
       } catch (error) {
         console.error("Failed to load flagged attendance:", error);

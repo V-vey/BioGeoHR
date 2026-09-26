@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
             $table->timestamps();
         });
+        
     }
 
     /**
@@ -30,5 +31,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('leave_applications');
+        
     }
 };

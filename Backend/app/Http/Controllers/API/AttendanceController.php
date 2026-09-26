@@ -251,17 +251,23 @@ class AttendanceController extends Controller
         ]);
         
     }
-    public function flaggedAttendance()
-    {
-        $flagged = Attendance::whereHas('flaggedAttendances')
-            ->with(['user', 'location', 'flaggedAttendances' => function ($query) {
-                $query->latest('out_at');
-            }])
-            ->withCount('flaggedAttendances')
-            ->get();
-            
-        return response()->json($flagged);
+    public function flaggedAttendance(Request $request)
+{
+    $query = Attendance::whereHas('flaggedAttendances');
+
+    if ($request->query('today')) {
+        $query->whereDate('date', today());
     }
+
+    $flagged = $query
+        ->with(['user', 'location', 'flaggedAttendances' => function ($q) {
+            $q->latest('out_at');
+        }])
+        ->withCount('flaggedAttendances')
+        ->get();
+
+    return response()->json($flagged);
+}
     
     public function weeklyAttendance()
     {

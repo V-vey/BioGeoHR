@@ -3,13 +3,15 @@ import Item from "@/components/Employee/LeaveRequest/item-container";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
+import { format, parse } from "date-fns";
+
 export default function Leave() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [employees, setEmployees] = useState([]);
+  const [leaveReq, setLeaveReq] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const fetchEmployees = async () => {
+    const fetchLeave = async () => {
       try {
         const response = await axios.get(url + "/leave", {
           headers: {
@@ -17,13 +19,35 @@ export default function Leave() {
             "ngrok-skip-browser-warning": "true",
           },
         });
-        setEmployees(response.data);
+        setLeaveReq(response.data);
       } catch (error) {
         console.error("Failed to load employees", error);
       }
     };
-    fetchEmployees();
+    fetchLeave();
   }, []);
+
+  const [search, setSearch] = useState("");
+
+  const handleSearch = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const filteredLeave = leaveReq
+    .filter((leave) =>
+      leave.user?.name?.toLowerCase().includes(search.toLowerCase()),
+    )
+    .reverse();
+
+  const itemsPerPage = 16;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredLeave.length / itemsPerPage),
+  );
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageItems = filteredLeave.slice(startIndex, startIndex + itemsPerPage);
   return (
     <div className="flex flex-col">
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
@@ -40,19 +64,33 @@ export default function Leave() {
             /* ...unchanged... */
           ]
         }
+        totalPages={totalPages}
+        search={search}
+        setSearch={handleSearch}
         onFilterApply={(filters) => console.log(filters)}
       >
-        <Item
-          id={"100"}
-          name={"Abdul Jackul"}
-          email={"abdul@gmail.com"}
-          status={"Pending"}
-          department={"HR"}
-          position={"HR Head"}
-          leaveType={"Sick Leave"}
-          startDate={"April 13, 2026"}
-          endDate={"April 13, 2026"}
-        />
+        {pageItems.map((leave, i) => (
+          <Item
+            key={i}
+            id={leave.id}
+            name={leave.user?.name}
+            email={leave.user?.email}
+            status={leave.status}
+            department={leave.user?.department}
+            position={leave.user?.position}
+            leaveType={leave.leave_type}
+            startDate={new Date(leave.start_date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+            endDate={new Date(leave.end_date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          />
+        ))}
       </Containers>
     </div>
   );

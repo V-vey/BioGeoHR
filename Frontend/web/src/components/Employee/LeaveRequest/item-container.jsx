@@ -59,7 +59,7 @@ export default function ItemContainer({
             </div>
           </div>
           <div className="m-0 leading-none flex gap-1 items-center justify-end font-medium">
-            <p className="text-[#3A3A3A] text-[14px]">
+            <p className="text-[#3A3A3A] text-[15px]">
               {department} | {position}
             </p>
           </div>
@@ -67,11 +67,11 @@ export default function ItemContainer({
 
         <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5 mx-0 px-0" />
         <div className="flex flex-col py-1 px-2">
-          <div className="m-0 leading-none flex flex-row justify-between">
+          <div className=" flex flex-row justify-between">
             <p className="text-[15px] font-medium">Leave Type:</p>
             <p className="text-[15px] font-regular">{leaveType}</p>
           </div>
-          <div className="m-0 leading-none flex flex-row justify-between">
+          <div className=" leading-none flex flex-row justify-between">
             <p className="text-[15px] font-medium">Date Range:</p>
             <p className="text-[15px] font-regular">
               {startDate} - {endDate}
