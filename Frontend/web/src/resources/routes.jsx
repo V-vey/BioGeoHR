@@ -28,6 +28,7 @@ import RunPayrollOutlet from "@/outlet/RunPayrollOutlet";
 import PayslipsOutlet from "@/outlet/PayslipsOutlet";
 import PayrollSettingsOutlet from "@/outlet/PayrollSettingsOutlet";
 import LoansOutlet from "@/outlet/LoansOutlet";
+import LeaveOutlet from "@/outlet/LeaveOutlet";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,12 @@ export const router = createBrowserRouter([
         path: "leave-request",
         element: <LeaveRequest />,
         errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            element: <LeaveOutlet />,
+          },
+        ],
       },
       {
         path: "new-employee",

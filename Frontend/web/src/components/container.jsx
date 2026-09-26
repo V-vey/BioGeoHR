@@ -18,6 +18,8 @@ export default function Containers({
   minH,
   maxH,
   footer,
+
+  spacing = true,
 }) {
   const handleBack = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -29,7 +31,7 @@ export default function Containers({
 
   return (
     <div
-      className="flex flex-col  mb-4 bg-white border border-[#b2b2b2] rounded-[10px]"
+      className="flex flex-col bg-white border border-[#b2b2b2] rounded-[10px]"
       style={{ minHeight: minH, maxHeight: maxH }}
     >
       <div className="flex flex-col w-full px-4 py-3 justify-center">
@@ -63,10 +65,19 @@ export default function Containers({
       </div>
       <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
       <div className="flex flex-col flex-1">
-        <div className="flex-1 flex flex-wrap gap-4 content-start justify-center py-4">
-          {children}
-        </div>
+        {spacing ? (
+          <div className="py-4">
+            <div className="flex-1 flex flex-wrap gap-4 content-start justify-center">
+              {children}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-wrap gap-4 content-start justify-center">
+            {children}
+          </div>
+        )}
       </div>
+
       <div>
         {pageShow && (
           <>

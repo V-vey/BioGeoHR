@@ -12,8 +12,8 @@ export default function ItemContainer({
   };
   return (
     <>
-      <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] p-2 rounded-[5px]">
-        <div className="flex justify-between">
+      <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] py-2 rounded-[5px]">
+        <div className="flex px-2 justify-between">
           <div className="flex gap-1 items-center font-semibold">
             <p className="text-[16px]">ID - {id}</p>
           </div>
@@ -27,9 +27,10 @@ export default function ItemContainer({
         </div>
         {/* line */}
         <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5 mx-0 px-0" />
-        <div className="my-1">
+        <div className="my-1 px-2">
           <div className="flex justify-between items-center ">
             <div className="flex gap-1 items-center">
+              {/* IMAGE */}
               <div className="rounded-full w-15 h-15 border-1" />
               <div className="flex flex-col items-start">
                 <p className="m-0 leading-none font-semibold text-[#3A3A3A] text-[16px]">
@@ -45,7 +46,7 @@ export default function ItemContainer({
 
         {/* line */}
         <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5" />
-        <div className="flex justify-between">
+        <div className="flex justify-between px-2">
           <div className="flex flex-col items-start ">
             <p className="m-0 leading-none text-[16px] text-[#3A3A3A]">
               Contract Type:

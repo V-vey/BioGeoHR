@@ -31,7 +31,7 @@ export default function weeklyItems({ chartData }) {
   };
 
   return (
-    <ChartContainer config={chartConfig} className="w-full mt-1 h-[280px]">
+    <ChartContainer config={chartConfig} className="w-full mt-2 h-[280px]">
       <BarChart data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="day" tickLine={false} axisLine={false} />

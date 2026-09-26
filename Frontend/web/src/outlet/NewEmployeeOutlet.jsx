@@ -35,6 +35,7 @@ export default function NewEmployeeForm() {
   const [form, setForm] = useState({});
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [passwordError, setPasswordError] = useState("");
   const fileInputRef = useRef(null);
 
   const handlePhotoChange = (e) => {
@@ -85,11 +86,11 @@ export default function NewEmployeeForm() {
   const onCancel = () => {};
   return (
     <>
-      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
+      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Location</h2>
       </div>
 
-      <div className="bg-white border border-[#eef0f5] rounded-[14px] p-6 md:p-8">
+      <div className="bg-white border border-[#b2b2b2] rounded-[14px] p-6 md:p-8">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold text-[#3A3A3A]">Employee Detail</h2>
           <p className="text-xs text-gray-400">
@@ -100,6 +101,11 @@ export default function NewEmployeeForm() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (form.password !== form.confirmPassword) {
+              setPasswordError("Passwords do not match");
+              return;
+            }
+            setPasswordError("");
             onSubmit?.(form);
           }}
         >
@@ -155,6 +161,9 @@ export default function NewEmployeeForm() {
                 className={inputClass}
                 onChange={update("confirmPassword")}
               />
+              {passwordError && (
+                <div className="text-xs text-[#EC6668]">{passwordError}</div>
+              )}
             </Field>
           </Section>
 
@@ -238,7 +247,7 @@ export default function NewEmployeeForm() {
                 onChange={update("salary")}
               />
             </Field>
-            <Field label="Standard Work Hours per day" required>
+            <Field label="Call Time" required>
               <input
                 type="time"
                 className={inputClass}

@@ -72,7 +72,7 @@ export default function Location() {
 
   return (
     <div className="flex flex-col">
-      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px]">
+      <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Location</h2>
       </div>
       <div className="flex flex-row  justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#eef0f5] rounded-[14px] gap-4">

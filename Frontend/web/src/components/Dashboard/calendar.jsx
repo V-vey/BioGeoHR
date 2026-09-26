@@ -1,51 +1,31 @@
-import React, { useState } from "react";
+import React from "react";
 
-const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+export const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-
-  // 1. Find the weekday alignment for the 1st of the month (0 = Sun, 1 = Mon, etc.)
+const Calendar = ({ month, year, selectedDate, onDateClick }) => {
   const firstDayOfMonth = new Date(year, month, 1).getDay();
-
-  // 2. Fetch the total number of days in the active month
   const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // 3. Navigation triggers
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  // 4. Capture clicked date
-  const handleDateClick = (day) => {
-    setSelectedDate(new Date(year, month, day));
-  };
-
-  // 5. Build layout cells
   const calendarCells = [];
-
   // Empty grid spacer cells for proper calendar alignment
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarCells.push(<div key={`empty-${i}`} className="invisible"></div>);
   }
-
   // Active day button elements
   for (let day = 1; day <= totalDaysInMonth; day++) {
     const isToday =
@@ -62,8 +42,8 @@ const Calendar = () => {
     calendarCells.push(
       <button
         key={`day-${day}`}
-        onClick={() => handleDateClick(day)}
-        className={`w-full h-10 flex items-center justify-center text-sm rounded focus:outline-none transition-colors duration-150
+        onClick={() => onDateClick(day)}
+        className={` w-full h-8.5 flex items-center justify-center text-sm rounded focus:outline-none transition-colors duration-150
           ${isToday ? "border-2 border-blue-500 font-bold" : ""}
           ${
             isSelected
@@ -76,27 +56,8 @@ const Calendar = () => {
       </button>,
     );
   }
-
   return (
-    <div className=" min-h-[400px] w-full flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl ">
-      {/* Navigation Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={prevMonth}
-          className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm focus:outline-none"
-        >
-          &lt;
-        </button>
-        <h2 className="text-lg font-bold text-[#6675EC]">
-          {months[month]} {year}
-        </h2>
-        <button
-          onClick={nextMonth}
-          className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm focus:outline-none"
-        >
-          &gt;
-        </button>
-      </div>
+    <div className="w-full">
       {/* Weekday Row Labels */}
       <div className="grid grid-cols-7 text-center font-semibold text-gray-500 text-xs mb-2">
         {daysOfWeek.map((day) => (
