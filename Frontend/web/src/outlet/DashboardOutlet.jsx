@@ -178,6 +178,27 @@ export default function DashboardOutlet() {
   );
 
   //lEAVE
+  const [leaves, setLeaves] = useState([]);
+  const [searchLeave, setSearchLeave] = useState("");
+  const [currentPageLeave, setCurrentPageLeave] = useState(1);
+
+  const fetchPending = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      };
+      const response = await axios.get(url + "/leave", { headers });
+      setLeaves(response.data.filter((leave) => leave.status === "Pending"));
+    } catch (error) {
+      console.error("Failed to load pending leave:", error);
+    }
+  };
+  useEffect(() => {
+    fetchPending();
+  }, []);
+
   const leaveHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Pending Leave</h2>
@@ -188,6 +209,25 @@ export default function DashboardOutlet() {
         View All
       </Link>
     </div>
+  );
+
+  // const [currentPageLeave, setCurrentPageFlagged] = useState(1);
+  const filteredLeave = leaves
+    .filter((leave) =>
+      leave.user?.name?.toLowerCase().includes(searchLeave.toLowerCase()),
+    )
+    .reverse();
+
+  const itemsPerPageLeave = 3;
+
+  const totalPagesLeave = Math.max(
+    1,
+    Math.ceil(filteredLeave.length / itemsPerPageLeave),
+  );
+  const startIndexLeave = (currentPageLeave - 1) * itemsPerPageLeave;
+  const pageItemsLeave = filteredLeave.slice(
+    startIndexLeave,
+    startIndexLeave + itemsPerPageLeave,
   );
 
   //WEEKLY ATTENDANCE
@@ -281,53 +321,7 @@ export default function DashboardOutlet() {
       </div>
     </div>
   );
-  const [searchLeave, setSearchLeave] = useState("");
-  const [currentPageLeave, setCurrentPageLeave] = useState(1);
-  const [leaves, setLeaves] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "true",
-    };
-    const fetchPending = async () => {
-      try {
-        const response = await axios.get(url + "/leave", { headers });
-        setLeaves(response.data.filter((leave) => leave.status === "Pending"));
-      } catch (error) {
-        console.error("Failed to load pending leave:", error);
-      }
-    };
-    fetchPending();
-  }, []);
-
-  const handleDecision = async (id, status) => {
-    try {
-      await axios.put(`${url}/leave/${id}`, { status }, { headers });
-      fetchPending();
-    } catch (error) {
-      console.error("Failed to update leave application:", error);
-    }
-  };
-  // const [currentPageLeave, setCurrentPageFlagged] = useState(1);
-  const filteredLeave = leaves
-    .filter((leave) =>
-      leave.user?.name?.toLowerCase().includes(searchLeave.toLowerCase()),
-    )
-    .reverse();
-
-  const itemsPerPageLeave = 3;
-
-  const totalPagesLeave = Math.max(
-    1,
-    Math.ceil(filteredLeave.length / itemsPerPageLeave),
-  );
-  const startIndexLeave = (currentPageLeave - 1) * itemsPerPageLeave;
-  const pageItemsLeave = filteredLeave.slice(
-    startIndexLeave,
-    startIndexLeave + itemsPerPageLeave,
-  );
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -480,13 +474,7 @@ export default function DashboardOutlet() {
               headerDefault={false}
             >
               {pageItemsLeave.map((leave, i) => (
-                <PendingLeave
-                  key={i}
-                  name={leave.user?.name}
-                  department={leave.user?.department}
-                  position={leave.user?.position}
-                  type={leave.leave_type}
-                />
+                <PendingLeave fetch={fetchPending} key={i} item={leave} />
               ))}
             </Containers>
           </div>

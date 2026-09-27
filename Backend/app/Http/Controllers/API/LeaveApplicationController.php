@@ -15,7 +15,7 @@ class LeaveApplicationController extends Controller
      */
     public function index()
     {
-        $leaveApplications = LeaveApplication::with('user')->get();
+        $leaveApplications = LeaveApplication::with('user.leaveBalance')->get();
         return response()->json($leaveApplications);
     }
 
