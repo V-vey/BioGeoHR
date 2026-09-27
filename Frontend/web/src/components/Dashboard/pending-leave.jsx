@@ -2,39 +2,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 
-export default function PendingLeave({image, name, email , status, }) {
-  // const [pending, setPending] = useState([]);
-
-  // const token = localStorage.getItem("token");
-  // const headers = {
-  //   Authorization: `Bearer ${token}`,
-  //   "ngrok-skip-browser-warning": "true",
-  // };
-
-  // const fetchPending = async () => {
-  //   try {
-  //     const response = await axios.get(url + "/leave", { headers });
-  //     setPending(
-  //       response.data.filter((leave) => leave.status === "Pending"),
-  //     );
-  //   } catch (error) {
-  //     console.error("Failed to load pending leave:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchPending();
-  // }, []);
-
-  // const handleDecision = async (id, status) => {
-  //   try {
-  //     await axios.put(`${url}/leave/${id}`, { status }, { headers });
-  //     fetchPending();
-  //   } catch (error) {
-  //     console.error("Failed to update leave application:", error);
-  //   }
-  // };
-
+export default function PendingLeave({
+  image,
+  name,
+  department,
+  position,
+  type,
+}) {
   // if (pending.length === 0) {
   //   return (
   //     <p className="text-sm text-[#8a90a3] text-center py-4">
@@ -44,39 +18,24 @@ export default function PendingLeave({image, name, email , status, }) {
   // }
 
   return (
-    <div className="flex flex-col gap-2 w-full">
-        <div
-          className="flex items-center justify-between border-b border-[#eef0f5] pb-2 last:border-b-0"
-        >
-          <div className="flex flex-col">
-            <p className="m-0 font-semibold text-[#3A3A3A] text-[14px]">
-              {leave.user?.name}
+    <>
+      <div className="flex flex-row w-full px-4 items-center">
+        <div className="flex-2 flex flex-row gap-2 items-center">
+          <div className="rounded-full w-10 h-10 border-1" />
+          <div className="flex flex-col items-start">
+            <p className="m-0 leading-none text-[16px] font-medium">{name}</p>
+            <p className="m-0 leading-none text-[13px] font-regular">
+              {department} | {position}
             </p>
-            <p className="m-0 text-[#8a90a3] text-[12px]">
-              {leave.user?.contact_number} | {leave.leave_type}
-            </p>
-            <p className="m-0 text-[#3A3A3A] text-[12px] italic">
-              {leave.reason}
-            </p>
-          </div>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => handleDecision(leave.id, "Approved")}
-              className="text-xs px-2 py-1 rounded-full bg-[#2AAF56] text-white"
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDecision(leave.id, "Rejected")}
-              className="text-xs px-2 py-1 rounded-full bg-[#EC6668] text-white"
-            >
-              Reject
-            </button>
           </div>
         </div>
-      ))}
-    </div>
+        <p className="flex-1 text-start m-0 text-[16px] font-medium">{type}</p>
+        <div className="flex-1 flex justify-end">
+          <button className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] rounded-[10px]">
+            View
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

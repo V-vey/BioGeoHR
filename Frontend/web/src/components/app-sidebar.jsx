@@ -1,10 +1,4 @@
-import {
-  Calendar,
-  Users,
-  LayoutDashboard,
-  Wallet,
-  ChevronDown,
-} from "lucide-react";
+import { Calendar, Users, LayoutDashboard, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,11 +12,6 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
 import { Button } from "@base-ui/react";
 import { Link, useNavigate, useLocation } from "react-router-dom"; // 1. Added useLocation
 
@@ -85,55 +74,45 @@ export function AppSidebar() {
                     (child) => location.pathname === child.url,
                   );
                   return (
-                    <Collapsible key={item.title} defaultOpen={isGroupActive}>
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger
-                          render={
-                            <SidebarMenuButton
-                              isActive={isGroupActive}
-                              className={`flex items-center gap-2 p-2 rounded-lg transition-colors w-full ${
-                                isGroupActive
-                                  ? "bg-[#6675EC]/10 text-[#6675EC] font-medium"
-                                  : "text-gray-600 hover:bg-gray-100"
-                              }`}
-                            />
-                          }
-                        >
-                          <span className="shrink-0">
-                            <item.icon className="w-5 h-5" />
-                          </span>
-                          <span>{item.title}</span>
-                          <ChevronDown className="w-4 h-4 ml-auto" />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub className="mt-1">
-                            {item.children.map((child) => {
-                              const isChildActive =
-                                location.pathname === child.url;
-                              return (
-                                <SidebarMenuSubItem key={child.url}>
-                                  <SidebarMenuSubButton
-                                    isActive={isChildActive}
-                                    render={
-                                      <Link
-                                        to={child.url}
-                                        className={`justify-start transition-colors ${
-                                          isChildActive
-                                            ? "text-[#6675EC] font-medium bg-[#6675EC]/10"
-                                            : "text-gray-600 hover:bg-gray-100"
-                                        }`}
-                                      />
-                                    }
-                                  >
-                                    {child.title}
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              );
-                            })}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </SidebarMenuItem>
-                    </Collapsible>
+                    <SidebarMenuItem key={item.title}>
+                      <div
+                        className={`flex items-center gap-2 p-2 rounded-lg w-full ${
+                          isGroupActive
+                            ? "text-[#6675EC] font-medium"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        <span className="shrink-0">
+                          <item.icon className="w-5 h-5" />
+                        </span>
+                        <span>{item.title}</span>
+                      </div>
+                      <SidebarMenuSub className="mt-1">
+                        {item.children.map((child) => {
+                          const isChildActive =
+                            location.pathname === child.url;
+                          return (
+                            <SidebarMenuSubItem key={child.url}>
+                              <SidebarMenuSubButton
+                                isActive={isChildActive}
+                                render={
+                                  <Link
+                                    to={child.url}
+                                    className={`justify-start transition-colors ${
+                                      isChildActive
+                                        ? "text-[#6675EC] font-medium bg-[#6675EC]/10"
+                                        : "text-gray-600 hover:bg-gray-100"
+                                    }`}
+                                  />
+                                }
+                              >
+                                {child.title}
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </SidebarMenuItem>
                   );
                 }
                 const isActive = location.pathname === item.url;

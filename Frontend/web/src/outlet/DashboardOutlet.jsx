@@ -38,75 +38,20 @@ export default function DashboardOutlet() {
     "November",
     "December",
   ];
-
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
   // 1. Find the weekday alignment for the 1st of the month (0 = Sun, 1 = Mon, etc.)
   const firstDayOfMonth = new Date(year, month, 1).getDay();
-
   // 2. Fetch the total number of days in the active month
   const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
   // 3. Navigation triggers
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
   // 4. Capture clicked date
   const handleDateClick = (day) => {
     setSelectedDate(new Date(year, month, day));
   };
-
   // 5. Build layout cells
-
-  //counts
-  const [metrics, setMetrics] = useState({
-    countEmployees: 0,
-    countAttendance: 0,
-    countLate: 0,
-    countAbsent: 0,
-    countLeave: 0,
-
-    percentageAttendance: 0,
-    percentageLate: 0,
-    percentageAbsent: 0,
-    percentageLeave: 0,
-  });
-  const [flagged, setFlagged] = useState([]);
-  const [leave, setLeave] = useState([]);
-
-  //custome header
-  const flaggedHeader = (
-    <div className="flex flex-row justify-between items-center">
-      <div className="flex items-start text-[21px] text-[#6675EC] font-medium">
-        Flagged Attendance
-      </div>
-      <Link
-        to="/attendance/flagged"
-        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
-      >
-        View All
-      </Link>
-    </div>
-  );
-  const leaveHeader = (
-    <div className="flex flex-row justify-between items-center">
-      <h2 className="flex items-start ">Pending Leave</h2>
-      <Link
-        to="/employee/leave-request"
-        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
-      >
-        View All
-      </Link>
-    </div>
-  );
-
-  const weeklyHeader = (
-    <div className="flex flex-row justify-center items-center">
-      <h2 className="flex items-center">Weekly Attendance</h2>
-    </div>
-  );
-
   const calendarHeader = (
     // justify-between when there is a button
     <div className="flex items-center justify-between ">
@@ -128,7 +73,20 @@ export default function DashboardOutlet() {
     </div>
   );
 
-  //fetching data
+  //Attendance Count
+  const [metrics, setMetrics] = useState({
+    countEmployees: 0,
+    countAttendance: 0,
+    countLate: 0,
+    countAbsent: 0,
+    countLeave: 0,
+
+    percentageAttendance: 0,
+    percentageLate: 0,
+    percentageAbsent: 0,
+    percentageLeave: 0,
+  });
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const fetchData = async () => {
@@ -164,26 +122,22 @@ export default function DashboardOutlet() {
     fetchData();
   }, []);
 
-  const [weeklyData, setWeeklyData] = useState([]);
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const fetchWeekly = async () => {
-      try {
-        const response = await axios.get(url + "/weeklyAttendance", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-        setWeeklyData(response.data);
-      } catch (error) {
-        console.error("Failed to load weekly attendance:", error);
-      }
-    };
-    fetchWeekly();
-  }, []);
-
-  // change to today flagged
+  //FLAGGED
+  const [flagged, setFlagged] = useState([]);
+  //custome header
+  const flaggedHeader = (
+    <div className="flex flex-row justify-between items-center">
+      <div className="flex items-start text-[21px] text-[#6675EC] font-medium">
+        Flagged Attendance
+      </div>
+      <Link
+        to="/attendance/flagged"
+        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
+      >
+        View All
+      </Link>
+    </div>
+  );
   useEffect(() => {
     const token = localStorage.getItem("token");
     const fetchFlagged = async () => {
@@ -204,9 +158,65 @@ export default function DashboardOutlet() {
     };
     fetchFlagged();
   }, []);
+  const [currentPageFlagged, setCurrentPageFlagged] = useState(1);
+  const filteredFlagged = flagged
+    .filter((flag) =>
+      flag.user?.name?.toLowerCase().includes(search.toLowerCase()),
+    )
+    .reverse();
 
+  const itemsPerPage = 4;
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredFlagged.length / itemsPerPage),
+  );
+  const startIndex = (currentPageFlagged - 1) * itemsPerPage;
+  const pageItemsFlagged = filteredFlagged.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  //lEAVE
+  const leaveHeader = (
+    <div className="flex flex-row justify-between items-center">
+      <h2 className="flex items-start ">Pending Leave</h2>
+      <Link
+        to="/employee/leave-request"
+        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
+      >
+        View All
+      </Link>
+    </div>
+  );
+
+  //WEEKLY ATTENDANCE
+  const weeklyHeader = (
+    <div className="flex flex-row justify-center items-center">
+      <h2 className="flex items-center">Weekly Attendance</h2>
+    </div>
+  );
+  const [weeklyData, setWeeklyData] = useState([]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const fetchWeekly = async () => {
+      try {
+        const response = await axios.get(url + "/weeklyAttendance", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        setWeeklyData(response.data);
+      } catch (error) {
+        console.error("Failed to load weekly attendance:", error);
+      }
+    };
+    fetchWeekly();
+  }, []);
+
+  //EMPLOYEE
   const [employees, setEmployees] = useState([]);
-
   // change to today attendance
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -227,7 +237,6 @@ export default function DashboardOutlet() {
     };
     fetchEmployees();
   }, []);
-
   const [currentPageEmp, setCurrentPageEmp] = useState(1);
   const [searchEmp, setSearchEmp] = useState("");
   const handleSearch = (value) => {
@@ -249,7 +258,6 @@ export default function DashboardOutlet() {
     startIndexEmp,
     startIndexEmp + itemsPerPageEmp,
   );
-
   const employeeHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Employee List</h2>
@@ -273,29 +281,52 @@ export default function DashboardOutlet() {
       </div>
     </div>
   );
-
-  //pagest
+  const [searchLeave, setSearchLeave] = useState("");
   const [currentPageLeave, setCurrentPageLeave] = useState(1);
-  const [currentPageFlagged, setCurrentPageFlagged] = useState(1);
-  const [currentPageEmployee, setCurrentPageEmployee] = useState(1);
-  const [search, setSearch] = useState("");
+  const [leaves, setLeaves] = useState([]);
 
-  const filteredFlagged = flagged
-    .filter((flag) =>
-      flag.user?.name?.toLowerCase().includes(search.toLowerCase()),
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
+    };
+    const fetchPending = async () => {
+      try {
+        const response = await axios.get(url + "/leave", { headers });
+        setLeaves(response.data.filter((leave) => leave.status === "Pending"));
+      } catch (error) {
+        console.error("Failed to load pending leave:", error);
+      }
+    };
+    fetchPending();
+  }, []);
+
+  const handleDecision = async (id, status) => {
+    try {
+      await axios.put(`${url}/leave/${id}`, { status }, { headers });
+      fetchPending();
+    } catch (error) {
+      console.error("Failed to update leave application:", error);
+    }
+  };
+  // const [currentPageLeave, setCurrentPageFlagged] = useState(1);
+  const filteredLeave = leaves
+    .filter((leave) =>
+      leave.user?.name?.toLowerCase().includes(searchLeave.toLowerCase()),
     )
     .reverse();
 
-  const itemsPerPage = 4;
+  const itemsPerPageLeave = 3;
 
-  const totalPages = Math.max(
+  const totalPagesLeave = Math.max(
     1,
-    Math.ceil(filteredFlagged.length / itemsPerPage),
+    Math.ceil(filteredLeave.length / itemsPerPageLeave),
   );
-  const startIndex = (currentPageFlagged - 1) * itemsPerPage;
-  const pageItemsFlagged = filteredFlagged.slice(
-    startIndex,
-    startIndex + itemsPerPage,
+  const startIndexLeave = (currentPageLeave - 1) * itemsPerPageLeave;
+  const pageItemsLeave = filteredLeave.slice(
+    startIndexLeave,
+    startIndexLeave + itemsPerPageLeave,
   );
   return (
     <>
@@ -448,7 +479,15 @@ export default function DashboardOutlet() {
               header={leaveHeader}
               headerDefault={false}
             >
-              <PendingLeave />
+              {pageItemsLeave.map((leave, i) => (
+                <PendingLeave
+                  key={i}
+                  name={leave.user?.name}
+                  department={leave.user?.department}
+                  position={leave.user?.position}
+                  type={leave.leave_type}
+                />
+              ))}
             </Containers>
           </div>
         </div>
