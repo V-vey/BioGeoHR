@@ -15,7 +15,7 @@ use App\Http\Controllers\API\LoanController;
 use App\Http\Controllers\API\PasswordController;
 use App\Http\Controllers\API\PayslipController;
 use App\Http\Controllers\API\SystemSettingController;
-
+use App\Http\Controllers\API\HolidayController;
 //Auth
 use App\Http\Controllers\Auth\LoginAuthController;
 
@@ -86,9 +86,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('location', LocationController::class);
         // Route::get('location', [LocationController::class, "index"]);
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
-
+    
         // Route::get('systemSettings', [SystemSettingController::class, 'index']);
         Route::put('systemSettings/{id}', [SystemSettingController::class, 'update']);
+        Route::apiResource('holidays', HolidayController::class)->only(['index', 'store', 'destroy']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

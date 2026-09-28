@@ -10,6 +10,8 @@ import 'Screens/LoginPage/text_box_email.dart';
 // import 'Screens/LoginPage/text_box_password.dart';
 import 'Screens/LoginPage/login_button.dart';
 
+import 'package:workmanager/workmanager.dart';
+import 'Controller/Homepage/ClockIn/geofence_periodic_check.dart';
 //testin widget
 import 'Testing/testing_button.dart';
 
@@ -18,6 +20,9 @@ final TextEditingController _passwordController = TextEditingController();
 final Logintext logintext = Logintext();
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().initialize(callbackDispatcher);
+
   runApp(
     MaterialApp(
       theme: ThemeData(fontFamily: 'Roboto'),

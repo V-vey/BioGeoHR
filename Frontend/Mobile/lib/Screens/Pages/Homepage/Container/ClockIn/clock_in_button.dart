@@ -14,6 +14,7 @@ import '../../../../../Controller/Homepage/leave_balance.dart';
 import '../../../../../Controller/Homepage/ClockIn/save_attendance_clock_in.dart';
 
 import '../../../../../Controller/Homepage/count_late.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();
@@ -74,11 +75,31 @@ class Clockinbutton extends StatelessWidget {
             }
 
             //check if in range
-            if (!await verifyUserCoordinates()) {
+            try {
+              if (!await verifyUserCoordinates()) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('User Not In Range')));
+                return;
+              }
+            } catch (e) {
               if (!context.mounted) return;
+              String message = 'Something went wrong getting your location.';
+
+              if (e.toString().contains('Location services are disabled')) {
+                message = 'Please turn on your GPS/Location to clock in.';
+              } else if (e.toString().contains('permanently denied')) {
+                message =
+                    'Location permission is permanently denied. Please enable it in your phone settings.';
+                await Geolocator.openAppSettings();
+              } else if (e.toString().contains('denied')) {
+                message = 'Location permission is required to clock in.';
+              }
+
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text('User Not In Range')));
+              ).showSnackBar(SnackBar(content: Text(message)));
               return;
             }
 

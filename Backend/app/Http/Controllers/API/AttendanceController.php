@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\Users;
 use App\Models\Location;
 use App\Models\LeaveApplication;
+use App\Models\Holiday;
 use App\Http\Controllers\Feature\AttendanceService;
 
 use Carbon\Carbon;
@@ -242,8 +243,9 @@ class AttendanceController extends Controller
         }
 
         $totalAttedance = $onTime + $late;
-        $absent = $employeesCount - $totalAttedance;
-        
+        $isHoliday = Holiday::where('date', today())->exists();
+        $absent = $isHoliday ? 0 : ($employeesCount - $totalAttedance);
+
         return response()->json([
             'employees' => $employeesCount,
             'on_time' => $onTime,
@@ -298,11 +300,13 @@ class AttendanceController extends Controller
                 ->whereDate("end_date", ">=", $date)
                 ->count();
 
+            $isHoliday = Holiday::where('date', $date)->exists();
+
             $result[] = [
                 'day' => $dayName,
                 'ontime' => $onTime,
                 'late' => $late,
-                'absent' => max($employeesCount - ($onTime + $late), 0),
+                'absent' => $isHoliday ? 0 : max($employeesCount - ($onTime + $late), 0),
                 'leave' => $leave,
             ];
         }

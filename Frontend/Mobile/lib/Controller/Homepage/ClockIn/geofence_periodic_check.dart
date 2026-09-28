@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../../../Service/url.dart';
 import 'location_check.dart';
@@ -30,4 +31,12 @@ Future<void> checkGeofencePeriodically() async {
     // a missed periodic check shouldn't interrupt the user's clocked-in session
     print('Periodic geofence check failed: $e');
   }
+}
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    await checkGeofencePeriodically();
+    return Future.value(true);
+  });
 }

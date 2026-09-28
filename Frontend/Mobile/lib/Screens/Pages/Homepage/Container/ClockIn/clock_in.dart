@@ -15,6 +15,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../Service/url.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:workmanager/workmanager.dart';
+import 'package:geolocator/geolocator.dart';
+
 class ClockIn extends StatefulWidget {
   const ClockIn({super.key});
 
@@ -62,6 +65,19 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Future<void> requestBackgroundLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.whileInUse) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission != LocationPermission.always) {
+      // Android wouldn't grant it via a simple dialog — user must enable it manually
+      await Geolocator.openAppSettings();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +87,12 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
   void start() {
     if (isRunning == true) return;
     isRunning = true;
+    requestBackgroundLocation();
+    Workmanager().registerPeriodicTask(
+      "geofence-check",
+      "geofenceCheckTask",
+      frequency: Duration(minutes: geofenceIntervalMinutes),
+    );
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() => addTimer());
     });
@@ -84,6 +106,7 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
   }
 
   void reset() {
+    Workmanager().cancelByUniqueName("geofence-check");
     setState(() {
       isRunning = false;
       duration = Duration();
