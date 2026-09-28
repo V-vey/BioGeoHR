@@ -26,6 +26,27 @@ export default function AllEmployee({}) {
     fetchEmployees();
   }, []);
 
+  const [search, setSearch] = useState("");
+  const handleSearch = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const filteredEmployees = employees
+    .filter((emp) => emp.name.toLowerCase().includes(search.toLowerCase()))
+    .reverse();
+
+  const itemsPerPage = 12;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredEmployees.length / itemsPerPage),
+  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageItems = filteredEmployees.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
   return (
     <div>
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
@@ -42,9 +63,12 @@ export default function AllEmployee({}) {
             /* ...unchanged... */
           ]
         }
+        totalPages={totalPages}
+        search={search}
+        setSearch={handleSearch}
         onFilterApply={(filters) => console.log(filters)}
       >
-        {employees.map((emp) => (
+        {pageItems.map((emp) => (
           <Item
             key={emp.id}
             id={emp.id}
@@ -53,7 +77,7 @@ export default function AllEmployee({}) {
             position={emp.position}
             contType={emp.contract_type}
             joinDate={new Date(emp.created_at).toLocaleDateString("en-US", {
-              month: "long",
+              month: "short",
               day: "numeric",
               year: "numeric",
             })}

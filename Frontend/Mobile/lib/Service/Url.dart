@@ -71,4 +71,8 @@ class Url {
   String geofenceCheck() {
     return "$api/geofenceCheck";
   }
+
+  String systemSettings() {
+    return "$api/systemSettings";
+  }
 }

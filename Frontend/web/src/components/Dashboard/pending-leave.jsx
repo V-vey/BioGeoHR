@@ -13,8 +13,6 @@ export default function PendingLeave({ item, fetch }) {
   const [view, setView] = useState(false);
   const onView = () => {
     setView(true);
-
-    console.log(view);
   };
 
   return (

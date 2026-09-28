@@ -10,6 +10,11 @@ import '../../../../../Controller/Homepage/ClockIn/geofence_periodic_check.dart'
 //testing
 import '../../../../../Controller/Homepage/leave_balance.dart';
 
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../Service/url.dart';
+import 'package:http/http.dart' as http;
+
 class ClockIn extends StatefulWidget {
   const ClockIn({super.key});
 
@@ -33,6 +38,36 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
 
   Timer? geofenceTimer;
 
+  final Url _api = Url();
+  int geofenceIntervalMinutes = 30; // fallback default
+
+  Future<void> fetchGeofenceInterval() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("token");
+
+      final response = await http.get(
+        Uri.parse(_api.systemSettings()),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+      );
+      final data = jsonDecode(response.body);
+      setState(() {
+        geofenceIntervalMinutes = data['geofence_check_interval_minutes'];
+      });
+    } catch (e) {
+      // keep the fallback default on failure
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchGeofenceInterval();
+  }
+
   void start() {
     if (isRunning == true) return;
     isRunning = true;
@@ -41,7 +76,9 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
     });
 
     //change min to 30 later or the data
-    geofenceTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+    geofenceTimer = Timer.periodic(Duration(minutes: geofenceIntervalMinutes), (
+      timer,
+    ) {
       checkGeofencePeriodically();
     });
   }
