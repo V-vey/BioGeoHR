@@ -3,6 +3,8 @@ namespace App\Service;
 
 //Just for Testing
 use Illuminate\Http\Request;
+use App\Models\Attendance;
+use Carbon\Carbon;
 
 class SalaryService
 {
@@ -12,7 +14,7 @@ class SalaryService
     }
 
     function hourlyRate($dailyWage, $hrsPerDay){
-        return $hrlyRate = $dailyWage / hrsPerDay;
+        return $dailyWage / $hrsPerDay;
     }
 
     function lateDeduction($userId){
@@ -20,8 +22,10 @@ class SalaryService
         ->whereMonth('date', Carbon::now()->month)
         ->where('status', 'Late')
         ->count();
-
-    return intdiv($late, 3); 
+    if($late >= 3){
+        return true;
+    }
+    return false;
 }
 
     //Employees' Compensation
@@ -57,8 +61,8 @@ class SalaryService
     }
 
     //based on 2025 SSS Contribution Table
-    function sssContributionTable(Request $request){
-        $salary = $request->salary;
+    function sssContributionTable($monthlySalary){
+        $salary = $monthlySalary;
         //Salary is based on monthly salary credit
         $minMSC = 5000.00;
         $maxMSC = 35000.00;
@@ -84,18 +88,18 @@ class SalaryService
 
         $total = $employeeTotal + $employerTotal;
 
-         return response()->json([
+         return ([
                 'salary' => $salary,
                 'msc' => $msc,
                 'mpf' => $mpf, 
                 'ec' => $ec,
-                'Employee Contribution' => $employeeCont, 
-                'Employee MPF' => $employeeMPF,
-                'Employee Total' => $employeeTotal,
-                'Employer Contribution' => $employerCont, 
-                'Employer MPF' => $employerMPF,
-                'Employer Total' => $employerTotal,
-                'Total' => $total]);
+                'employee_contribution' => $employeeCont, 
+                'employee_mpf' => $employeeMPF,
+                'employee_total' => $employeeTotal,
+                'employer_contribution' => $employerCont, 
+                'employer_mPF' => $employerMPF,
+                'employer_total' => $employerTotal,
+                'total' => $total]);
     }
     function philHealth($salary){
         return $salary * .025;
@@ -104,21 +108,27 @@ class SalaryService
         return $salary * .025;
     } 
     
-    function paycheck($salary){
-        $dailyWage = $this->dailyWage($salary);
-        $hrRate = $this->hourlyRate($dailyWage);
-        //use the user
-        $lateDeduction = $this->lateDeduction(); //-1 day if true
-        $sss = 1; //the sss table later fix it
+    function paycheck($salary, $daysPerMonth, $hrsPerDay, $userId){
+        $dailyWage = $this->dailyWage($salary, $daysPerMonth);
+        $hrRate = $this->hourlyRate($dailyWage, $hrsPerDay);
+        $lateDeduction = $this->lateDeduction($userId);
+        $sss = $this->sssContributionTable($salary)['employee_total']; 
         $philHealth = $this->philHealth($salary);
         $pagIbig = $this->pagIbig($salary);
         $tax = $sss + $philHealth + $pagIbig;
-
-        $loan; //unknow i don know later
-
-        $paycheck = $salary - $tax; // this is monthly
-
+        $paycheck = $salary - $tax; 
+        if($lateDeduction == true){
+            $paycheck = $paycheck - $dailyWage;
+        }
         $semiMonth = $paycheck / 2;
+       
+        return [
+            'sss' => $sss,
+            'philhealth' => $philHealth,
+            'pagibig' => $pagIbig,
+            'late_deduction' => $lateDeduction ? $dailyWage : 0,
+            'net_pay' => $semiMonth,
+        ];
     }
 
 }

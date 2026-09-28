@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             'nationality' => 'Filipino',
             'address' => 'N/A',
         ]);
+        SystemSetting::create();
     }
 }
 

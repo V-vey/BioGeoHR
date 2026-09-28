@@ -177,9 +177,11 @@ class AttendanceController extends Controller
         return $attendance;
     }
 
-    private function isLate($userCallTime,$timeIn){
-        
-        if ($userCallTime>$timeIn){
+    private function isLate($userCallTime, $timeIn){
+        $graceMinutes = SystemSetting::first()->late_grace_period_minutes;
+        $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
+
+        if ($timeIn <= $graceDeadline) {
             return "On-Time";
         }
         return "Late";
@@ -202,7 +204,7 @@ class AttendanceController extends Controller
             'user_id' => $userId,
             'location_id' => $locationId->id,
             'status' => $status, 
-            'date' => today()->toDateString(), // bug
+            'date' => now('Asia/Manila')->toDateString(),
             'time_in' => $time,
         ]);
         

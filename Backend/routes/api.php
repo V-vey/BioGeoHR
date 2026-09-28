@@ -13,6 +13,8 @@ use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\UserLocationController;
 use App\Http\Controllers\API\LoanController;
 use App\Http\Controllers\API\PasswordController;
+use App\Http\Controllers\API\PayslipController;
+use App\Http\Controllers\API\SystemSettingController;
 
 //Auth
 use App\Http\Controllers\Auth\LoginAuthController;
@@ -60,7 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //periodic check
     Route::post('geofenceCheck', [GeoFenceController::class, 'periodicCheck']);
-
+    Route::get('systemSettings', [SystemSettingController::class, 'index']);
     //can only access by HR
     Route::middleware('role:HR')->group(function () {
         // Route::apiResource('users', UsersController::class);
@@ -74,6 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
         
+        Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
+        Route::post('payslips/run', [PayslipController::class, 'run']);
+        
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
         
         Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
@@ -81,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('location', LocationController::class);
         // Route::get('location', [LocationController::class, "index"]);
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
+
+        // Route::get('systemSettings', [SystemSettingController::class, 'index']);
+        Route::put('systemSettings/{id}', [SystemSettingController::class, 'update']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);
