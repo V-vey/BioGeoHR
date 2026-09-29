@@ -68,20 +68,8 @@ export default function AllEmployee({}) {
         setSearch={handleSearch}
         onFilterApply={(filters) => console.log(filters)}
       >
-        {pageItems.map((emp) => (
-          <Item
-            key={emp.id}
-            id={emp.id}
-            name={emp.name}
-            department={emp.department}
-            position={emp.position}
-            contType={emp.contract_type}
-            joinDate={new Date(emp.created_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          />
+        {pageItems.map((emp, i) => (
+          <Item key={i} item={emp} />
         ))}
       </Containers>
     </div>

@@ -158,10 +158,11 @@ export default function DashboardOutlet() {
     };
     fetchFlagged();
   }, []);
+  const [searchFlagged, setSearchFlagged] = useState("");
   const [currentPageFlagged, setCurrentPageFlagged] = useState(1);
   const filteredFlagged = flagged
     .filter((flag) =>
-      flag.user?.name?.toLowerCase().includes(search.toLowerCase()),
+      flag.user?.name?.toLowerCase().includes(searchFlagged.toLowerCase()),
     )
     .reverse();
 

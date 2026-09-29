@@ -1,25 +1,26 @@
 import EmployeeModal from "@/Modal/EmployeeModal";
 import { useEffect, useState } from "react";
-export default function ItemContainer({
-  id,
-  name,
-  department,
-  position,
-  contType,
-  joinDate,
-}) {
+export default function ItemContainer({ item }) {
   const [view, setView] = useState(false);
   const onView = () => {
     setView(true);
   };
+
   const token = localStorage.getItem("token");
   const test = async (e) => {};
+
+  const createdAt = new Date(item.created_at).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return (
     <>
       <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] py-2 rounded-[5px]">
         <div className="flex px-2 justify-between">
           <div className="flex gap-1 items-center font-semibold">
-            <p className="text-[16px]">ID - {id}</p>
+            <p className="text-[16px]">ID - {item.id}</p>
           </div>
           <button
             onClick={onView}
@@ -38,10 +39,10 @@ export default function ItemContainer({
               <div className="rounded-full w-15 h-15 border-1" />
               <div className="flex flex-col items-start">
                 <p className="m-0 leading-none font-semibold text-[#3A3A3A] text-[16px]">
-                  {name}
+                  {item.name}
                 </p>
                 <p className="m-0 leading-none text-[#3A3A3A] text-[13px]">
-                  {department} | {position}
+                  {item.department} | {item.position}
                 </p>
               </div>
             </div>
@@ -61,21 +62,15 @@ export default function ItemContainer({
           </div>
           <div className="flex flex-col items-end">
             <p className="m-0 leading-none text-[16px] text-[#3A3A3A]">
-              {contType}
+              {item.contract_type}
             </p>
             <p className="m-0 leading-none text-[16px] text-[#3A3A3A]">
-              {joinDate}
+              {createdAt}
             </p>
           </div>
         </div>
       </div>
-      {view && (
-        <EmployeeModal
-          fetch={fetch}
-          leave={item}
-          onClose={() => setView(false)}
-        />
-      )}
+      {view && <EmployeeModal emp={item} onClose={() => setView(false)} />}
     </>
   );
 }

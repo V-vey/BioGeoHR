@@ -10,7 +10,7 @@ export default function countsLayout({ display, count, icon, percentage }) {
         </span>
         {/* <div className="h-0.5 w-full bg-[#E0E0E0] my-0.5" /> */}
 
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           {/* We use flex-col here to stack the items tightly */}
           <div className="flex flex-col items-start leading-none">
             <span className="text-[24px] font-regular text-[#3A3A3A]">
