@@ -47,34 +47,35 @@ Future<Position> determinePosition() async {
 }
 
 Future<bool> verifyUserCoordinates() async {
-  // try {
-  Position position = await determinePosition();
+  try {
+    Position position = await determinePosition();
 
-  // print(position.longitude);
-  // print(position.latitude);
-  final prefs = await SharedPreferences.getInstance();
+    // print(position.longitude);
+    // print(position.latitude);
+    final prefs = await SharedPreferences.getInstance();
 
-  //access the user
-  String? token = prefs.getString("token");
-  String? locationName = prefs.getString("temp");
+    //access the user
+    String? token = prefs.getString("token");
+    String? locationName = prefs.getString("temp");
 
-  final url = Uri.parse(_api.getGeofence());
-  final response = await http.post(
-    url,
-    headers: {
-      "Authorization": "Bearer $token",
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    },
-    body: jsonEncode({
-      "userLong": position.longitude,
-      "userLat": position.latitude,
-      "locationName": locationName,
-    }),
-  );
-  // print(response.body);
-  return _checkPosition(response.statusCode);
-  // } catch (e) {
-  //   print('Error getting location: $e');
-  // }
+    final url = Uri.parse(_api.getGeofence());
+    final response = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "userLong": position.longitude,
+        "userLat": position.latitude,
+        "locationName": locationName,
+      }),
+    );
+    // print(response.body);
+    return _checkPosition(response.statusCode);
+  } catch (e) {
+    print('Error getting location: $e');
+    return false;
+  }
 }

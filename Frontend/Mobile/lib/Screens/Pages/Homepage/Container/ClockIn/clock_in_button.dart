@@ -22,22 +22,22 @@ class Clockinbutton extends StatelessWidget {
 
   final LeaveBalance balance = LeaveBalance();
   final CountLate late = CountLate();
-
+  final VoidCallback requestBackgroundLocation;
   //Timer call back
   final VoidCallback timerStart;
   final VoidCallback timerReset;
   //Check if its runnning
   final bool isRunning;
-
   //status
   final VoidCallback statusActive;
   final VoidCallback statusInactive;
-
+  String clockText = "Clock In";
   //clockIn Out
   final SaveclockInOut clock = SaveclockInOut();
 
   Clockinbutton({
     super.key,
+    required this.requestBackgroundLocation,
     required this.timerStart,
     required this.timerReset,
     required this.isRunning,
@@ -69,7 +69,7 @@ class Clockinbutton extends StatelessWidget {
             if (isRunning) {
               timerReset();
               statusInactive();
-
+              clockText = "Clock In";
               clock.clockOut();
               return;
             }
@@ -105,15 +105,27 @@ class Clockinbutton extends StatelessWidget {
 
             //the biometric
             if (await biometric.authenticateUser() == (true, null)) {
+              final success = await clock.clockIn();
+              if (!success) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Failed to save attendance. Please try again.',
+                    ),
+                  ),
+                );
+                return;
+              }
               timerStart();
               statusActive();
-
-              clock.clockIn();
+              clockText = "Clock Out";
+              // requestBackgroundLocation();
             }
           },
 
           child: Text(
-            "clock in  ",
+            clockText,
             style: TextStyle(
               fontFamily: 'Roboto',
               fontSize: 15,

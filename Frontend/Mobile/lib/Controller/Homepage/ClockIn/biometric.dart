@@ -14,7 +14,7 @@ class Biometric {
       }
 
       if (availableBiometric.contains(BiometricType.face)) {
-        // print("UGLEE");
+        print("Face Reveal");
       }
       if (availableBiometric.contains(BiometricType.fingerprint)) {
         // print("Finger style");
@@ -31,7 +31,8 @@ class Biometric {
       //   biometricOnly: true,
       // );
       final bool didAuthenticate = await auth.authenticate(
-        localizedReason: 'Please authenticate to show account balance',
+        localizedReason: 'Please authenticate to clock in',
+        biometricOnly: true,
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: 'Oops! Biometric authentication required!',

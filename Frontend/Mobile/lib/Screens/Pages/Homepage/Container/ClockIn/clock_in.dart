@@ -218,6 +218,7 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
               Spacer(),
               Clockinbutton(
                 timerStart: start,
+                requestBackgroundLocation: requestBackgroundLocation,
                 timerReset: reset,
                 isRunning: isRunning,
                 statusActive: setStatusActive,
