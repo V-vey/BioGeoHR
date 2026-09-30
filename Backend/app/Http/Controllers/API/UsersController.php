@@ -168,7 +168,7 @@ class UsersController extends Controller
     }
     public function byUser(string $userId)
     {
-        $users = Users::with(['salary', 'leaveBalance', 'attendance.location', 'leaveApplication.leaveBalance'])->find($userId);
+        $users = Users::with(['salary', 'leaveBalance', 'attendance.location', 'leaveApplication.user.leaveBalance'])->find($userId);
         if (!$users) {
             return response()->json(['message' => 'User not found'], 404);
         }

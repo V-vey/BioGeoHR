@@ -1,6 +1,7 @@
 import axios from "axios";
 import { url } from "@/resources/api";
 import { useState, useEffect, useRef } from "react";
+import LeaveRequestModal from "@/Modal/LeaveModal";
 import {
   Mars,
   Venus,
@@ -15,33 +16,18 @@ import {
   Calendar,
 } from "lucide-react";
 import Containers from "@/components/container";
-function Field({ label, required, span = 1, children }) {
-  return (
-    <div
-      className={`flex flex-col  gap-1.5 ${span === 2 ? "sm:col-span-2" : ""}`}
-    >
-      <label className="text-sm text-gray-600 ">
-        {label}
-        {required && <span className="text-[#EC6668]">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-const inputClass =
-  "w-full h-11 px-3 border border-[#b2b2b2] rounded-xl text-sm outline-none focus:border-[#6675EC] focus:ring-2 focus:ring-[#6675EC]/20 transition-colors";
 
-function Section({ title, children }) {
+function ProfInf({ label, data }) {
   return (
-    <div className="flex flex-col gap-4 border border-[#b2b2b2] bg-white p-4 last:border-b-0 rounded-[10px]">
-      <h3 className="font-semibold text-[#3A3A3A]">{title}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-        {children}
+    <div className="flex flex-col flex-1 justify-start items-start ">
+      <p className="font-medium pl-2">{label}</p>
+      <div className="flex flex-col flex-1 justify-start items-start border border-[#b2b2b2] rounded-[10px] p-2 w-full">
+        {/* Change to Input */}
+        <p className="font-regular">{data}</p>
       </div>
     </div>
   );
 }
-
 function Balance(type, item) {
   return (
     <div className="flex flex-1 flex-row justify-between items-center bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px] font-medium ">
@@ -66,52 +52,60 @@ function SalaryRow({ icon: Icon, bg, iconColor, label, value }) {
     </div>
   );
 }
-function LeaveItem({ fetch, status }) {
+function LeaveItem({ fetch }) {
+  const [viewLeave, setViewLeave] = useState(false);
+  const onViewLeave = () => {
+    setViewLeave(true);
+  };
+
   let statusColor;
   // let status = "Approved";
-  if (status == "Approved") {
+  if (fetch?.status == "Approved") {
     statusColor = "#2AAF56";
-  } else if (status == "Pending") {
+  } else if (fetch?.status == "Pending") {
     statusColor = "#EACA3A";
-  } else if (status == "Rejected") {
+  } else if (fetch?.status == "Rejected") {
     statusColor = "#EC6668";
   }
   return (
-    <div className="flex flex-col bg-white border border-[#b2b2b2] rounded-[10px] min-w-70">
-      <div className="flex flex-row p-2 font-semibold justify-between">
-        <div className="flex flex-row gap-2 items-center justify-end font-semibold">
-          <div
-            style={{ backgroundColor: statusColor }}
-            className="w-4 h-4 rounded-full"
-          />
-          <p className="text-[16px]">{status}</p>
+    <>
+      <div className="flex flex-col bg-white border border-[#b2b2b2] rounded-[10px] min-w-70">
+        <div className="flex flex-row p-2 font-semibold justify-between">
+          <div className="flex flex-row gap-2 items-center justify-end font-semibold">
+            <div
+              style={{ backgroundColor: statusColor }}
+              className="w-4 h-4 rounded-full"
+            />
+            <p className="text-[16px]">{fetch.status}</p>
+          </div>
+          <button
+            onClick={onViewLeave}
+            type="button"
+            className="w-20 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
+          >
+            View
+          </button>
         </div>
-        <button
-          // onClick={}
-          type="button"
-          className="w-20 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
-        >
-          View
-        </button>
+        <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5 mx-0 px-0" />
+        <div className=" m-0 my-1 leading-none flex flex-col py-1 px-2">
+          <div className="flex flex-row justify-between">
+            <p className="text-[15px] font-medium">Leave Type:</p>
+            <p className="text-[15px] font-regular">{fetch.leave_type}</p>
+          </div>
+          <div className="m-0 my-1 leading-none flex flex-row justify-between">
+            <p className="text-[15px] font-medium">Starting Date:</p>
+            <p className="text-[15px] font-regular">{fetch.start_date}</p>
+          </div>
+          <div className="m-0 leading-none flex flex-row justify-between">
+            <p className="text-[15px] font-medium">Ending Date:</p>
+            <p className="text-[15px] font-regular">{fetch.end_date}</p>
+          </div>
+        </div>
       </div>
-      <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5 mx-0 px-0" />
-      <div className="flex flex-col py-1 px-2">
-        <div className=" flex flex-row justify-between">
-          <p className="text-[15px] font-medium">Leave Type:</p>
-          <p className="text-[15px] font-regular">Sick Leave</p>
-        </div>
-        <div className="  flex flex-row justify-between">
-          <p className="text-[15px] font-medium">Date Range:</p>
-          <p className="text-[15px] font-regular">
-            Dec 28, 2004 - Dec 28, 2004
-          </p>
-        </div>
-        <div className=" flex flex-row justify-between">
-          <p className="text-[15px] font-medium">Number of Days:</p>
-          <p className="text-[15px] font-regular">4 days</p>
-        </div>
-      </div>
-    </div>
+      {viewLeave && (
+        <LeaveRequestModal leave={fetch} onClose={() => setViewLeave(false)} />
+      )}
+    </>
   );
 }
 export default function EmployeeModal({ emp, onClose }) {
@@ -128,6 +122,7 @@ export default function EmployeeModal({ emp, onClose }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const fileInputRef = useRef(null);
+
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -162,10 +157,12 @@ export default function EmployeeModal({ emp, onClose }) {
 
     fetchData();
   }, [emp.id]);
-
-  const filteredLeave = leaves
+  if (!empData) {
+    return <div>LOADING..</div>;
+  }
+  const filteredLeave = empData?.leave_application
     .filter((leave) =>
-      leave.user?.name?.toLowerCase().includes(searchLeave.toLowerCase()),
+      leave?.status?.toLowerCase().includes(searchLeave.toLowerCase()),
     )
     .reverse();
 
@@ -324,9 +321,13 @@ export default function EmployeeModal({ emp, onClose }) {
                     // header={leaveHeader}
                     // headerDefault={false}
                   >
-                    <LeaveItem status={"Approved"} />
-                    <LeaveItem status={"Approved"} />
-                    <LeaveItem status={"Approved"} />
+                    {pageItemsLeave && pageItemsLeave.length > 0 ? (
+                      pageItemsLeave.map((leave, i) => (
+                        <LeaveItem key={i} fetch={leave} />
+                      ))
+                    ) : (
+                      <p>No leave data available.</p>
+                    )}
                   </Containers>
                 </div>
               </div>
@@ -358,191 +359,76 @@ export default function EmployeeModal({ emp, onClose }) {
               </div>
             </div>
           ) : (
-            <div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-
-                  onSubmit?.(form);
-                }}
-                className="flex flex-col gap-2"
-              >
-                <Section title="Personal Information">
-                  <div className="flex items-center gap-4 py-6 border-b border-[#eef0f5]">
-                    <div className="w-16 h-16 rounded-full bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {photoPreview ? (
-                        <img
-                          src={photoPreview}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-7 h-7 text-[#6675EC]" />
-                      )}
-                    </div>
-
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        ref={fileInputRef}
-                        onChange={handlePhotoChange}
-                        className="hidden"
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-4 p-5 bg-white rounded-[10px] border border-[#b2b2b2]">
+                <h3 className="font-semibold text-[#3A3A3A] text-[21px]">
+                  Personal Information
+                </h3>
+                <div className="flex flex-row items-center gap-4  ">
+                  <div className="w-20 h-20 rounded-[10px] border border-[#b2b2b2] bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
                       />
+                    ) : (
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-sm text-[#6675EC] font-medium hover:underline"
+                        className="text-sm text-[#6675EC] font-medium"
                       >
-                        Upload photo
+                        <User className="w-10 h-10 text-[#6675EC]" />
                       </button>
-                      <p className="text-xs text-gray-400">
-                        JPG or PNG, max 2MB
-                      </p>
-                    </div>
+                    )}
                   </div>
-                  <Field label="Last name" required>
-                    <input
-                      className={inputClass}
-                      onChange={update("lastName")}
-                    />
-                  </Field>
-                  <Field label="First name" required>
-                    <input
-                      className={inputClass}
-                      onChange={update("firstName")}
-                    />
-                  </Field>
-                  <Field label="Middle name">
-                    <input
-                      className={inputClass}
-                      onChange={update("middleName")}
-                    />
-                  </Field>
-                  <Field label="Gender" required>
-                    <div className="relative">
-                      <select
-                        className={`${inputClass} appearance-none pr-8`}
-                        onChange={update("gender")}
-                      >
-                        <option value="">Select</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                      </select>
-                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-                  </Field>
-
-                  <Field label="Date of Birth" required>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        className={`${inputClass} pr-9`}
-                        onChange={update("dob")}
-                      />
-                      <Calendar className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-                  </Field>
-                  <Field label="Birth place">
-                    <input
-                      className={inputClass}
-                      onChange={update("birthPlace")}
-                    />
-                  </Field>
-                  <Field label="Nationality" required>
-                    <input
-                      className={inputClass}
-                      onChange={update("nationality")}
-                    />
-                  </Field>
-                  <Field label="Contact No." required>
-                    <input
-                      type="tel"
-                      className={inputClass}
-                      onChange={update("contactNumber")}
-                    />
-                  </Field>
-                  <Field label="Address" required span={2}>
-                    <input
-                      className={inputClass}
-                      onChange={update("address")}
-                    />
-                  </Field>
-                </Section>
-
-                <Section title="Employment Details">
-                  <Field label="Department" required>
-                    <input
-                      className={inputClass}
-                      onChange={update("department")}
-                    />
-                  </Field>
-                  <Field label="Position" required>
-                    <input
-                      className={inputClass}
-                      onChange={update("position")}
-                    />
-                  </Field>
-                  <Field label="Contract Type" required>
-                    <div className="relative">
-                      <select
-                        className={`${inputClass} appearance-none pr-8`}
-                        onChange={update("contractType")}
-                      >
-                        <option value="">Select</option>
-                        <option>Probationary</option>
-                        <option>Regular</option>
-                      </select>
-                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-                  </Field>
-                  <Field label="Monthly Salary" required>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      onChange={update("salary")}
-                    />
-                  </Field>
-                  <Field label="Call Time" required>
-                    <input
-                      type="time"
-                      className={inputClass}
-                      onChange={update("callTime")}
-                    />
-                  </Field>
-                  <Field label="Working Hours Per Day" required>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      onChange={update("wrkHrsPD")}
-                    />
-                  </Field>
-                  <Field label="Working Days Per Month" required>
-                    <input
-                      type="number"
-                      className={inputClass}
-                      onChange={update("wrkDPM")}
-                    />
-                  </Field>
-                </Section>
-
-                <div className="flex justify-end gap-3 pt-6">
-                  <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-5 py-2 rounded-full border border-[#eef0f5] text-gray-600 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#249c4c] text-white font-medium"
-                  >
-                    Create
-                  </button>
+                  <ProfInf label={"Name: "} data={emp.name} />
+                  <ProfInf label={"Email: "} data={emp.email} />
+                  <ProfInf
+                    label={"Contact Number: "}
+                    data={emp.contact_number}
+                  />
                 </div>
-              </form>
+                <div className="flex flex-row gap-2 w-full">
+                  <ProfInf label={"Gender: "} data={emp.gender} />
+                  <ProfInf label={"Date of Birth: "} data={emp.date_of_birth} />
+                  <ProfInf label={"Nationality: "} data={emp.nationality} />
+                </div>
+                <div className="flex flex-row gap-2">
+                  <div className="flex-2">
+                    <ProfInf label={"Address: "} data={emp.address} />
+                  </div>
+                  <div className="flex-1"></div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 p-5 bg-white rounded-[10px] border border-[#b2b2b2]">
+                <h3 className="font-semibold text-[#3A3A3A] text-[21px]">
+                  Employee Details
+                </h3>
+                <div className="flex flex-row items-center gap-2 ">
+                  <ProfInf label={"Department: "} data={emp.department} />
+                  <ProfInf label={"Position: "} data={emp.position} />
+                  <ProfInf label={"Contract Type: "} data={emp.contract_type} />
+                  <ProfInf label={"Call Time: "} data={emp.call_time} />
+                </div>
+              </div>
+              <div className="flex flex-row gap-2 justify-end">
+                <button
+                  // onClick={}
+                  type="button"
+                  className="px-4 py-2 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
+                >
+                  Reset Password
+                </button>
+                <button
+                  // onClick={}
+                  type="button"
+                  className="w-20 bg-[#2AAF56] hover:bg-[#6675EC] rounded-full text-white py-0.5"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
           )}
           {/* <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5 " /> */}

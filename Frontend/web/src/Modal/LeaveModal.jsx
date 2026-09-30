@@ -13,27 +13,35 @@ function Balance(type, item) {
 
 export default function LeaveRequestModal({ leave, onClose, fetch }) {
   const [errorMsg, setErrorMsg] = useState("");
-  const handleDecision = async (id, status) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${url}/leave/${id}`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
+  let handleDecision;
+  let buttonRes = true;
+  if (leave.status == "Approved" || leave.status == "Rejected") {
+    buttonRes = false;
+  }
+  if (buttonRes) {
+    handleDecision = async (id, status) => {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.put(
+          `${url}/leave/${id}`,
+          { status },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
           },
-        },
-      );
-      fetch();
-      onClose();
-      alert("The Leave Have Been " + { status });
-    } catch (error) {
-      console.error("Failed to update leave application:", error);
-      alert(error.response?.data?.message || "Something went wrong.");
-    }
-  };
+        );
+        fetch();
+        onClose();
+        alert("The Leave Have Been " + { status });
+      } catch (error) {
+        console.error("Failed to update leave application:", error);
+        alert(error.response?.data?.message || "Something went wrong.");
+      }
+    };
+  }
+
   const startDate = new Date(leave.start_date).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -105,21 +113,25 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
             {Balance("Maternity Leave: ", leave.user?.leave_balance?.maternity)}
           </div>
         </div>
-        <div className="flex flex-row justify-end gap-2 text-[19px] text-white font-bold">
-          <button
-            onClick={() => handleDecision(leave.id, "Rejected")}
-            className="bg-[#EC6668] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
-          >
-            Reject
-          </button>
-          <button
-            onClick={() => handleDecision(leave.id, "Approved")}
-            className="bg-[#2AAF56] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
-          >
-            Approve
-          </button>
-        </div>
+
+        {buttonRes && (
+          <div className="flex flex-row justify-end gap-2 text-[19px] text-white font-bold">
+            <button
+              onClick={() => handleDecision(leave.id, "Rejected")}
+              className="bg-[#EC6668] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
+            >
+              Reject
+            </button>
+            <button
+              onClick={() => handleDecision(leave.id, "Approved")}
+              className="bg-[#2AAF56] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
+            >
+              Approve
+            </button>
+          </div>
+        )}
       </div>
+
       {errorMsg && (
         <p className="text-[#EC6668] text-sm text-right">{errorMsg}</p>
       )}
