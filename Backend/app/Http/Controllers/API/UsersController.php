@@ -8,6 +8,10 @@ use App\Models\Users;
 use Illuminate\Support\Facades\Hash;
 use App\Models\LeaveBalance;
 use App\Models\Salary;
+use App\Models\Holiday;
+use App\Models\Attendance;
+use App\Models\LeaveApplication;
+use Carbon\Carbon;
 
 class UsersController extends Controller
 {
@@ -162,13 +166,48 @@ class UsersController extends Controller
             'updated_at' => $user->updated_at
         ]);
     }
-    public function mobileUI(){
+    public function byUser(string $userId)
+    {
+        $users = Users::with(['salary', 'leaveBalance', 'attendance.location', 'leaveApplication.leaveBalance'])->find($userId);
+        if (!$users) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
 
-        // load all ui
-        //recent 
-        //user profile 
-        //salary
-        //late
-        //all
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $today = Carbon::now();
+        $absentDays = 0;
+
+        foreach ($startOfMonth->daysUntil($today) as $date) {
+            if ($date->dayOfWeek === Carbon::SATURDAY) continue;
+
+            $isHoliday = Holiday::where('date', $date->toDateString())->exists();
+            if ($isHoliday) continue;
+
+            $hasAttendance = Attendance::where('user_id', $userId)->whereDate('date', $date)->exists();
+            if ($hasAttendance) continue;
+
+            $onLeave = LeaveApplication::where('user_id', $userId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $date)
+                ->whereDate('end_date', '>=', $date)
+                ->exists();
+            if ($onLeave) continue;
+
+            $absentDays++;
+        }
+        $onTimeCount = Attendance::where('user_id', $userId)
+            ->where('status', 'On-Time')
+            ->whereDate('date', '>=', $startOfMonth)
+            ->count();
+
+        $lateCount = Attendance::where('user_id', $userId)
+            ->where('status', 'Late')
+            ->whereDate('date', '>=', $startOfMonth)
+            ->count();
+        $users->absent = $absentDays;
+        $users->on_time = $onTimeCount;
+        $users->late = $lateCount;
+
+        return response()->json($users);
     }
 }

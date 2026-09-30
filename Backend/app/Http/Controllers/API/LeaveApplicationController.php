@@ -173,4 +173,11 @@ class LeaveApplicationController extends Controller
                 break;
         }
     }
+    public function byUser(string $userId)
+    {
+        $leaveApplications = LeaveApplication::with('user','user.leaveBalance')
+            ->where('user_id', $userId)
+            ->get();
+        return response()->json($leaveApplications);
+    }
 }

@@ -75,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
-        
+        Route::get('user/{userId}', [UsersController::class, 'byUser']);
         Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
         Route::post('payslips/run', [PayslipController::class, 'run']);
         
