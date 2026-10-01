@@ -15,7 +15,7 @@ class Location extends Model
      *
      * @var list<string>
      */
-    protected $cast = [
+    protected $casts = [
         'longitude' => 'float',
         'latitude' => 'float',
         'radius' => 'float',

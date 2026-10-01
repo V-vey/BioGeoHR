@@ -40,7 +40,7 @@ export default function Leave() {
     )
     .reverse();
 
-  const itemsPerPage = 16;
+  const itemsPerPage = 12;
   const totalPages = Math.max(
     1,
     Math.ceil(filteredLeave.length / itemsPerPage),
@@ -70,26 +70,7 @@ export default function Leave() {
         onFilterApply={(filters) => console.log(filters)}
       >
         {pageItems.map((leave, i) => (
-          <Item
-            key={i}
-            id={leave.id}
-            name={leave.user?.name}
-            email={leave.user?.email}
-            status={leave.status}
-            department={leave.user?.department}
-            position={leave.user?.position}
-            leaveType={leave.leave_type}
-            startDate={new Date(leave.start_date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-            endDate={new Date(leave.end_date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          />
+          <Item fetch={leave} />
         ))}
       </Containers>
     </div>

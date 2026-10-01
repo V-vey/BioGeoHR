@@ -32,12 +32,14 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
             },
           },
         );
-        fetch();
+        if (!fetch == null) {
+          fetch();
+        }
         onClose();
         alert("The Leave Have Been " + { status });
       } catch (error) {
         console.error("Failed to update leave application:", error);
-        alert(error.response?.data?.message || "Something went wrong.");
+        // alert(error.response?.data?.message || "Something went wrong.");
       }
     };
   }

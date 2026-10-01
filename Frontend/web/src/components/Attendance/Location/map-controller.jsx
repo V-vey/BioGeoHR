@@ -1,16 +1,20 @@
 import axios from "axios";
 import { url } from "@/resources/api";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function MapController({
   centerLng,
   centerLat,
   setRadius,
   radius,
+  modal = false,
+  nameM,
+  id,
+  refresh,
+  onClose,
 }) {
   const token = localStorage.getItem("token");
-  const [name, setName] = useState("");
-
+  const [name, setName] = useState(nameM);
   const createLocation = {
     name: name,
     longitude: centerLng,
@@ -19,10 +23,52 @@ export default function MapController({
   };
   const handleSubmit = async (e) => {
     e.preventDefault;
-
+    if (modal) {
+      try {
+        await axios
+          .put(url + `/location/${id}`, createLocation, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+            "ngrok-skip-browser-warning": "true",
+          })
+          .then((response) => {
+            if (response.status == 200) {
+              alert("New Location Successfuly");
+              alert("Edited Save");
+              refresh();
+              onClose();
+            }
+          });
+      } catch (e) {
+        alert("Something went wrong:", e);
+      }
+    } else if (!modal) {
+      try {
+        await axios
+          .post(url + "/location", createLocation, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+            "ngrok-skip-browser-warning": "true",
+          })
+          .then((response) => {
+            if (response.status == 201) {
+              alert("New Location Successfuly");
+            }
+          });
+      } catch (e) {
+        alert("Something went wrong:", e);
+      }
+    }
+  };
+  const handleDelete = async (e) => {
+    e.preventDefault;
     try {
       await axios
-        .post(url + "/location", createLocation, {
+        .delete(url + `/location/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
@@ -30,8 +76,10 @@ export default function MapController({
           "ngrok-skip-browser-warning": "true",
         })
         .then((response) => {
-          if (response.status == 201) {
-            alert("New Location Successfuly");
+          if (response.status == 200) {
+            alert("Delete Successful");
+            refresh();
+            onClose();
           }
         });
     } catch (e) {
@@ -39,7 +87,7 @@ export default function MapController({
     }
   };
   return (
-    <div className="flex justify-end min-h-[500px] p-4 md:p-[16px_20px] bg-white border border-[#B2B2B2] rounded-[14px]">
+    <div className="flex justify-end min-h-[500px] p-4 md:p-[16px_20px] bg-white border border-[#B2B2B2] rounded-[10px] ">
       <div className="flex-col w-full">
         <h2 className="flex items-start">Create Location</h2>
         <div className="h-2" />
@@ -106,12 +154,29 @@ export default function MapController({
                 "
               />
             </div>
-            <div className="flex w-full justify-end items-end">
-              <input
-                type="submit"
-                value="Submit"
-                className="bg-[#2AAF56] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
-              />
+            <div className="flex flex-row gap-2 w-full justify-end items-end">
+              {modal ? (
+                <div className="flex flex-row gap-2">
+                  <input
+                    type="button"
+                    onClick={handleDelete}
+                    value="Delete"
+                    className="bg-[#EC6668] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                  />
+                  <input
+                    type="button"
+                    onClick={handleSubmit}
+                    value="Edit"
+                    className="bg-[#2AAF56] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                  />
+                </div>
+              ) : (
+                <input
+                  type="submit"
+                  value="Submit"
+                  className="bg-[#2AAF56] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                />
+              )}
             </div>
           </div>
         </form>
