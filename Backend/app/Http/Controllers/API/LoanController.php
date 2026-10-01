@@ -112,4 +112,17 @@ class LoanController extends Controller
         $loans = Loan::where('user_id', $userId)->get();
         return response()->json($loans);
     }
+    
+    public function paidOffThisPeriod(Request $request)
+    {
+        $request->validate([
+            'period_start' => 'required|date',
+            'period_end' => 'required|date',
+        ]);
+        $count = Loan::where('status', 'Paid')
+            ->where('paid_off_period_start', $request->period_start)
+            ->where('paid_off_period_end', $request->period_end)
+            ->count();
+        return response()->json(['count' => $count]);
+    }
 }

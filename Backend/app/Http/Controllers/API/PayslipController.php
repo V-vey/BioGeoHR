@@ -77,6 +77,8 @@ class PayslipController extends Controller
                 $loan->decrement('remaining_balance', $loanDeduction);
                 if ($loan->fresh()->remaining_balance <= 0) {
                     $loan->status = 'Paid';
+                    $loan->paid_off_period_start = $request->period_start;
+                    $loan->paid_off_period_end = $request->period_end;
                     $loan->save();
                 }
             }

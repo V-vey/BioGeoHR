@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
         Route::post('payslips/run', [PayslipController::class, 'run']);
         Route::post('payslips/preview', [PayslipController::class, 'preview']);
+
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
         
         Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
@@ -86,12 +87,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('location', LocationController::class);
         // Route::get('location', [LocationController::class, "index"]);
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
-    
+
         // Route::get('systemSettings', [SystemSettingController::class, 'index']);
         Route::put('systemSettings/{id}', [SystemSettingController::class, 'update']);
         Route::apiResource('holidays', HolidayController::class)->only(['index', 'store', 'destroy']);
-
         
+        Route::get('frequentLates', [AttendanceController::class, 'frequentLates']);
+        Route::get('loans/paidOffThisPeriod', [LoanController::class, 'paidOffThisPeriod']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

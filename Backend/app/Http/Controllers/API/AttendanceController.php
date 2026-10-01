@@ -314,4 +314,20 @@ class AttendanceController extends Controller
 
         return response()->json($result);
     }
+    public function frequentLates()
+    {
+        $counts = Attendance::where('status', 'Late')
+            ->whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
+            ->selectRaw('user_id, count(*) as late_count')
+            ->groupBy('user_id')
+            ->having('late_count', '>=', 3)
+            ->with('user:id,name')
+            ->get();
+
+        return response()->json([
+            'count' => $counts->count(),
+            'employees' => $counts,
+        ]);
+    }
 }
