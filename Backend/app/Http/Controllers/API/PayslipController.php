@@ -29,6 +29,7 @@ class PayslipController extends Controller
             'period_start' => 'required|date',
             'period_end' => 'required|date',
         ]);
+
         $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
         $salaryService = new SalaryService();
         $created = [];
@@ -54,24 +55,32 @@ class PayslipController extends Controller
             );
 
             $loanDeduction = 0;
+            $loan = null;
             if ($isDesignatedCutoff) {
                 $loan = Loan::where('user_id', $employee->id)
                     ->where('status', 'Active')
                     ->first();
                 if ($loan) {
                     $loanDeduction = min($loan->monthly_deduction, $loan->remaining_balance);
-                    $loan->decrement('remaining_balance', $loanDeduction);
-                    if ($loan->fresh()->remaining_balance <= 0) {
-                        $loan->status = 'Paid';
-                        $loan->save();
-                    }
+                    
                 }
             }
+
             $netPay = $result['net_pay'] - $loanDeduction;
+
             if ($netPay < 0) {
                 $loanDeduction = $loanDeduction + $netPay;
                 $netPay = 0;
             }
+
+            if ($loan && $loanDeduction > 0) {
+                $loan->decrement('remaining_balance', $loanDeduction);
+                if ($loan->fresh()->remaining_balance <= 0) {
+                    $loan->status = 'Paid';
+                    $loan->save();
+                }
+            }
+
             $payslip = Payslip::create([
                 'user_id' => $employee->id,
                 'period_start' => $request->period_start,
@@ -83,6 +92,7 @@ class PayslipController extends Controller
                 'late_deduction' => $result['late_deduction'],
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
+                'income_tax' => $result['income_tax'],
             ]);
 
             $created[] = $payslip;
@@ -104,5 +114,61 @@ class PayslipController extends Controller
             return response()->json(['message' => 'Payslip not found'], 404);
         }
         return response()->json($payslip);
+    }
+    public function preview(Request $request)
+    {
+        $request->validate([
+            'period_start' => 'required|date',
+            'period_end' => 'required|date',
+        ]);
+        $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
+        $salaryService = new SalaryService();
+        $preview = [];
+
+        $employees = Users::with('salary')->get();
+
+        foreach ($employees as $employee) {
+            if (!$employee->salary) {
+                continue;
+            }
+
+            $result = $salaryService->paycheck(
+                $employee->salary->salary_basis,
+                $employee->salary->working_days_per_month,
+                $employee->salary->working_hours_per_day,
+                $employee->id,
+            );
+
+            $loanDeduction = 0;
+            if ($isDesignatedCutoff) {
+                $loan = Loan::where('user_id', $employee->id)
+                    ->where('status', 'Active')
+                    ->first();
+                if ($loan) {
+                    $loanDeduction = min($loan->monthly_deduction, $loan->remaining_balance);
+                }
+            }
+
+            $netPay = $result['net_pay'] - $loanDeduction;
+            if ($netPay < 0) {
+                $loanDeduction = $loanDeduction + $netPay;
+                $netPay = 0;
+            }
+
+            $preview[] = [
+                'user_id' => $employee->id,
+                'name' => $employee->name,
+                'gross_salary' => $employee->salary->salary_basis,
+                'sss' => $result['sss'],
+                'philhealth' => $result['philhealth'],
+                'pagibig' => $result['pagibig'],
+                'income_tax' => $result['income_tax'],
+                'late_deduction' => $result['late_deduction'],
+                'loan_deduction' => $loanDeduction,
+                'net_pay' => $netPay,
+            ];
+        }
+
+        return response()->json($preview);
     }
 }

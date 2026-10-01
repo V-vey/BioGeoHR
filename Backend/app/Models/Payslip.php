@@ -26,6 +26,7 @@ class Payslip extends Model
         'late_deduction',
         'loan_deduction',
         'net_pay',
+        'income_tax'
     ];
 
     public function user()

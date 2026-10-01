@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('late_deduction', 10, 2)->default(0);
             $table->decimal('loan_deduction', 10, 2)->default(0);
             $table->decimal('net_pay', 10, 2);
+            $table->decimal('income_tax', 10, 2)->default(0);
             $table->timestamps();
              
             $table->unique(['user_id', 'period_start', 'period_end']);

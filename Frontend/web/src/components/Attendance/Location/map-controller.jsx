@@ -22,7 +22,7 @@ export default function MapController({
     radius: radius,
   };
   const handleSubmit = async (e) => {
-    e.preventDefault;
+    e.preventDefault();
     if (modal) {
       try {
         await axios
@@ -65,7 +65,7 @@ export default function MapController({
     }
   };
   const handleDelete = async (e) => {
-    e.preventDefault;
+    e.preventDefault();
     try {
       await axios
         .delete(url + `/location/${id}`, {

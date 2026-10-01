@@ -25,7 +25,7 @@ use App\Http\Controllers\Feature\AttendanceService;
 
 //Test
 use App\Service\SalaryService;
-Route::apiResource('/users', UsersController::class);
+
 // Public routes
 Route::post('/login', [LoginAuthController::class, 'auth']);
 
@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('user/{userId}', [UsersController::class, 'byUser']);
         Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
         Route::post('payslips/run', [PayslipController::class, 'run']);
-        
+        Route::post('payslips/preview', [PayslipController::class, 'preview']);
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
         
         Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
@@ -90,6 +90,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::get('systemSettings', [SystemSettingController::class, 'index']);
         Route::put('systemSettings/{id}', [SystemSettingController::class, 'update']);
         Route::apiResource('holidays', HolidayController::class)->only(['index', 'store', 'destroy']);
+
+        
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

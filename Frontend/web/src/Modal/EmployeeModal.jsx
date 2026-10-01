@@ -179,8 +179,8 @@ export default function EmployeeModal({ emp, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 overflow-y-auto p-5">
-      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] ">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
+      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%]">
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
             onClick={onClose}

@@ -115,20 +115,43 @@ class SalaryService
         $sss = $this->sssContributionTable($salary)['employee_total']; 
         $philHealth = $this->philHealth($salary);
         $pagIbig = $this->pagIbig($salary);
-        $tax = $sss + $philHealth + $pagIbig;
-        $paycheck = $salary - $tax; 
+        $contributions = $sss + $philHealth + $pagIbig;
+        $paycheck = $salary - $contributions; 
         if($lateDeduction == true){
             $paycheck = $paycheck - $dailyWage;
         }
+
+        $taxableIncome = ($salary - $contributions) / 2;
         $semiMonth = $paycheck / 2;
-       
+
+        $incomeTax = $this->incomeTax($taxableIncome);
+        $netPay = $semiMonth - $incomeTax;
         return [
             'sss' => $sss,
             'philhealth' => $philHealth,
             'pagibig' => $pagIbig,
             'late_deduction' => $lateDeduction ? $dailyWage : 0,
-            'net_pay' => $semiMonth,
+            'net_pay' => $netPay,
+            'income_tax' => $incomeTax,
+            'semi_month' => $semiMonth,
+            'paycheck' => $paycheck,
+            'taxable_income' => $taxableIncome
         ];
     }
-
+    function incomeTax($taxableIncome)
+    {
+        if ($taxableIncome <= 10417) {
+            return 0;
+        } elseif ($taxableIncome <= 16666) {
+            return ($taxableIncome - 10417) * 0.15;
+        } elseif ($taxableIncome <= 33332) {
+            return 937.50 + ($taxableIncome - 16667) * 0.20;
+        } elseif ($taxableIncome <= 83332) {
+            return 4270.70 + ($taxableIncome - 33333) * 0.25;
+        } elseif ($taxableIncome <= 333332) {
+            return 16770.70 + ($taxableIncome - 83333) * 0.30;
+        } else {
+            return 91770.70 + ($taxableIncome - 333333) * 0.35;
+        }
+    }
 }
