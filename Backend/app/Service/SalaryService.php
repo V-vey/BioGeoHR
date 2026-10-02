@@ -18,15 +18,47 @@ class SalaryService
     }
 
     function lateDeduction($userId){
-    $late = Attendance::where('user_id', $userId)
-        ->whereMonth('date', Carbon::now()->month)
-        ->where('status', 'Late')
-        ->count();
-    if($late >= 3){
-        return true;
+        $late = Attendance::where('user_id', $userId)
+            ->whereMonth('date', Carbon::now()->month)
+            ->where('status', 'Late')
+            ->count();
+        if($late >= 3){
+            return true;
+        }
+        return false;
     }
-    return false;
-}
+    
+    // overtime Comment
+    /*
+    // DOLE multipliers (Table 7 in the paper)
+    const OT_RATES = [
+        'regular'                 => 1.25,
+        'rest_day'                => 1.30,
+        'special_day_rest_day'    => 1.50,
+        'regular_holiday'         => 2.00,
+        'regular_holiday_rest_day'=> 2.30,
+    ];
+
+    function overtimePay($hourlyRate, $overtimeHours, $dayType = 'regular'){
+        $multiplier = self::OT_RATES[$dayType] ?? self::OT_RATES['regular'];
+        return round($hourlyRate * $multiplier * $overtimeHours, 2);
+    }
+
+    function overtimeHours($userId, $workingHoursPerDay, $periodStart, $periodEnd){
+        $records = Attendance::where('user_id', $userId)
+            ->whereBetween('date', [$periodStart, $periodEnd])
+            ->whereNotNull('time_out')
+            ->get();
+
+        $hours = 0;
+        foreach ($records as $a) {
+            $worked = Carbon::parse($a->time_in)->diffInMinutes(Carbon::parse($a->time_out)) / 60;
+            $hours += max(0, $worked - $workingHoursPerDay);
+        }
+        return round($hours, 2);
+    }
+    */
+    // overtime Comment
 
     //Employees' Compensation
     function eeCompensation($salary){
@@ -108,7 +140,7 @@ class SalaryService
         return $salary * .025;
     } 
     
-    function paycheck($salary, $daysPerMonth, $hrsPerDay, $userId){
+    function paycheck($salary, $daysPerMonth, $hrsPerDay, $userId, $periodStart = null, $periodEnd = null){
         $dailyWage = $this->dailyWage($salary, $daysPerMonth);
         $hrRate = $this->hourlyRate($dailyWage, $hrsPerDay);
         $lateDeduction = $this->lateDeduction($userId);
@@ -120,11 +152,22 @@ class SalaryService
         if($lateDeduction == true){
             $paycheck = $paycheck - $dailyWage;
         }
-
+        
+        // overtime Comment
+        /*
+        $overtimePay = 0;
+        if ($periodStart && $periodEnd) {
+            $otHours = $this->overtimeHours($userId, $hrsPerDay, $periodStart, $periodEnd);
+            $overtimePay = $this->overtimePay($hrRate, $otHours, 'regular');
+        }
+        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay;
+        */
         $taxableIncome = ($salary - $contributions) / 2;
         $semiMonth = $paycheck / 2;
 
         $incomeTax = $this->incomeTax($taxableIncome);
+        // overtime Comment
+        // $netPay = $semiMonth + $overtimePay - $incomeTax;
         $netPay = $semiMonth - $incomeTax;
         return [
             'sss' => $sss,
@@ -135,7 +178,10 @@ class SalaryService
             'income_tax' => $incomeTax,
             'semi_month' => $semiMonth,
             'paycheck' => $paycheck,
-            'taxable_income' => $taxableIncome
+            'taxable_income' => $taxableIncome,
+
+            // overtime Comment
+            // 'overtime_pay' => $overtimePay,
         ];
     }
     function incomeTax($taxableIncome)

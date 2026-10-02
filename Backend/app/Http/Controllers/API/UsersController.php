@@ -208,6 +208,28 @@ class UsersController extends Controller
         $users->on_time = $onTimeCount;
         $users->late = $lateCount;
 
+        // overtime Comment
+        /*
+        $service = new \App\Service\SalaryService();
+        $salary = $users->salary;
+        $users->overtime_hours = 0;
+        $users->overtime_pay = 0;
+        if ($salary) {
+            $hrs = $service->overtimeHours(
+                $users->id,
+                $salary->working_hours_per_day,
+                Carbon::now()->startOfMonth()->toDateString(),
+                Carbon::now()->endOfMonth()->toDateString()
+            );
+            $hourly = $service->hourlyRate(
+                $service->dailyWage($salary->salary_basis, $salary->working_days_per_month),
+                $salary->working_hours_per_day
+            );
+            $users->overtime_hours = $hrs;
+            $users->overtime_pay = $service->overtimePay($hourly, $hrs, 'regular');
+        }
+        */
+
         return response()->json($users);
     }
 }

@@ -26,7 +26,9 @@ class Payslip extends Model
         'late_deduction',
         'loan_deduction',
         'net_pay',
-        'income_tax'
+        'income_tax',
+        // overtime Comment
+        // 'overtime_pay'
     ];
 
     public function user()

@@ -111,7 +111,6 @@ function LeaveItem({ fetch }) {
 export default function EmployeeModal({ emp, onClose }) {
   const [isOverview, setIsOverview] = useState(true);
   const [leaveBalance, setLeaveBalance] = useState(null);
-  const [salary, setSalary] = useState(null);
   const [leaves, setLeaves] = useState([]);
   const [searchLeave, setSearchLeave] = useState("");
   const [currentPageLeave, setCurrentPageLeave] = useState(1);
@@ -178,6 +177,7 @@ export default function EmployeeModal({ emp, onClose }) {
     startIndexLeave + itemsPerPageLeave,
   );
 
+  const salary = empData.salary;
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
       <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%]">
@@ -242,7 +242,7 @@ export default function EmployeeModal({ emp, onClose }) {
                           </p>
                         </div>
                         <div className="flex flex-col justify-end items-end">
-                          <p className="m-0 leading-none text-[13px] font-medium">
+                          <p className="m-0 leading-none text-[13px] text-end font-medium">
                             {emp.department} | {emp.position}
                           </p>
                           <p className="m-0 leading-none text-[13px] font-regular">
@@ -290,17 +290,19 @@ export default function EmployeeModal({ emp, onClose }) {
                       label="Salary per hour"
                       value={
                         salary
-                          ? `₱${(salary.salary_basis / salary.working_days_per_month / salary.working_hours_per_day).toFixed(2)} / hr`
+                          ? `₱${(empData.salary?.salary_basis / empData.salary?.working_days_per_month / empData.salary?.working_hours_per_day).toFixed(2)} / hr`
                           : "—"
                       }
                     />
+                    {/* overtime Comment
                     <SalaryRow
                       icon={Hourglass}
                       iconColor="#8a6d10"
                       bg={"#FCF7E2"}
-                      label="Overtime this period"
-                      value={`100 · ₱100`}
+                      label="Overtime this month"
+                      value={`${empData.overtime_hours ?? 0} hrs · ₱${Number(empData.overtime_pay ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`}
                     />
+                    */}
                     <SalaryRow
                       icon={Wallet}
                       iconColor="#2AAF56"
@@ -332,7 +334,7 @@ export default function EmployeeModal({ emp, onClose }) {
                 </div>
               </div>
               <div className="flex-1 flex flex-col  gap-2 ">
-                <div className="flex-1items-center bg-white w-full px-4 py-3.5 border border-[#b2b2b2] rounded-[10px] ">
+                <div className="flex-1 items-center bg-white w-full px-4 py-3.5 border border-[#b2b2b2] rounded-[10px] ">
                   <p className="text-[#b2b2b2] text-[20px] font-bold text-start">
                     Leave Balance:
                   </p>

@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { url } from "@/resources/api";
 import {
   Check,
   ArrowLeft,
@@ -8,136 +10,111 @@ import {
   Info,
 } from "lucide-react";
 
-// Sample data for now — swap for an API call once the payroll endpoints exist.
-// Computation rules, per Academia de Santiago of Tarlac, Inc.'s policy:
-//  - Daily rate = monthly salary / 26 working days; no overtime is paid at all
-//  - Late deduction = 1 day's pay for every 3 lates logged within the month
-//    (15-minute grace period per instance; undertime is not deducted the same way)
-//  - SSS ~5%, PhilHealth 2.5%, and Pag-IBIG 2.5% of monthly salary are withheld
-//    in full during the 1st–15th cutoff; there is no withholding tax
-//  - Active loan installments (see the Loans page) are deducted on the same cutoff
-const payPeriod = { range: "Jan 1–15, 2026", payDate: "Jan 20, 2026" };
-
-const employees = [
-  {
-    id: "MR-0001",
-    name: "Maria Santos",
-    dept: "Teaching Staff",
-    monthlySalary: 16000,
-    lates: 1,
-    loan: { type: "SSS Loan", amount: 2000 },
-    initials: "MS",
-    color: "bg-[#EC6668]",
-    selected: true,
-  },
-  {
-    id: "MR-0002",
-    name: "Renz Aquino",
-    dept: "Non-teaching Staff",
-    monthlySalary: 15000,
-    lates: 4,
-    loan: null,
-    initials: "RA",
-    color: "bg-[#6675EC]",
-    selected: true,
-  },
-  {
-    id: "MR-0003",
-    name: "Carla Domingo",
-    dept: "Teaching Staff",
-    monthlySalary: 18000,
-    lates: 0,
-    loan: { type: "Company Loan", amount: 1000 },
-    initials: "CD",
-    color: "bg-purple-400",
-    selected: true,
-  },
-  {
-    id: "MR-0004",
-    name: "Paolo Ramos",
-    dept: "Non-teaching Staff",
-    monthlySalary: 14000,
-    lates: 3,
-    loan: { type: "Cash Advance", amount: 5000 },
-    initials: "PR",
-    color: "bg-amber-400",
-    selected: false,
-    flag: "3 lates this cutoff — review before approving",
-  },
-  {
-    id: "MR-0005",
-    name: "Jenny Cruz",
-    dept: "Teaching Staff",
-    monthlySalary: 17000,
-    lates: 2,
-    loan: null,
-    initials: "JC",
-    color: "bg-[#2AAF56]",
-    selected: true,
-  },
-  {
-    id: "MR-0006",
-    name: "Miguel Torres",
-    dept: "Non-teaching Staff",
-    monthlySalary: 15500,
-    lates: 0,
-    loan: null,
-    initials: "MT",
-    color: "bg-sky-400",
-    selected: true,
-  },
-];
-
 const money = (n) =>
-  n.toLocaleString("en-PH", { style: "currency", currency: "PHP" });
+  Number(n || 0).toLocaleString("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  });
 
-const computeRow = (e) => {
-  const dailyRate = e.monthlySalary / 26;
-  const gross = e.monthlySalary / 2; // semi-monthly base pay
-  const lateDeduction = Math.floor(e.lates / 3) * dailyRate;
-  const sss = e.monthlySalary * 0.05;
-  const philhealth = e.monthlySalary * 0.025;
-  const pagibig = e.monthlySalary * 0.025;
-  const statutory = sss + philhealth + pagibig;
-  const loanDeduction = e.loan ? e.loan.amount : 0;
-  const deductions = lateDeduction + statutory + loanDeduction;
-  const net = gross - deductions;
-  return { dailyRate, gross, lateDeduction, statutory, loanDeduction, deductions, net };
+const pad = (n) => String(n).padStart(2, "0");
+const toISO = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+
+// default = the current cutoff: 1–15 or 16–end of month
+const defaultPeriod = () => {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = t.getMonth();
+  if (t.getDate() <= 15) return [toISO(y, m, 1), toISO(y, m, 15)];
+  return [toISO(y, m, 16), toISO(y, m, new Date(y, m + 1, 0).getDate())];
 };
 
 const steps = [
-  { label: "Review hours", state: "done" },
+  { label: "Select period", state: "done" },
   { label: "Review pay", state: "active" },
-  { label: "Approve", state: "upcoming" },
-  { label: "Confirmation", state: "upcoming" },
+  { label: "Run payroll", state: "upcoming" },
 ];
 
 export default function RunPayrollOutlet() {
-  const [rows, setRows] = useState(employees);
+  const navigate = useNavigate();
+  const [start, end] = defaultPeriod();
+  const [periodStart, setPeriodStart] = useState(start);
+  const [periodEnd, setPeriodEnd] = useState(end);
+  const [rows, setRows] = useState([]);
+  const [excluded, setExcluded] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "ngrok-skip-browser-warning": "true",
+  };
+
+  useEffect(() => {
+    if (!periodStart || !periodEnd) return;
+    const fetchPreview = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.post(
+          url + "/payslips/preview",
+          { period_start: periodStart, period_end: periodEnd },
+          { headers },
+        );
+        setRows(res.data);
+        setExcluded([]);
+      } catch (error) {
+        console.error("Failed to load payroll preview:", error);
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPreview();
+  }, [periodStart, periodEnd]);
 
   const toggleRow = (id) =>
-    setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, selected: !r.selected } : r)),
+    setExcluded((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
 
-  const totals = useMemo(() => {
-    const selected = rows.filter((r) => r.selected).map(computeRow);
-    const gross = selected.reduce((s, r) => s + r.gross, 0);
-    const deductions = selected.reduce((s, r) => s + r.deductions, 0);
-    const statutory = selected.reduce((s, r) => s + r.statutory, 0);
-    const loans = selected.reduce((s, r) => s + r.loanDeduction, 0);
-    const net = selected.reduce((s, r) => s + r.net, 0);
-    return {
-      count: selected.length,
-      gross,
-      deductions,
-      statutory,
-      loans,
-      net,
-    };
-  }, [rows]);
+  const handleRun = async () => {
+    try {
+      const res = await axios.post(
+        url + "/payslips/run",
+        {
+          period_start: periodStart,
+          period_end: periodEnd,
+          excluded_ids: excluded,
+        },
+        { headers },
+      );
+      alert(res.data.message);
+      navigate("..");
+    } catch (error) {
+      alert("Something went wrong while running payroll.");
+    }
+  };
 
-  const unresolvedCount = rows.filter((r) => r.flag).length;
+  const govt = (r) => Number(r.sss) + Number(r.philhealth) + Number(r.pagibig);
+
+  const totals = useMemo(() => {
+    const t = { count: 0, gross: 0, gov: 0, tax: 0, late: 0, loan: 0, net: 0 };
+    rows
+      .filter((r) => !excluded.includes(r.user_id))
+      .forEach((r) => {
+        t.count += 1;
+        t.gross += Number(r.gross_salary);
+        t.gov += govt(r);
+        t.tax += Number(r.income_tax);
+        t.late += Number(r.late_deduction);
+        t.loan += Number(r.loan_deduction);
+        t.net += Number(r.net_pay);
+        // overtime Comment
+        // t.overtime += Number(r.overtime_pay);
+      });
+    return t;
+  }, [rows, excluded]);
+
+  const lateCount = rows.filter((r) => Number(r.late_deduction) > 0).length;
 
   return (
     <div className="bg-white border border-[#eef0f5] rounded-[14px] overflow-hidden">
@@ -147,16 +124,23 @@ export default function RunPayrollOutlet() {
           <div className="text-xs text-[#8a90a3] mb-1">
             Payroll / Run Payroll
           </div>
-          <h2 className="m-0 text-lg font-bold text-[#3A3A3A]">
-            Run Payroll — {payPeriod.range}
-          </h2>
+          <h2 className="m-0 text-lg font-bold text-[#3A3A3A]">Run Payroll</h2>
         </div>
-        <Link
-          to=".."
-          className="text-sm font-semibold text-[#8a90a3] border border-[#eef0f5] rounded-[8px] px-4 py-2 hover:bg-gray-50"
-        >
-          Save &amp; exit
-        </Link>
+        <div className="flex items-center gap-2 text-sm">
+          <input
+            type="date"
+            value={periodStart}
+            onChange={(e) => setPeriodStart(e.target.value)}
+            className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
+          />
+          <span className="text-[#8a90a3]">to</span>
+          <input
+            type="date"
+            value={periodEnd}
+            onChange={(e) => setPeriodEnd(e.target.value)}
+            className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
+          />
+        </div>
       </div>
 
       {/* Stepper */}
@@ -180,7 +164,11 @@ export default function RunPayrollOutlet() {
                       : "bg-gray-100 text-gray-400"
                 }`}
               >
-                {step.state === "done" ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                {step.state === "done" ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  i + 1
+                )}
               </div>
               <span
                 className={`text-sm ${
@@ -202,9 +190,9 @@ export default function RunPayrollOutlet() {
       <div className="mx-4 mt-4 md:mx-6 flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
-          Late deduction: 1 day's pay for every 3 lates logged this month (15-minute
-          grace period). No overtime is paid. SSS, PhilHealth, and Pag-IBIG are
-          withheld in full this cutoff; active loan installments are included below.
+          Late deduction: 1 day's pay after 3 lates this month. SSS, PhilHealth,
+          Pag-IBIG and BIR income tax are withheld. Loan installments are
+          deducted on the second cutoff.
         </span>
       </div>
 
@@ -216,7 +204,7 @@ export default function RunPayrollOutlet() {
               {totals.count} of {rows.length} employees selected
             </div>
             <div className="text-xs text-[#8a90a3]">
-              {payPeriod.range} · Pay date {payPeriod.payDate}
+              {periodStart} to {periodEnd}
             </div>
           </div>
 
@@ -226,66 +214,92 @@ export default function RunPayrollOutlet() {
                 <tr className="text-[11px] uppercase tracking-wide text-[#8a90a3]">
                   <th className="py-2 pl-4 pr-2 w-8"></th>
                   <th className="py-2 px-2 font-semibold">Employee</th>
-                  <th className="py-2 px-2 font-semibold">Lates</th>
-                  <th className="py-2 px-2 font-semibold">Gross pay</th>
-                  <th className="py-2 px-2 font-semibold">Deductions</th>
+                  <th className="py-2 px-2 font-semibold">Gross</th>
+                  <th className="py-2 px-2 font-semibold">Gov't</th>
+                  <th className="py-2 px-2 font-semibold">Tax</th>
+                  <th className="py-2 px-2 font-semibold">Late</th>
+                  <th className="py-2 px-2 font-semibold">Loan</th>
+                  {/* overtime Comment
+                  <th className="py-2 px-2 font-semibold">Overtime</th>
+                  */}
+
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
-                  const calc = computeRow(row);
-                  return (
-                    <tr
-                      key={row.id}
-                      className={`border-t border-[#eef0f5] hover:bg-gray-50 ${
-                        row.flag ? "bg-[#EACA3A]/10" : ""
-                      }`}
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-6 text-center text-sm text-[#8a90a3]"
                     >
-                      <td className="py-3 pl-4 pr-2">
-                        <input
-                          type="checkbox"
-                          checked={row.selected}
-                          onChange={() => toggleRow(row.id)}
-                          className="w-4 h-4 accent-[#6675EC]"
-                        />
-                      </td>
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold shrink-0 ${row.color}`}
-                          >
-                            {row.initials}
+                      Loading preview...
+                    </td>
+                  </tr>
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-6 text-center text-sm text-[#8a90a3]"
+                    >
+                      No employees to pay for this period.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((r) => {
+                    const hasLate = Number(r.late_deduction) > 0;
+                    return (
+                      <tr
+                        key={r.user_id}
+                        className={`border-t border-[#eef0f5] hover:bg-gray-50 ${
+                          hasLate ? "bg-[#EACA3A]/10" : ""
+                        }`}
+                      >
+                        <td className="py-3 pl-4 pr-2">
+                          <input
+                            type="checkbox"
+                            checked={!excluded.includes(r.user_id)}
+                            onChange={() => toggleRow(r.user_id)}
+                            className="w-4 h-4 accent-[#6675EC]"
+                          />
+                        </td>
+                        <td className="py-3 px-2">
+                          <div className="text-sm font-semibold text-[#3A3A3A]">
+                            {r.name}
                           </div>
-                          <div>
-                            <div className="text-sm font-semibold text-[#3A3A3A]">
-                              {row.name}
+                          {hasLate && (
+                            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#8a6d10]">
+                              <TriangleAlert className="w-3 h-3" />
+                              Late deduction applied
                             </div>
-                            {row.flag ? (
-                              <div className="flex items-center gap-1 text-[11px] font-semibold text-[#8a6d10]">
-                                <TriangleAlert className="w-3 h-3" />
-                                {row.flag}
-                              </div>
-                            ) : (
-                              <div className="text-[11px] text-[#8a90a3]">
-                                {row.dept}
-                                {row.loan ? ` · ${row.loan.type}` : ""}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-2 text-sm">{row.lates}</td>
-                      <td className="py-3 px-2 text-sm">{money(calc.gross)}</td>
-                      <td className="py-3 px-2 text-sm text-[#8a90a3]">
-                        {money(calc.deductions)}
-                      </td>
-                      <td className="py-3 pr-4 pl-2 text-sm font-semibold">
-                        {money(calc.net)}
-                      </td>
-                    </tr>
-                  );
-                })}
+                          )}
+                        </td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.gross_salary)}
+                        </td>
+                        <td className="py-3 px-2 text-sm">{money(govt(r))}</td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.income_tax)}
+                        </td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.late_deduction)}
+                        </td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.loan_deduction)}
+                        </td>
+                        {/* overtime Comment
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.overtime_pay)}
+                        </td>
+                        */}
+
+                        <td className="py-3 pr-4 pl-2 text-sm font-semibold">
+                          {money(r.net_pay)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -296,39 +310,56 @@ export default function RunPayrollOutlet() {
           <div className="text-sm font-bold text-[#3A3A3A] mb-4">
             Pay run summary
           </div>
-
           <div className="flex flex-col gap-2.5 text-sm">
             <div className="flex justify-between">
               <span className="text-[#8a90a3]">Gross pay</span>
               <span className="font-semibold">{money(totals.gross)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#8a90a3]">SSS / PhilHealth / Pag-IBIG</span>
+              <span className="text-[#8a90a3]">
+                SSS / PhilHealth / Pag-IBIG
+              </span>
               <span className="font-semibold text-[#EC6668]">
-                −{money(totals.statutory)}
+                −{money(totals.gov)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Income tax</span>
+              <span className="font-semibold text-[#EC6668]">
+                −{money(totals.tax)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Late deductions</span>
+              <span className="font-semibold text-[#EC6668]">
+                −{money(totals.late)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#8a90a3]">Loan deductions</span>
               <span className="font-semibold text-[#EC6668]">
-                −{money(totals.loans)}
+                −{money(totals.loan)}
               </span>
             </div>
+
+            {/* overtime Comment
+            <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Overtime</span>
+              <span className="font-semibold">{money(totals.overtime)}</span>
+            </div>
+            */}
           </div>
-
           <div className="h-px bg-[#eef0f5] my-3.5" />
-
           <div className="flex justify-between items-baseline">
             <span className="text-sm font-bold text-[#3A3A3A]">Net pay</span>
             <span className="text-lg font-bold">{money(totals.net)}</span>
           </div>
-
-          {unresolvedCount > 0 && (
+          {lateCount > 0 && (
             <div className="flex items-start gap-2.5 mt-4 p-3 rounded-[8px] bg-[#EACA3A]/15">
               <TriangleAlert className="w-4 h-4 text-[#8a6d10] shrink-0 mt-0.5" />
               <span className="text-xs text-[#8a6d10] text-left leading-relaxed">
-                {unresolvedCount} employee{unresolvedCount > 1 ? "s have" : " has"}{" "}
-                3 or more lates this cutoff. Review before approving.
+                {lateCount} employee{lateCount > 1 ? "s have" : " has"} a late
+                deduction this period. Review before running.
               </span>
             </div>
           )}
@@ -342,16 +373,18 @@ export default function RunPayrollOutlet() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#8a90a3] border border-[#eef0f5] rounded-[8px] px-4 py-2.5 hover:bg-gray-50"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to hours
+          Back to overview
         </Link>
         <div className="text-sm text-[#8a90a3] hidden md:block">
           {totals.count} of {rows.length} employees selected
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 bg-[#6675EC] hover:bg-[#5563d6] text-white text-sm font-semibold rounded-[10px] px-5 py-2.5 transition-colors"
+          onClick={handleRun}
+          disabled={loading || totals.count === 0}
+          className="inline-flex items-center gap-2 bg-[#6675EC] hover:bg-[#5563d6] disabled:opacity-40 text-white text-sm font-semibold rounded-[10px] px-5 py-2.5 transition-colors"
         >
-          Continue to approval
+          Run Payroll
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

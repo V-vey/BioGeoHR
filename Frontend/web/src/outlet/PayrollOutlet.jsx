@@ -235,7 +235,7 @@ export default function PayrollOutlet() {
                     pageItems.map((run) => (
                       <div
                         key={`${run.period_start}_${run.period_end}`}
-                        className="flex flex-row items-center px-4 py-2 hover:bg-gray-50"
+                        className="flex flex-row items-center px-4 py-2 hover:bg-gray-50 border-b border-[#b2b2b2]"
                       >
                         <p className="flex-2 text-start">
                           {dateFormatYear(run.period_start)} –{" "}

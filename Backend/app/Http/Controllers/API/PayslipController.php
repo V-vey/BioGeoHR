@@ -28,6 +28,7 @@ class PayslipController extends Controller
         $request->validate([
             'period_start' => 'required|date',
             'period_end' => 'required|date',
+            'excluded_ids' => 'sometimes|array',
         ]);
 
         $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
@@ -38,6 +39,9 @@ class PayslipController extends Controller
 
         foreach ($employees as $employee) {
             if (!$employee->salary) {
+                continue;
+            }
+            if (in_array($employee->id, $request->input('excluded_ids', []))) {
                 continue;
             }
             $alreadyExists = Payslip::where('user_id', $employee->id)
@@ -52,6 +56,9 @@ class PayslipController extends Controller
                 $employee->salary->working_days_per_month,
                 $employee->salary->working_hours_per_day,
                 $employee->id,
+                // overtime Comment
+                // $request->period_start,
+                // $request->period_end,
             );
 
             $loanDeduction = 0;
@@ -95,6 +102,8 @@ class PayslipController extends Controller
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
                 'income_tax' => $result['income_tax'],
+                // overtime Comment
+                // 'overtime_pay' => $result['overtime_pay'],
             ]);
 
             $created[] = $payslip;
@@ -122,6 +131,7 @@ class PayslipController extends Controller
         $request->validate([
             'period_start' => 'required|date',
             'period_end' => 'required|date',
+            
         ]);
         $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
         $salaryService = new SalaryService();
@@ -139,6 +149,10 @@ class PayslipController extends Controller
                 $employee->salary->working_days_per_month,
                 $employee->salary->working_hours_per_day,
                 $employee->id,
+
+                // overtime Comment
+                // $request->period_start,
+                // $request->period_end,
             );
 
             $loanDeduction = 0;
@@ -168,6 +182,8 @@ class PayslipController extends Controller
                 'late_deduction' => $result['late_deduction'],
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
+                // overtime Comment
+                // 'overtime_pay' => $result['overtime_pay'],
             ];
         }
 
