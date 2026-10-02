@@ -18,6 +18,7 @@ import StatusBadge from "@/components/Payroll/StatusBadge";
 import { useEffect, useMemo } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
+import Loading from "@/components/Loading";
 
 function Counts({ title, count, icon }) {
   return (
@@ -51,6 +52,7 @@ export default function PayrollOutlet() {
   const [loans, setLoans] = useState([]);
   const [frequentLatesCount, setFrequentLatesCount] = useState(0);
   const [paidOffCount, setPaidOffCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const payrollRunsHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Past Payroll Runs</h2>
@@ -89,6 +91,8 @@ export default function PayrollOutlet() {
         setFrequentLatesCount(latesRes.data.count);
       } catch (error) {
         console.error("Failed to load payroll overview data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 

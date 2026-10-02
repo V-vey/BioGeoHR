@@ -3,10 +3,11 @@ import Item from "@/components/Employee/AllEmployee/item-container";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
-
+import Loading from "@/components/Loading";
 export default function AllEmployee({}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -21,6 +22,8 @@ export default function AllEmployee({}) {
         setEmployees(response.data);
       } catch (error) {
         console.error("Failed to load employees", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchEmployees();
@@ -49,9 +52,11 @@ export default function AllEmployee({}) {
 
   return (
     <div>
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">All Employee</h2>
       </div>
+
       <Containers
         name="Employees"
         currentPage={currentPage}

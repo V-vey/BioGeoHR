@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import LeaveRequestModal from "@/Modal/LeaveModal";
+import Fallback from "@/assets/user.svg";
 export default function PendingLeave({ item, fetch }) {
   // if (pending.length === 0) {
   //   return (
@@ -14,12 +15,23 @@ export default function PendingLeave({ item, fetch }) {
   const onView = () => {
     setView(true);
   };
-
+  const srvUrl = url.replace("/api", "/storage/");
+  const fallbackImage = Fallback;
+  const imageSrc = item.user?.image_path
+    ? `${srvUrl}${item.user?.image_path}`
+    : fallbackImage;
   return (
     <>
       <div className="flex flex-row w-full px-4 items-center">
         <div className="flex-2 flex flex-row gap-2 items-center">
-          <div className="rounded-full w-10 h-10 border-1" />
+          <div className="border rounded-[10px] w-12 h-12 overflow-hidden">
+            <img
+              src={imageSrc}
+              alt={`${item.user?.name || "User"}'s Profile`}
+              className="object-cover scale-110"
+            />
+          </div>
+
           <div className="flex flex-col items-start">
             <p className="m-0 leading-none text-[16px] font-medium">
               {item.user?.name}

@@ -9,7 +9,7 @@ import FlaggedSummary from "@/components/Dashboard/flagged-summary";
 import { useState, useEffect } from "react";
 import Containers from "@/components/container";
 import Test from "@/components/Dashboard/testingCard";
-
+import Loading from "@/components/Loading";
 import CalendarV from "@/components/Dashboard/calendarV2";
 
 import axios from "axios";
@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
+  const [loading, setLoading] = useState(true);
   //Calendar
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -251,6 +252,8 @@ export default function DashboardOutlet() {
         setWeeklyData(response.data);
       } catch (error) {
         console.error("Failed to load weekly attendance:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchWeekly();
@@ -324,7 +327,8 @@ export default function DashboardOutlet() {
   );
 
   return (
-    <>
+    <div>
+      {loading && <Loading />}
       <div className="flex flex-col gap-4">
         <div className=" flex justify-end p-4 md:p-[16px_20px]  bg-white border border-[#b2b2b2] rounded-[14px]">
           <h2 className="text-[#6675EC] font-bold justify-end">Dashboard</h2>
@@ -481,6 +485,6 @@ export default function DashboardOutlet() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

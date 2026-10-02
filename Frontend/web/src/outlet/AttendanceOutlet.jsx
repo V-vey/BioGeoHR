@@ -8,6 +8,7 @@ import { url } from "@/resources/api";
 import axios from "axios";
 
 import { format, parse } from "date-fns";
+import Loading from "@/components/Loading";
 
 const formatTime = (timeStr) => {
   if (!timeStr) return "--:--";
@@ -19,6 +20,7 @@ export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -34,6 +36,8 @@ export default function Attendance() {
         setAttendance(response.data);
       } catch (error) {
         console.error("Failed to Load Locations:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -63,6 +67,7 @@ export default function Attendance() {
   );
   return (
     <>
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Attendance</h2>
       </div>

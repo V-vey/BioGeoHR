@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Map, MapControls } from "@/components/ui/map";
 import { url } from "@/resources/api";
 import axios from "axios";
+import Loading from "@/components/Loading";
 
 export default function Location() {
   let centerLng = 124.66181861;
@@ -28,6 +29,7 @@ export default function Location() {
   });
 
   const [location, setLocation] = useState([]);
+  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
   const fetchLocations = async () => {
@@ -41,6 +43,8 @@ export default function Location() {
       setLocation(response.data);
     } catch (error) {
       console.error("Failed to Load Locations:", error);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -70,6 +74,7 @@ export default function Location() {
 
   return (
     <div className="flex flex-col">
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Location</h2>
       </div>

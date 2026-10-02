@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import { format, parse } from "date-fns";
+import Loading from "@/components/Loading";
 
 export default function Leave() {
   const [currentPage, setCurrentPage] = useState(1);
   const [leaveReq, setLeaveReq] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -22,6 +24,8 @@ export default function Leave() {
         setLeaveReq(response.data);
       } catch (error) {
         console.error("Failed to load employees", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchLeave();
@@ -50,6 +54,7 @@ export default function Leave() {
   const pageItems = filteredLeave.slice(startIndex, startIndex + itemsPerPage);
   return (
     <div className="flex flex-col">
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Leave</h2>
       </div>

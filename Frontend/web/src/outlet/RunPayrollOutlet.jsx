@@ -51,6 +51,7 @@ export default function RunPayrollOutlet() {
 
   useEffect(() => {
     if (!periodStart || !periodEnd) return;
+    let cancelled = false;
     const fetchPreview = async () => {
       try {
         setLoading(true);
@@ -59,16 +60,21 @@ export default function RunPayrollOutlet() {
           { period_start: periodStart, period_end: periodEnd },
           { headers },
         );
+        if (cancelled) return;
         setRows(res.data);
         setExcluded([]);
       } catch (error) {
+        if (cancelled) return;
         console.error("Failed to load payroll preview:", error);
         setRows([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchPreview();
+    return () => {
+      cancelled = true;
+    };
   }, [periodStart, periodEnd]);
 
   const toggleRow = (id) =>

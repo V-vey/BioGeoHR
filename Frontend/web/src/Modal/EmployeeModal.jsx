@@ -16,7 +16,8 @@ import {
   Calendar,
 } from "lucide-react";
 import Containers from "@/components/container";
-
+import Loading from "@/components/Loading";
+import Fallback from "@/assets/user.svg";
 function ProfInf({ label, data }) {
   return (
     <div className="flex flex-col flex-1 justify-start items-start ">
@@ -122,6 +123,7 @@ export default function EmployeeModal({ emp, onClose }) {
   const [photoPreview, setPhotoPreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  const [error, setError] = useState(false);
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -149,15 +151,22 @@ export default function EmployeeModal({ emp, onClose }) {
           },
         });
         setEmpData(response.data);
-      } catch (error) {
-        console.error("Failed to load employee overview data:", error);
+      } catch (err) {
+        console.error("Failed to load employee overview data:", err);
+        setError(true);
       }
     };
 
     fetchData();
   }, [emp.id]);
   if (!empData) {
-    return <div>LOADING..</div>;
+    return (
+      <Loading
+        error={error}
+        message="Could not load this employee."
+        onClose={onClose}
+      />
+    );
   }
   const filteredLeave = empData?.leave_application
     .filter((leave) =>
@@ -178,6 +187,13 @@ export default function EmployeeModal({ emp, onClose }) {
   );
 
   const salary = empData.salary;
+
+  const srvUrl = url.replace("/api", "/storage/");
+  const fallbackImage = Fallback;
+  const imageSrc = emp.image_path
+    ? `${srvUrl}${emp.image_path}`
+    : fallbackImage;
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
       <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%]">
@@ -220,7 +236,13 @@ export default function EmployeeModal({ emp, onClose }) {
                   {/* employee info */}
                   <div className="flex flex-row gap-2 w-full">
                     <div className="flex flex-row items-center gap-2 bg-white  px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                      <div className="border rounded-[10px] w-20 h-20" />
+                      <div className="border rounded-[10px] w-20 h-20 overflow-hidden">
+                        <img
+                          src={imageSrc}
+                          alt={`${emp.name || "User"}'s Profile`}
+                          className="object-cover scale-110"
+                        />
+                      </div>
                       <div className="flex flex-col gap-4 h-full py-2">
                         <div className="flex flex-col items-start">
                           <div className="flex flex-row w-full justify-between">
@@ -308,7 +330,11 @@ export default function EmployeeModal({ emp, onClose }) {
                       iconColor="#2AAF56"
                       bg={"#E5F5EA"}
                       label="Monthly salary"
-                      value={salary ? `₱${salary.salary_basis}` : "—"}
+                      value={
+                        salary
+                          ? `₱${Number(salary.salary_basis).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`
+                          : "—"
+                      }
                     />
                   </div>
 

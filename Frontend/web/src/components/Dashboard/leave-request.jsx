@@ -1,4 +1,4 @@
-import DefaultProfile from "@/assets/userprofile.jpg";
+// import DefaultProfile from "@/assets/userprofile.jpg";
 import Footer from "@/components/footer-items";
 
 function ContainerItems({ name, email, typeLeave }) {

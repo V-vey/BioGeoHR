@@ -17,15 +17,14 @@ class SalaryService
         return $dailyWage / $hrsPerDay;
     }
 
-    function lateDeduction($userId){
+    function lateDeduction($userId, $periodEnd = null){
+        $month = $periodEnd ? Carbon::parse($periodEnd) : Carbon::now();
         $late = Attendance::where('user_id', $userId)
-            ->whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', $month->year)
+            ->whereMonth('date', $month->month)
             ->where('status', 'Late')
             ->count();
-        if($late >= 3){
-            return true;
-        }
-        return false;
+        return $late >= 3;
     }
     
     // overtime Comment
@@ -143,7 +142,7 @@ class SalaryService
     function paycheck($salary, $daysPerMonth, $hrsPerDay, $userId, $periodStart = null, $periodEnd = null){
         $dailyWage = $this->dailyWage($salary, $daysPerMonth);
         $hrRate = $this->hourlyRate($dailyWage, $hrsPerDay);
-        $lateDeduction = $this->lateDeduction($userId);
+        $lateDeduction = $this->lateDeduction($userId, $periodEnd);
         $sss = $this->sssContributionTable($salary)['employee_total']; 
         $philHealth = $this->philHealth($salary);
         $pagIbig = $this->pagIbig($salary);

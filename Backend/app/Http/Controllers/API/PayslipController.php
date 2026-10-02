@@ -56,6 +56,8 @@ class PayslipController extends Controller
                 $employee->salary->working_days_per_month,
                 $employee->salary->working_hours_per_day,
                 $employee->id,
+                $request->period_start,
+                $request->period_end,
                 // overtime Comment
                 // $request->period_start,
                 // $request->period_end,
@@ -149,7 +151,8 @@ class PayslipController extends Controller
                 $employee->salary->working_days_per_month,
                 $employee->salary->working_hours_per_day,
                 $employee->id,
-
+                $request->period_start,
+                $request->period_end,
                 // overtime Comment
                 // $request->period_start,
                 // $request->period_end,

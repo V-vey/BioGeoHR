@@ -4,10 +4,12 @@ import FlaggedItem from "@/components/Attendance/flagged-item-container";
 import axios from "axios";
 import { url } from "@/resources/api";
 import { format } from "date-fns";
+import Loading from "@/components/Loading";
 
 export default function FlaggedAttendanceOutlet() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flagged, setFlagged] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -22,6 +24,8 @@ export default function FlaggedAttendanceOutlet() {
         setFlagged(response.data);
       } catch (error) {
         console.error("Failed to load flagged attendance:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchFlagged();
@@ -50,6 +54,7 @@ export default function FlaggedAttendanceOutlet() {
 
   return (
     <>
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">
           Flagged Attendance
