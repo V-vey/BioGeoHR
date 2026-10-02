@@ -131,11 +131,11 @@ export const router = createBrowserRouter([
     element: <Payroll />,
     errorElement: <ErrorPage />,
     children: [
-      // {
-      //   path: "run",
-      //   element: <RunPayrollOutlet />,
-      //   errorElement: <ErrorPage />,
-      // },
+      {
+        path: "run",
+        element: <RunPayrollOutlet />,
+        errorElement: <ErrorPage />,
+      },
 
       //MAYBE
       // {

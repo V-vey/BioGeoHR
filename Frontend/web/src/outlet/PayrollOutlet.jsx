@@ -30,6 +30,21 @@ function Counts({ title, count, icon }) {
     </div>
   );
 }
+function dateFormat(date) {
+  const format = new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  return format;
+}
+function dateFormatYear(date) {
+  const format = new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  return format;
+}
 export default function PayrollOutlet() {
   const [salaries, setSalaries] = useState([]);
   const [payslips, setPayslips] = useState([]);
@@ -137,6 +152,14 @@ export default function PayrollOutlet() {
         loans: latestRun.loanDeductions,
       }
     : { statutory: 0, incomeTax: 0, loans: 0 };
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 4;
+
+  const totalPages = Math.max(1, Math.ceil(payrollRuns.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageItems = payrollRuns.slice(startIndex, startIndex + itemsPerPage);
   return (
     <>
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
@@ -176,7 +199,7 @@ export default function PayrollOutlet() {
             title="Last run period"
             count={
               latestRun
-                ? `${latestRun.period_start} – ${latestRun.period_end}`
+                ? `${dateFormat(latestRun.period_start)} – ${dateFormat(latestRun.period_end)}`
                 : "—"
             }
             icon={<CalendarClock className="w-8 h-8 text-[#EC6668]" />}
@@ -187,19 +210,19 @@ export default function PayrollOutlet() {
             <Containers
               // name="Employee List"
               searchShow={false}
-              // currentPage={currentPageEmp}
-              // setCurrentPage={setCurrentPageEmp}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
               arrowSize={32}
               minH={700}
               maxH={700}
               headerDefault={false}
               header={payrollRunsHeader}
-              // totalPages={totalPagesEmp}
+              totalPages={totalPages}
               spacing={false}
             >
               <div className="w-full justify-start">
                 <div className="flex flex-row items-center px-4 py-1 border-b border-[#b2b2b2] ">
-                  <p className="flex-1 text-start font-medium">Period</p>
+                  <p className="flex-2 text-start font-medium">Period</p>
                   <p className="flex-1 text-start font-medium">
                     Employees paid
                   </p>
@@ -208,14 +231,15 @@ export default function PayrollOutlet() {
                 </div>
                 <div className="h-2" />
                 <div className="flex flex-col gap-2">
-                  {payrollRuns.length > 0 ? (
-                    payrollRuns.map((run) => (
+                  {pageItems.length > 0 ? (
+                    pageItems.map((run) => (
                       <div
                         key={`${run.period_start}_${run.period_end}`}
                         className="flex flex-row items-center px-4 py-2 hover:bg-gray-50"
                       >
-                        <p className="flex-1 text-start">
-                          {run.period_start} – {run.period_end}
+                        <p className="flex-2 text-start">
+                          {dateFormatYear(run.period_start)} –{" "}
+                          {dateFormatYear(run.period_end)}
                         </p>
                         <p className="flex-1 text-start">{run.count}</p>
                         <p className="flex-1 text-start font-medium">
@@ -244,8 +268,8 @@ export default function PayrollOutlet() {
                     Loans paid off
                   </p>
                   <p className="text-xs  text-[#2AAF56] leading-relaxed">
-                    {paidOffCount} loan{paidOffCount !== 1 ? "s" : ""} loans
-                    were fully paid off in the last run.
+                    {paidOffCount} loan{paidOffCount !== 1 ? "s" : ""} were
+                    fully paid off in the last run.
                   </p>
                 </div>
               </div>
