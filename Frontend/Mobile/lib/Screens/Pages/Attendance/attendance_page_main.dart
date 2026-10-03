@@ -127,24 +127,24 @@ class _AttendancePageMainState extends State<AttendancePageMain> {
                         width: 350,
                         color: Color(0xFFE0E0E0),
                       ),
-                      Expanded(
-                        //ITEMS
-                        child: ListView.builder(
-                          // padding: const EdgeInsets.all(15),
-                          itemCount: pageRecords.length,
-                          itemBuilder: (context, index) {
-                            final record = pageRecords[index];
-                            return AttendanceItemLayout(
-                              status: record.status,
-                              location: record.location,
-                              date: record.date,
-                              isVisible: false,
-                              clockIn: record.clockIn,
-                              clockOut: record.clockOut,
-                            );
-                          },
-                        ),
-                      ),
+                      // Expanded(
+                      //   //ITEMS
+                      //   child: ListView.builder(
+                      //     // padding: const EdgeInsets.all(15),
+                      //     itemCount: pageRecords.length,
+                      //     itemBuilder: (context, index) {
+                      //       final record = pageRecords[index];
+                      //       return AttendanceItemLayout(
+                      //         status: record.status,
+                      //         location: record.location,
+                      //         date: record.date,
+                      //         isVisible: false,
+                      //         clockIn: record.clockIn,
+                      //         clockOut: record.clockOut,
+                      //       );
+                      //     },
+                      //   ),
+                      // ),
                       // AttendanceItems(),
                       // Spacer(),
 

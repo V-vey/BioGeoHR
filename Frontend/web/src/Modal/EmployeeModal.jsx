@@ -246,7 +246,7 @@ export default function EmployeeModal({ emp, onClose }) {
                       <div className="flex flex-col gap-4 h-full py-2">
                         <div className="flex flex-col items-start">
                           <div className="flex flex-row w-full justify-between">
-                            <p className="m-0 leading-none text-[16px] font-medium">
+                            <p className="m-0 leading-none text-[16px] text-start font-medium">
                               {emp.name}
                             </p>
                             {emp.gender === "Male" ? (
