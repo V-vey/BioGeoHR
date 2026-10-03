@@ -38,10 +38,10 @@ class _ChangePasswordState extends State<ChangePassword> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.person, size: 30),
+                  Icon(Icons.lock_reset, size: 30),
                   SizedBox(width: 10),
                   Text(
-                    "Personal Details",
+                    "Change Password",
                     style: TextStyle(
                       color: Color(0xFF3A3A3A),
                       fontFamily: 'Roboto',

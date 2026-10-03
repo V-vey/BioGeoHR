@@ -125,7 +125,11 @@ class AttendanceController extends Controller
         $userId = $this->getUserIdFromToken();
 
         // $attendance = Attendance::where("user_id", $userId)->get();
-        $late = Attendance::where("user_id", $userId)->where("status", "Late")->count();
+        $late = Attendance::where("user_id", $userId)
+        ->whereMonth('date', Carbon::now()->month)
+        ->whereYear('date', Carbon::now()->year)
+        ->where("status", "Late")
+        ->count();
         return response()->json(['message' => $late]);
     }
     /*
@@ -135,7 +139,8 @@ class AttendanceController extends Controller
         $userId = $this->getUserIdFromToken();
 
         // $attendance = Attendance::where("user_id", $userId)->get();
-        $late = Attendance::where("user_id", $userId)->where("status", "On-time")->count();
+        $late = Attendance::where("user_id", $userId)
+        ->where("status", "On-time")->count();
         return response()->json(['message' => $late]);
     }
 
@@ -329,5 +334,21 @@ class AttendanceController extends Controller
             'count' => $counts->count(),
             'employees' => $counts,
         ]);
+    }
+    public function getNullAttendance(){
+        $userId = $this->getUserIdFromToken();
+        $attendance = Attendance::where('user_id', $userId);
+
+        if(!$atttendance->time_out == null){
+            return ;
+        }
+
+        $timeNow = now()->format('H:i:s');
+        $time = $timeNow - $attendance->time_in;
+        return response()->json([
+            'time_in' => $attendance->time_in,
+            'time' => $time
+        ]);
+
     }
 }
