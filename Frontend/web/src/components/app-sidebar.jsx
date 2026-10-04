@@ -34,6 +34,7 @@ const items = [
     icon: Calendar,
     children: [
       { title: "All Attendance", url: "/attendance" },
+      { title: "Holidays", url: "/attendance/holidays" },
       { title: "Flagged Attendance", url: "/attendance/flagged" },
       { title: "Location", url: "/attendance/location" },
     ],
@@ -89,8 +90,7 @@ export function AppSidebar() {
                       </div>
                       <SidebarMenuSub className="mt-1">
                         {item.children.map((child) => {
-                          const isChildActive =
-                            location.pathname === child.url;
+                          const isChildActive = location.pathname === child.url;
                           return (
                             <SidebarMenuSubItem key={child.url}>
                               <SidebarMenuSubButton

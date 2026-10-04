@@ -29,6 +29,7 @@ import PayslipsOutlet from "@/outlet/PayslipsOutlet";
 import PayrollSettingsOutlet from "@/outlet/PayrollSettingsOutlet";
 import LoansOutlet from "@/outlet/LoansOutlet";
 import LeaveOutlet from "@/outlet/LeaveOutlet";
+import HolidaysOutlet from "@/outlet/HolidaysOutlet";
 
 export const router = createBrowserRouter([
   {
@@ -101,6 +102,11 @@ export const router = createBrowserRouter([
             element: <LocationOutlet />,
           },
         ],
+      },
+      {
+        path: "holidays",
+        element: <HolidaysOutlet />,
+        errorElement: <ErrorPage />,
       },
       {
         // path: "location-log",
