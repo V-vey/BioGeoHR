@@ -3,6 +3,7 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import LeaveRequestModal from "@/Modal/LeaveModal";
 import Fallback from "@/assets/user.svg";
+import AuthImage from "@/components/AuthImage";
 export default function PendingLeave({ item, fetch }) {
   // if (pending.length === 0) {
   //   return (
@@ -18,15 +19,16 @@ export default function PendingLeave({ item, fetch }) {
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
   const imageSrc = item.user?.image_path
-    ? `${srvUrl}${item.user?.image_path}`
-    : fallbackImage;
+    ? `${url}/${item.user?.image_path}`
+    : null;
   return (
     <>
       <div className="flex flex-row w-full px-4 items-center">
         <div className="flex-2 flex flex-row gap-2 items-center">
           <div className="border rounded-[10px] w-12 h-12 overflow-hidden">
-            <img
+            <AuthImage
               src={imageSrc}
+              fallback={fallbackImage}
               alt={`${item.user?.name || "User"}'s Profile`}
               className="object-cover scale-110"
             />

@@ -28,7 +28,9 @@ class Payslip extends Model
         'net_pay',
         'income_tax',
         // overtime Comment
-        // 'overtime_pay'
+        // 'overtime_pay',
+        'absence_deduction'
+
     ];
 
     public function user()

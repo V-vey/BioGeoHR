@@ -36,7 +36,7 @@ class Users extends Authenticatable
         'nationality',
         'address',
     ];
-
+    
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -52,6 +52,13 @@ class Users extends Authenticatable
      *
      * @return array<string, string>
      */
+
+    public function isHR(): bool
+    {
+        return $this->department === 'Administrative'
+            && str_starts_with($this->position ?? '', 'HR');
+    }
+
     protected function casts(): array
     {
         return [

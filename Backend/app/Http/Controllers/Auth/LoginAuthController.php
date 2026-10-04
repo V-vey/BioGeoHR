@@ -22,7 +22,7 @@ class LoginAuthController extends Controller{
 
             return response()->json([
                 'authenticated' => "Log in Success",
-                'user' => $this->user->department,
+                'user' => $this->user->isHR() ? 'HR' : 'Employee',
                 'token' => $token
             ], 201);
         }

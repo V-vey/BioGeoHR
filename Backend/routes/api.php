@@ -10,7 +10,7 @@ use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\LeaveApplicationController;
 use App\Http\Controllers\API\LeaveBalanceController;
 use App\Http\Controllers\API\AttendanceController;
-use App\Http\Controllers\API\UserLocationController;
+// use App\Http\Controllers\API\UserLocationController;
 use App\Http\Controllers\API\LoanController;
 use App\Http\Controllers\API\PasswordController;
 use App\Http\Controllers\API\PayslipController;
@@ -48,13 +48,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
     
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
-    
+    // Route::get('leave', LeaveApplicationController::class); 
+    // Route::post('leave', LeaveApplicationController::class); 
     //attendance
     Route::get('getAllAttendance', [AttendanceController::class, 'show']);
 
     //profile
     Route::get('userProfile', [UsersController::class , 'userProfileDetails']);
-
+    Route::get('avatars/{filename}', [UsersController::class, 'avatar']);
     //password
     Route::post('changePassword', [PasswordController::class , 'update']);
 
@@ -64,15 +65,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('geofenceCheck', [GeoFenceController::class, 'periodicCheck']);
     Route::get('systemSettings', [SystemSettingController::class, 'index']);
     //can only access by HR
-    Route::middleware('role:HR')->group(function () {
+    Route::middleware('role:Administrative')->group(function () {
         // Route::apiResource('users', UsersController::class);
         Route::apiResource('users', UsersController::class);
         Route::apiResource('salary', SalaryController::class);
         Route::apiResource('leave', LeaveApplicationController::class);
         Route::apiResource('balance', LeaveBalanceController::class);
-        Route::apiResource('attendance', AttendanceController::class);
-        Route::apiResource('userl', UserLocationController::class);
+        Route::apiResource('attendance', AttendanceController::class)->except(['store']);
+        Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
+        // Route::apiResource('userl', UserLocationController::class);
 
+        Route::get('loans/paidOffThisPeriod', [LoanController::class, 'paidOffThisPeriod']);
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
         Route::get('user/{userId}', [UsersController::class, 'byUser']);
@@ -93,7 +96,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('holidays', HolidayController::class)->only(['index', 'store', 'destroy']);
         
         Route::get('frequentLates', [AttendanceController::class, 'frequentLates']);
-        Route::get('loans/paidOffThisPeriod', [LoanController::class, 'paidOffThisPeriod']);
     });
     //Testing
     Route::get('test', [AttendanceController::class, 'show']);

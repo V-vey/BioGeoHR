@@ -18,6 +18,8 @@ import {
 import Containers from "@/components/container";
 import Loading from "@/components/Loading";
 import Fallback from "@/assets/user.svg";
+import AuthImage from "@/components/AuthImage";
+import EditProfile from "@/Modal/EditProfileModal";
 function ProfInf({ label, data }) {
   return (
     <div className="flex flex-col flex-1 justify-start items-start ">
@@ -109,7 +111,7 @@ function LeaveItem({ fetch }) {
     </>
   );
 }
-export default function EmployeeModal({ emp, onClose }) {
+export default function EmployeeModal({ emp, onClose, onSaved }) {
   const [isOverview, setIsOverview] = useState(true);
   const [leaveBalance, setLeaveBalance] = useState(null);
   const [leaves, setLeaves] = useState([]);
@@ -123,7 +125,13 @@ export default function EmployeeModal({ emp, onClose }) {
   const [photoPreview, setPhotoPreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  const [view, setView] = useState(false);
+
   const [error, setError] = useState(false);
+
+  const onView = () => {
+    setView(true);
+  };
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -133,30 +141,28 @@ export default function EmployeeModal({ emp, onClose }) {
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
   const onCancel = () => {};
+  const token = localStorage.getItem("token");
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "ngrok-skip-browser-warning": "true",
+  };
 
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(url + `/user/${emp.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      setEmpData(response.data);
+    } catch (err) {
+      console.error("Failed to load employee overview data:", err);
+      setError(true);
+    }
+  };
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "ngrok-skip-browser-warning": "true",
-    };
-
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(url + `/user/${emp.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-        setEmpData(response.data);
-      } catch (err) {
-        console.error("Failed to load employee overview data:", err);
-        setError(true);
-      }
-    };
-
     fetchData();
   }, [emp.id]);
   if (!empData) {
@@ -190,13 +196,13 @@ export default function EmployeeModal({ emp, onClose }) {
 
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
-  const imageSrc = emp.image_path
-    ? `${srvUrl}${emp.image_path}`
-    : fallbackImage;
+  const imageSrc = empData.image_path
+    ? `${url}/${empData.image_path}`
+    : null;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
-      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%]">
+      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-full">
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
             onClick={onClose}
@@ -237,8 +243,9 @@ export default function EmployeeModal({ emp, onClose }) {
                   <div className="flex flex-row gap-2 w-full">
                     <div className="flex flex-row items-center gap-2 bg-white  px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
                       <div className="border rounded-[10px] w-20 h-20 overflow-hidden">
-                        <img
+                        <AuthImage
                           src={imageSrc}
+                          fallback={fallbackImage}
                           alt={`${emp.name || "User"}'s Profile`}
                           className="object-cover scale-110"
                         />
@@ -346,6 +353,7 @@ export default function EmployeeModal({ emp, onClose }) {
                     arrowSize={32}
                     minH={350}
                     maxH={350}
+                    totalPages={totalPagesLeave}
                     // header={leaveHeader}
                     // headerDefault={false}
                   >
@@ -394,21 +402,12 @@ export default function EmployeeModal({ emp, onClose }) {
                 </h3>
                 <div className="flex flex-row items-center gap-4  ">
                   <div className="w-20 h-20 rounded-[10px] border border-[#b2b2b2] bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                    {photoPreview ? (
-                      <img
-                        src={photoPreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-sm text-[#6675EC] font-medium"
-                      >
-                        <User className="w-10 h-10 text-[#6675EC]" />
-                      </button>
-                    )}
+                    <AuthImage
+                      src={imageSrc}
+                      fallback={fallbackImage}
+                      alt={`${emp.name || "User"}'s Profile`}
+                      className="object-cover scale-110"
+                    />
                   </div>
                   <ProfInf label={"Name: "} data={emp.name} />
                   <ProfInf label={"Email: "} data={emp.email} />
@@ -442,15 +441,15 @@ export default function EmployeeModal({ emp, onClose }) {
                 </div>
               </div>
               <div className="flex flex-row gap-2 justify-end">
-                <button
+                {/* <button
                   // onClick={}
                   type="button"
                   className="px-4 py-2 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
                 >
                   Reset Password
-                </button>
+                </button> */}
                 <button
-                  // onClick={}
+                  onClick={onView}
                   type="button"
                   className="w-20 bg-[#2AAF56] hover:bg-[#6675EC] rounded-full text-white py-0.5"
                 >
@@ -462,6 +461,15 @@ export default function EmployeeModal({ emp, onClose }) {
           {/* <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5 " /> */}
         </div>
       </div>
+      {view && (
+        <EditProfile
+          emp={emp}
+          empData={empData}
+          onSaved={fetchData}
+          onSavedAllEmployee={onSaved}
+          onClose={() => setView(false)}
+        />
+      )}
     </div>
   );
 }

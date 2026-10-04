@@ -5,10 +5,28 @@ namespace App\Service;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use Carbon\Carbon;
-
 class SalaryService
 {
-    
+    function absentDays($userId, $periodStart, $periodEnd, $createdAt)
+    {
+        $start = Carbon::parse($periodStart)->max(Carbon::parse($createdAt)->startOfDay());
+        $end   = Carbon::parse($periodEnd)->min(now('Asia/Manila')->subDay());   // today isn't over yet
+        $absent = 0;
+
+        foreach ($start->daysUntil($end->copy()->addDay()) as $date) {
+            if ($date->isSaturday() || $date->isSunday()) continue;                    // <- working days, see question below
+            if (Holiday::where('date', $date->toDateString())->exists()) continue;
+            if (Attendance::where('user_id', $userId)->whereDate('date', $date)->exists()) continue;
+            $onLeave = LeaveApplication::where('user_id', $userId)
+                ->where('status', 'Approved')
+                ->whereDate('start_date', '<=', $date)
+                ->whereDate('end_date', '>=', $date)->exists();
+            if ($onLeave) continue;
+            $absent++;
+        }
+        return $absent;
+    }
+
     function dailyWage($salaryBasis, $daysPerMonth){
         return $dailyWage = $salaryBasis / $daysPerMonth;
     }
@@ -151,7 +169,7 @@ class SalaryService
         if($lateDeduction == true){
             $paycheck = $paycheck - $dailyWage;
         }
-        
+ 
         // overtime Comment
         /*
         $overtimePay = 0;
@@ -159,10 +177,19 @@ class SalaryService
             $otHours = $this->overtimeHours($userId, $hrsPerDay, $periodStart, $periodEnd);
             $overtimePay = $this->overtimePay($hrRate, $otHours, 'regular');
         }
-        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay;
+        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay - absenceDeduction;
         */
-        $taxableIncome = ($salary - $contributions) / 2;
-        $semiMonth = $paycheck / 2;
+   
+        $absenceDeduction = 0;
+        if ($periodStart && $periodEnd) {
+            $absentDays = Attendance::where('user_id', $userId)
+                ->where('status', 'Absent')
+                ->whereBetween('date', [$periodStart, $periodEnd])
+                ->count();
+            $absenceDeduction = $absentDays * $dailyWage;
+        }
+        $taxableIncome = (($salary - $contributions) / 2) - $absenceDeduction;
+        $semiMonth = ($paycheck / 2) - $absenceDeduction;
 
         $incomeTax = $this->incomeTax($taxableIncome);
         // overtime Comment
@@ -175,10 +202,10 @@ class SalaryService
             'late_deduction' => $lateDeduction ? $dailyWage : 0,
             'net_pay' => $netPay,
             'income_tax' => $incomeTax,
+            'absence_deduction' => $absenceDeduction,
             'semi_month' => $semiMonth,
             'paycheck' => $paycheck,
             'taxable_income' => $taxableIncome,
-
             // overtime Comment
             // 'overtime_pay' => $overtimePay,
         ];

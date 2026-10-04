@@ -94,7 +94,7 @@ export default function RunPayrollOutlet() {
         { headers },
       );
       alert(res.data.message);
-      navigate("..");
+      navigate(`/payroll/payslips?start=${periodStart}&end=${periodEnd}`);
     } catch (error) {
       alert("Something went wrong while running payroll.");
     }

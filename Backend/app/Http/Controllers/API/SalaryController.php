@@ -5,7 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Salary;
-
+use App\Models\Holiday;
+use App\Models\LeaveApplication;
 use App\Service\SalaryService;
 
 class SalaryController extends Controller

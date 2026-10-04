@@ -8,6 +8,8 @@ use App\Models\Payslip;
 use App\Models\Users;
 use App\Models\Loan;
 use App\Service\SalaryService;
+use Carbon\Carbon;
+use App\Service\AbsenceService;
 
 class PayslipController extends Controller
 {
@@ -31,11 +33,18 @@ class PayslipController extends Controller
             'excluded_ids' => 'sometimes|array',
         ]);
 
-        $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
+        $isDesignatedCutoff = Carbon::parse($request->period_start)->day >= 16;
         $salaryService = new SalaryService();
         $created = [];
 
         $employees = Users::with('salary')->get();
+        $periodFrom = Carbon::parse($request->period_start)->startOfDay();
+        $periodTo   = Carbon::parse($request->period_end)->startOfDay()
+                        ->min(now('Asia/Manila')->subDay()->startOfDay());
+
+        if ($periodFrom->lte($periodTo)) {
+            (new AbsenceService())->sync($periodFrom, $periodTo);
+        }
 
         foreach ($employees as $employee) {
             if (!$employee->salary) {
@@ -140,7 +149,13 @@ class PayslipController extends Controller
         $preview = [];
 
         $employees = Users::with('salary')->get();
+        $periodFrom = Carbon::parse($request->period_start)->startOfDay();
+        $periodTo   = Carbon::parse($request->period_end)->startOfDay()
+                        ->min(now('Asia/Manila')->subDay()->startOfDay());
 
+        if ($periodFrom->lte($periodTo)) {
+            (new AbsenceService())->sync($periodFrom, $periodTo);
+        }
         foreach ($employees as $employee) {
             if (!$employee->salary) {
                 continue;
@@ -153,6 +168,7 @@ class PayslipController extends Controller
                 $employee->id,
                 $request->period_start,
                 $request->period_end,
+             
                 // overtime Comment
                 // $request->period_start,
                 // $request->period_end,

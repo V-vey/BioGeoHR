@@ -1,108 +1,209 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { url } from "@/resources/api";
 import { Plus, CircleOff, Landmark, Wallet, Info } from "lucide-react";
 import StatusBadge from "@/components/Payroll/StatusBadge";
+import Loading from "@/components/Loading";
 
-// Sample data for now — swap for an API call once the payroll endpoints exist.
-// Rules reflected here (per the institution's data collection sheet):
-//  - Loan types: SSS, Pag-IBIG, Company, Cash Advance — all tracked the same way
-//  - Deduction is always a fixed monthly amount, no interest, no percentage-based option
-//  - Deducted in full on one agreed date each month (not split across the two semi-monthly cutoffs)
-//  - Fixed repayment term — must be fully paid before the school year ends
-//  - An employee may hold only one active loan/cash advance at a time
-//  - If net pay can't cover the full deduction, only a partial amount is deducted that period
-//  - The system does not auto-stop a deduction when the balance hits zero — HR stops it manually
-const loans = [
-  {
-    id: "LN-2026-014",
-    employee: "Maria Santos",
-    dept: "Teaching Staff",
-    initials: "MS",
-    color: "bg-[#EC6668]",
-    type: "SSS Loan",
-    principal: 24000,
-    monthlyDeduction: 2000,
-    balance: 8000,
-    deductionDay: "5th of the month",
-    term: "Before SY 2026–2027 ends",
-    status: "active",
-  },
-  {
-    id: "LN-2026-009",
-    employee: "Renz Aquino",
-    dept: "Non-teaching Staff",
-    initials: "RA",
-    color: "bg-[#6675EC]",
-    type: "Pag-IBIG Loan",
-    principal: 30000,
-    monthlyDeduction: 2500,
-    balance: 0,
-    deductionDay: "5th of the month",
-    term: "Before SY 2026–2027 ends",
-    status: "fully_paid",
-  },
-  {
-    id: "LN-2026-021",
-    employee: "Carla Domingo",
-    dept: "Teaching Staff",
-    initials: "CD",
-    color: "bg-purple-400",
-    type: "Company Loan",
-    principal: 10000,
-    monthlyDeduction: 1000,
-    balance: 4000,
-    deductionDay: "5th of the month",
-    term: "Before SY 2026–2027 ends",
-    status: "active",
-  },
-  {
-    id: "LN-2026-027",
-    employee: "Paolo Ramos",
-    dept: "Non-teaching Staff",
-    initials: "PR",
-    color: "bg-amber-400",
-    type: "Cash Advance",
-    principal: 5000,
-    monthlyDeduction: 5000,
-    balance: 5000,
-    deductionDay: "5th of the month",
-    term: "Single cutoff",
-    status: "active",
-  },
-  {
-    id: "LN-2025-098",
-    employee: "Jenny Cruz",
-    dept: "Teaching Staff",
-    initials: "JC",
-    color: "bg-[#2AAF56]",
-    type: "SSS Loan",
-    principal: 18000,
-    monthlyDeduction: 1500,
-    balance: 0,
-    deductionDay: "5th of the month",
-    term: "Before SY 2026–2027 ends",
-    status: "fully_paid",
-  },
-];
+const LOAN_TYPES = ["SSS", "Pag-IBIG", "Company", "Cash Advance"];
 
 const peso = (n) =>
-  "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 0 });
+  "₱" +
+  Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0 });
+
+const initials = (name) =>
+  (name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+
+const emptyForm = {
+  user_id: "",
+  loan_type: "SSS",
+  total_amount: "",
+  monthly_deduction: "",
+  start_date: "",
+};
+
+function NewLoanModal({ employees, onClose, onSaved }) {
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const update = (key) => (e) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    try {
+      setSaving(true);
+      await axios.post(url + "/loans", form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      alert("Loan created");
+      onSaved();
+      onClose();
+    } catch (error) {
+      alert(error.response?.data?.message ?? "Could not create the loan.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldClass =
+    "w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white";
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-5">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-3 bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <h2 className="font-bold text-left">New loan</h2>
+
+        <label className="text-left text-sm font-medium">
+          Employee
+          <select
+            required
+            value={form.user_id}
+            onChange={update("user_id")}
+            className={fieldClass}
+          >
+            <option value="" disabled>
+              Select an employee
+            </option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="text-left text-sm font-medium">
+          Loan type
+          <select
+            value={form.loan_type}
+            onChange={update("loan_type")}
+            className={fieldClass}
+          >
+            {LOAN_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="text-left text-sm font-medium">
+          Total amount
+          <input
+            required
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.total_amount}
+            onChange={update("total_amount")}
+            className={fieldClass}
+          />
+        </label>
+
+        <label className="text-left text-sm font-medium">
+          Monthly deduction
+          <input
+            required
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.monthly_deduction}
+            onChange={update("monthly_deduction")}
+            className={fieldClass}
+          />
+        </label>
+
+        <label className="text-left text-sm font-medium">
+          Start date
+          <input
+            required
+            type="date"
+            value={form.start_date}
+            onChange={update("start_date")}
+            className={fieldClass}
+          />
+        </label>
+
+        <div className="flex flex-row gap-2 justify-end mt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1 rounded-full border border-[#b2b2b2]"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export default function LoansOutlet() {
-  const [rows, setRows] = useState(loans);
+  const [rows, setRows] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
 
-  const stopDeduction = (id) =>
-    setRows((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: "stopped" } : l)),
-    );
+  const fetchLoans = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(url + "/loans", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      setRows(response.data);
+    } catch (error) {
+      console.error("Failed to load loans:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const activeCount = rows.filter((l) => l.status === "active").length;
-  const pendingStopCount = rows.filter((l) => l.status === "fully_paid").length;
+  useEffect(() => {
+    fetchLoans();
+    const token = localStorage.getItem("token");
+    axios
+      .get(url + "/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      })
+      .then((res) => setEmployees(res.data))
+      .catch((error) => console.error("Failed to load employees:", error));
+  }, []);
+
+  const activeCount = rows.filter((l) => l.status === "Active").length;
+  const paidCount = rows.filter((l) => l.status === "Paid").length;
   const totalOutstanding = rows
-    .filter((l) => l.status !== "stopped")
-    .reduce((s, l) => s + l.balance, 0);
+    .filter((l) => l.status === "Active")
+    .reduce((s, l) => s + Number(l.remaining_balance), 0);
 
   return (
     <div className="flex flex-col gap-4">
+      {loading && <Loading />}
+
       {/* Stat row */}
       <div className="flex w-full justify-between gap-4">
         <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
@@ -129,11 +230,11 @@ export default function LoansOutlet() {
         </div>
         <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
           <div className="font-medium text-[#6675EC] text-left">
-            Fully Paid — Pending Stop
+            Fully Paid
           </div>
           <div className="flex items-start justify-between">
             <span className="text-[24px] font-regular text-[#3A3A3A]">
-              {pendingStopCount}
+              {paidCount}
             </span>
             <CircleOff className="text-[#EACA3A] w-10 h-10" />
           </div>
@@ -144,11 +245,12 @@ export default function LoansOutlet() {
       <div className="flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
-          Loans are interest-free with a fixed monthly deduction taken on an
-          agreed date each month, repaid within a fixed term. An employee may
-          hold only one active loan or cash advance at a time — a new one can't
-          be issued until the existing balance is fully paid off. When a balance
-          reaches ₱0, HR stops the deduction manually.
+          Loans are interest-free with a fixed monthly deduction, taken once a
+          month on the second cutoff (the 16th onward). An employee may hold
+          only one active loan or cash advance at a time — a new one can't be
+          issued until the existing balance is fully paid off. If net pay can't
+          cover the deduction, a partial amount is taken. When a balance reaches
+          ₱0, the system marks the loan Paid and stops the deduction.
         </span>
       </div>
 
@@ -166,6 +268,7 @@ export default function LoansOutlet() {
           </div>
           <button
             type="button"
+            onClick={() => setShowNew(true)}
             className="flex items-center gap-1.5 bg-[#6675EC] hover:bg-[#5563d6] text-white text-sm font-semibold rounded-[8px] px-3.5 py-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -182,75 +285,78 @@ export default function LoansOutlet() {
                 <th className="py-2 px-3 font-semibold">Principal</th>
                 <th className="py-2 px-3 font-semibold">Monthly deduction</th>
                 <th className="py-2 px-3 font-semibold">Balance</th>
-                <th className="py-2 px-3 font-semibold">Deducted on</th>
+                <th className="py-2 px-3 font-semibold">Started</th>
                 <th className="py-2 px-3 font-semibold">Status</th>
-                <th className="py-2 pr-5 pl-3"></th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((loan) => (
-                <tr
-                  key={loan.id}
-                  className="border-t border-[#eef0f5] hover:bg-gray-50"
-                >
-                  <td className="py-3 pl-5 pr-3">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold shrink-0 ${loan.color}`}
-                      >
-                        {loan.initials}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-[#3A3A3A]">
-                          {loan.employee}
-                        </div>
-                        <div className="text-[11px] text-[#8a90a3]">
-                          {loan.dept}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-sm text-[#8a90a3]">
-                    {loan.type}
-                  </td>
-                  <td className="py-3 px-3 text-sm">{peso(loan.principal)}</td>
-                  <td className="py-3 px-3 text-sm">
-                    {peso(loan.monthlyDeduction)}
-                  </td>
-                  <td className="py-3 px-3 text-sm font-semibold">
-                    {peso(loan.balance)}
-                  </td>
-                  <td className="py-3 px-3 text-sm text-[#8a90a3]">
-                    {loan.deductionDay}
-                  </td>
-                  <td className="py-3 px-3">
-                    {loan.status === "active" && (
-                      <StatusBadge tone="success">Active</StatusBadge>
-                    )}
-                    {loan.status === "fully_paid" && (
-                      <StatusBadge tone="warning">Fully paid</StatusBadge>
-                    )}
-                    {loan.status === "stopped" && (
-                      <StatusBadge tone="neutral">Stopped</StatusBadge>
-                    )}
-                  </td>
-                  <td className="py-3 pr-5 pl-3">
-                    {loan.status === "fully_paid" && (
-                      <button
-                        type="button"
-                        onClick={() => stopDeduction(loan.id)}
-                        className="text-xs font-semibold text-[#6675EC] hover:underline whitespace-nowrap"
-                      >
-                        Stop deduction
-                      </button>
-                    )}
+              {rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-6 text-center text-sm text-[#8a90a3]"
+                  >
+                    No loans yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((loan) => (
+                  <tr
+                    key={loan.id}
+                    className="border-t border-[#eef0f5] hover:bg-gray-50"
+                  >
+                    <td className="py-3 pl-5 pr-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold shrink-0 bg-[#6675EC]">
+                          {initials(loan.user?.name)}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-[#3A3A3A]">
+                            {loan.user?.name ?? "Unknown employee"}
+                          </div>
+                          <div className="text-[11px] text-[#8a90a3]">
+                            {loan.user?.department}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-sm text-[#8a90a3]">
+                      {loan.loan_type}
+                    </td>
+                    <td className="py-3 px-3 text-sm">
+                      {peso(loan.total_amount)}
+                    </td>
+                    <td className="py-3 px-3 text-sm">
+                      {peso(loan.monthly_deduction)}
+                    </td>
+                    <td className="py-3 px-3 text-sm font-semibold">
+                      {peso(loan.remaining_balance)}
+                    </td>
+                    <td className="py-3 px-3 text-sm text-[#8a90a3]">
+                      {loan.start_date}
+                    </td>
+                    <td className="py-3 px-3">
+                      {loan.status === "Active" ? (
+                        <StatusBadge tone="success">Active</StatusBadge>
+                      ) : (
+                        <StatusBadge tone="neutral">Paid</StatusBadge>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {showNew && (
+        <NewLoanModal
+          employees={employees}
+          onClose={() => setShowNew(false)}
+          onSaved={fetchLoans}
+        />
+      )}
     </div>
   );
 }

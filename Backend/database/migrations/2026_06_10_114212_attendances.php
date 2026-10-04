@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('location_id');
+            $table->foreignId('location_id')->nullable();
             $table->string('status');
             $table->date('date');
-            $table->time('time_in');
+            $table->time('time_in')->nullable();
             $table->time('time_out')->nullable()->default(null);
 
             $table->timestamps();

@@ -11,14 +11,14 @@ class LoanController extends Controller
 {
     public function index()
     {
-        $loans = Loan::all();
+        $loans = Loan::with('user:id,name,department,position')->get();
         return response()->json($loans);
     }
     public function store(Request $request)
     {
 
         $request->validate([
-            'user_id' => 'required',
+            'user_id' => 'required|exists:users,id',
             'loan_type' => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
             'total_amount' => 'required|numeric|min:0',
             'monthly_deduction' => 'required|numeric|min:0',

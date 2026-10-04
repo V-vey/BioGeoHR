@@ -137,12 +137,12 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
 
-      //MAYBE
-      // {
-      //   path: "payslips",
-      //   element: <PayslipsOutlet />,
-      //   errorElement: <ErrorPage />,
-      // },
+      // MAYBE
+      {
+        path: "payslips",
+        element: <PayslipsOutlet />,
+        errorElement: <ErrorPage />,
+      },
 
       // {
       //   path: "settings",

@@ -2,11 +2,9 @@ import EmployeeModal from "@/Modal/EmployeeModal";
 import { useEffect, useState } from "react";
 import { url } from "@/resources/api";
 import Fallback from "@/assets/user.svg";
-export default function ItemContainer({ item }) {
+import AuthImage from "@/components/AuthImage";
+export default function ItemContainer({ item, onSaved }) {
   const [view, setView] = useState(false);
-
-  const token = localStorage.getItem("token");
-  const test = async (e) => {};
 
   const createdAt = new Date(item.created_at).toLocaleDateString("en-US", {
     month: "short",
@@ -16,8 +14,8 @@ export default function ItemContainer({ item }) {
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
   const imageSrc = item.image_path
-    ? `${srvUrl}${item.image_path}`
-    : fallbackImage;
+    ? `${url}/${item.image_path}`
+    : null;
   const onView = () => {
     setView(true);
   };
@@ -43,8 +41,9 @@ export default function ItemContainer({ item }) {
             <div className="flex gap-1 items-center">
               {/* IMAGE */}
               <div className="flex rounded-full w-13 h-13 border items-center overflow-hidden">
-                <img
+                <AuthImage
                   src={imageSrc}
+                  fallback={fallbackImage}
                   alt={`${item.name || "User"}'s Profile`}
                   className="object-cover scale-110"
                 />
@@ -83,7 +82,13 @@ export default function ItemContainer({ item }) {
           </div>
         </div>
       </div>
-      {view && <EmployeeModal emp={item} onClose={() => setView(false)} />}
+      {view && (
+        <EmployeeModal
+          emp={item}
+          onSaved={onSaved}
+          onClose={() => setView(false)}
+        />
+      )}
     </>
   );
 }

@@ -8,24 +8,23 @@ export default function AllEmployee({}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const token = localStorage.getItem("token");
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(url + "/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      setEmployees(response.data);
+    } catch (error) {
+      console.error("Failed to load employees", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const fetchEmployees = async () => {
-      try {
-        const response = await axios.get(url + "/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-        setEmployees(response.data);
-      } catch (error) {
-        console.error("Failed to load employees", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEmployees();
   }, []);
 
@@ -74,7 +73,7 @@ export default function AllEmployee({}) {
         onFilterApply={(filters) => console.log(filters)}
       >
         {pageItems.map((emp, i) => (
-          <Item key={i} item={emp} />
+          <Item key={i} onSaved={fetchEmployees} item={emp} />
         ))}
       </Containers>
     </div>

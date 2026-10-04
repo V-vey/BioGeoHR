@@ -29,7 +29,7 @@ function LoginPageMain() {
     e.preventDefault();
 
     try {
-      await axios.post(url + "/login", loginForm).then((response) => {
+      await axios.post(url + "/login", loginForm).then(async (response) => {
         //block the user if they are not HR
         if (response.data.user !== "HR") {
           alert(
@@ -39,6 +39,22 @@ function LoginPageMain() {
         }
         if (response.data.authenticated === "Log in Success") {
           localStorage.setItem("token", response.data.token);
+          // mark employees with no record on past working days as absent;
+          // a failure here must not block the login
+          try {
+            await axios.post(
+              url + "/attendance/sync-absences",
+              {},
+              {
+                headers: {
+                  Authorization: `Bearer ${response.data.token}`,
+                  "ngrok-skip-browser-warning": "true",
+                },
+              },
+            );
+          } catch (syncError) {
+            console.error("Absence sync failed:", syncError);
+          }
           navigate("/dashboard");
         } else {
           alert("Please try again. Something went Wrong");

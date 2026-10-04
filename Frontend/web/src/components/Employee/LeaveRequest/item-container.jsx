@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import LeaveRequestModal from "@/Modal/LeaveModal";
 import { url } from "@/resources/api";
 import Fallback from "@/assets/user.svg";
+import AuthImage from "@/components/AuthImage";
 export default function ItemContainer({ fetch }) {
   const [view, setView] = useState(false);
   const onView = () => {
@@ -29,8 +30,8 @@ export default function ItemContainer({ fetch }) {
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
   const imageSrc = fetch.user?.image_path
-    ? `${srvUrl}${fetch.user?.image_path}`
-    : fallbackImage;
+    ? `${url}/${fetch.user?.image_path}`
+    : null;
   return (
     <>
       <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] py-2 rounded-[5px]">
@@ -58,8 +59,9 @@ export default function ItemContainer({ fetch }) {
           <div className="flex flex-row gap-2 items-center">
             {/* image */}
             <div className="rounded-full w-15 h-15 border-1 overflow-hidden">
-              <img
+              <AuthImage
                 src={imageSrc}
+                fallback={fallbackImage}
                 alt={`${fetch.user?.name || "User"}'s Profile`}
                 className="object-cover scale-110"
               />

@@ -19,7 +19,8 @@ import { Link } from "react-router-dom";
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
-  const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(5);
+  const done = () => setPending((p) => Math.max(0, p - 1));
   //Calendar
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -118,6 +119,8 @@ export default function DashboardOutlet() {
         });
       } catch (error) {
         console.error("Something went wrong", error);
+      } finally {
+        done();
       }
     };
     fetchData();
@@ -155,6 +158,8 @@ export default function DashboardOutlet() {
         setFlagged(response.data);
       } catch (error) {
         console.error("Failed to load flagged attendance:", error);
+      } finally {
+        done();
       }
     };
     fetchFlagged();
@@ -195,6 +200,8 @@ export default function DashboardOutlet() {
       setLeaves(response.data.filter((leave) => leave.status === "Pending"));
     } catch (error) {
       console.error("Failed to load pending leave:", error);
+    } finally {
+      done();
     }
   };
   useEffect(() => {
@@ -253,7 +260,7 @@ export default function DashboardOutlet() {
       } catch (error) {
         console.error("Failed to load weekly attendance:", error);
       } finally {
-        setLoading(false);
+        done();
       }
     };
     fetchWeekly();
@@ -277,6 +284,8 @@ export default function DashboardOutlet() {
         setEmployees(todaysRecords);
       } catch (error) {
         console.error("Failed to load employee list:", error);
+      } finally {
+        done();
       }
     };
     fetchEmployees();
@@ -328,7 +337,7 @@ export default function DashboardOutlet() {
 
   return (
     <div>
-      {loading && <Loading />}
+      {pending > 0 && <Loading />}
       <div className="flex flex-col gap-4">
         <div className=" flex justify-end p-4 md:p-[16px_20px]  bg-white border border-[#b2b2b2] rounded-[14px]">
           <h2 className="text-[#6675EC] font-bold justify-end">Dashboard</h2>
@@ -468,7 +477,7 @@ export default function DashboardOutlet() {
 
           <div className="flex-2">
             <Containers
-              name="Pending Leave"
+              name="Pending"
               currentPage={currentPageLeave}
               setCurrentPage={setCurrentPageLeave}
               searchShow={false}

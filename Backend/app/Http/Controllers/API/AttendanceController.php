@@ -11,7 +11,7 @@ use App\Models\LeaveApplication;
 use App\Models\Holiday;
 use App\Models\SystemSetting;
 use App\Http\Controllers\Feature\AttendanceService;
-
+use App\Service\AbsenceService;
 use Carbon\Carbon;
 use Laravel\Sanctum\PersonalAccessToken; 
 class AttendanceController extends Controller
@@ -42,22 +42,6 @@ class AttendanceController extends Controller
         ];
     });
         return response()->json($formatted);
-    }
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        
-        $request->validate([
-
-            'location_name' => 'required',
-        ]);
-        //service of Status::
-
-        // $attendance = $this->attendance->createAttendance($request);
-
-        return response()->json($attendance, 201);
     }
 
     /**
@@ -173,8 +157,13 @@ class AttendanceController extends Controller
         //find the attendance
         $attendance = Attendance::where("user_id", $userId)->latest()->first();
         
-        if (!$attendance) {
-            return response()->json(['message' => 'Attendance record not found'], 404);
+        $date = now('Asia/Manila')->toDateString();
+
+        if (!$attendance || $attendance->date != $date) {
+            return response()->json(['message' => 'You have not clocked in today'], 404);
+        }
+        if ($attendance->time_out !== null) {
+            return response()->json(['message' => 'You have already clocked out'], 409);
         }
 
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
@@ -197,16 +186,21 @@ class AttendanceController extends Controller
     public function createAttendance(Request $request){
 
         $userId = $this->getUserIdFromToken();
-
+        
         //find The user
         $userCallTime = Users::where("id", $userId)->first()->call_time;
 
         //Id of the Location name
         $locationId = Location::where("name", $request->location_name)->first();
 
-
+        $date = now('Asia/Manila')->toDateString();
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
         $status = $this->isLate($userCallTime, $time);
+        
+        if (Attendance::where('user_id', $userId)->whereDate('date', $date)->exists()) {
+            return response()->json(['message' => 'You have already clocked in today'], 409);
+        }
+
         $attendance = Attendance::create([
             'user_id' => $userId,
             'location_id' => $locationId->id,
@@ -244,13 +238,11 @@ class AttendanceController extends Controller
             }
             elseif($value->status == "Late"){
                 $late = $late + 1;
+            } elseif($value->status == "Absent"){
+                $absent = $absent + 1;
             }
 
         }
-
-        $totalAttedance = $onTime + $late;
-        $isHoliday = Holiday::where('date', today())->exists();
-        $absent = $isHoliday ? 0 : ($employeesCount - $totalAttedance);
 
         return response()->json([
             'employees' => $employeesCount,
@@ -296,23 +288,21 @@ class AttendanceController extends Controller
 
             $onTime = 0;
             $late = 0;
+            $absent = 0;
             foreach ($attendanceForDay as $value) {
                 if ($value->status == "On-Time") $onTime++;
                 elseif ($value->status == "Late") $late++;
+                elseif ($value->status == "Absent") $absent++;
             }
-
-            $leave = LeaveApplication::where("status", "approved")
-                ->whereDate("start_date", "<=", $date)
-                ->whereDate("end_date", ">=", $date)
+            $leave = LeaveApplication::where('status', 'Approved')
+                ->whereDate('start_date', '<=', $date)
+                ->whereDate('end_date', '>=', $date)
                 ->count();
-
-            $isHoliday = Holiday::where('date', $date)->exists();
-
             $result[] = [
                 'day' => $dayName,
                 'ontime' => $onTime,
                 'late' => $late,
-                'absent' => $isHoliday ? 0 : max($employeesCount - ($onTime + $late), 0),
+                'absent' => $absent,
                 'leave' => $leave,
             ];
         }
@@ -335,20 +325,13 @@ class AttendanceController extends Controller
             'employees' => $counts,
         ]);
     }
-    public function getNullAttendance(){
-        $userId = $this->getUserIdFromToken();
-        $attendance = Attendance::where('user_id', $userId);
-
-        if(!$atttendance->time_out == null){
-            return ;
-        }
-
-        $timeNow = now()->format('H:i:s');
-        $time = $timeNow - $attendance->time_in;
-        return response()->json([
-            'time_in' => $attendance->time_in,
-            'time' => $time
-        ]);
-
+    public function syncAbsences()
+    {
+        $abs = new AbsenceService();
+        $created = $abs->sync(
+            now('Asia/Manila')->startOfMonth(),
+            now('Asia/Manila')->subDay()->startOfDay()
+        );
+        return response()->json(['message' => 'Absences synced', 'created' => $created]);
     }
 }

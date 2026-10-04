@@ -15,11 +15,15 @@ class EnsureUserHasRole
      * 
      */
     public function handle(Request $request, Closure $next, string $role): Response
-    {
-        if (! $request->user() || $request->user()->department !== $role) {
-            abort(403, 'Unauthorized action.');
-        }
-        
-        return $next($request);
+{
+    $user = $request->user();
+    $allowed = $user && ($role === 'Administrative'
+        ? $user->isHR()
+        : $user->department === $role);
+
+    if (! $allowed) {
+        abort(403, 'Unauthorized action.');
     }
+    return $next($request);
+}
 }

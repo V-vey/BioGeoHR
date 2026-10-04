@@ -12,6 +12,7 @@ use App\Models\Holiday;
 use App\Models\Attendance;
 use App\Models\LeaveApplication;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
@@ -126,10 +127,22 @@ class UsersController extends Controller
         if (!$users) {
             return response()->json(['message' => 'User not found'], 404);
         }
-        else{
-            $users->update($request->all());
-            return response()->json($users);
+
+        $request->validate([
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->except(['image', '_method']);
+
+        if ($request->hasFile('image')) {
+            if ($users->image_path) {
+                \Storage::disk('public')->delete($users->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('avatars', 'public');
         }
+
+        $users->update($data);
+        return response()->json($users);
     }
 
     /**
@@ -231,5 +244,13 @@ class UsersController extends Controller
         */
 
         return response()->json($users);
+    }
+    public function avatar(string $filename)
+    {
+        $path = 'avatars/' . basename($filename);
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+        return Storage::disk('public')->response($path);
     }
 }
