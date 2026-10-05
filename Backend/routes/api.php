@@ -71,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('salary', SalaryController::class);
         Route::apiResource('leave', LeaveApplicationController::class);
         Route::apiResource('balance', LeaveBalanceController::class);
-        Route::apiResource('attendance', AttendanceController::class)->except(['store']);
+        Route::apiResource('attendance', AttendanceController::class);
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);
 

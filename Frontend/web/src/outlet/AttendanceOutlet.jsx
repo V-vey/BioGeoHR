@@ -11,38 +11,39 @@ import { format, parse } from "date-fns";
 import Loading from "@/components/Loading";
 
 import DownloadReportModal from "@/Modal/DownloadReportModal.jsx";
+import CreateAttendanceModal from "@/Modal/CreateAttendanceModal.jsx";
+
 const formatTime = (timeStr) => {
   if (!timeStr) return "--:--";
   const parsed = parse(timeStr, "HH:mm:ss", new Date());
   return format(parsed, "h:mma"); // "11:00PM"
 };
-
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDownload, setShowDownload] = useState(false);
+  const [showCreateAttendance, setShowCreateAttendnace] = useState(false);
+  const token = localStorage.getItem("token");
+
+  const fetchAttendance = async () => {
+    try {
+      const response = await axios.get(url + "/attendance", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      setAttendance(response.data);
+    } catch (error) {
+      console.error("Failed to Load Locations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    const fetchAttendance = async () => {
-      try {
-        const response = await axios.get(url + "/attendance", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-        setAttendance(response.data);
-      } catch (error) {
-        console.error("Failed to Load Locations:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAttendance();
   }, []);
 
@@ -106,11 +107,20 @@ export default function Attendance() {
             type="button"
             className="flex flex-row gap-2 bg-[#6675EC] items-center
           justify-center rounded-[10px] px-4 py-1 text-white border
-          border-[#b2b2b2] hover:bg-[#2AAF56]"
+          border-[#b2b2b2] hover:bg-[#6675EC]/90"
             onClick={() => setShowDownload(true)}
           >
             <Download className="w-4 h-4" />
-            Download Report
+            Download
+          </button>
+          <button
+            type="button"
+            className="flex flex-row gap-2 bg-[#2AAF56] items-center
+          justify-center rounded-[10px] px-4 py-1 text-white border
+          border-[#b2b2b2] hover:bg-[#2AAF56]/90"
+            onClick={() => setShowCreateAttendnace(true)}
+          >
+            Create Attendance
           </button>
         </div>
       </div>
@@ -118,6 +128,12 @@ export default function Attendance() {
         <DownloadReportModal
           attendance={attendance}
           onClose={() => setShowDownload(false)}
+        />
+      )}
+      {showCreateAttendance && (
+        <CreateAttendanceModal
+          onSaved={fetchAttendance}
+          onClose={() => setShowCreateAttendnace(false)}
         />
       )}
     </>

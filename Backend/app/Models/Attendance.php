@@ -22,7 +22,8 @@ class Attendance extends Model
         'status',
         'date',
         'time_in',
-        'time_out'
+        'time_out',
+        'remarks'
     ];
 
     public function user()

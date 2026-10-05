@@ -23,7 +23,7 @@ export default function ListOfEmployee({ emp }) {
               ? "bg-[#2AAF56]"
               : emp.status === "Late"
                 ? "bg-[#EACA3A]"
-                : "bg-gray-400"
+                : "bg-[#EC6668]"
           }`}
         />
         <p className="m-0">{emp.status}</p>

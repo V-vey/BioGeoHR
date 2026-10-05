@@ -43,7 +43,37 @@ class AttendanceController extends Controller
     });
         return response()->json($formatted);
     }
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'user_id'     => 'required|exists:users,id',
+            'date'        => 'required|date|before_or_equal:today',
+            'status'      => 'required|in:On-Time,Late,Absent',
+            'location_id' => 'required_unless:status,Absent|nullable|exists:locations,id',
+            'time_in'     => 'required_unless:status,Absent|nullable|date_format:H:i',
+            'time_out'    => 'nullable|date_format:H:i|after:time_in',
+            'remarks'     => 'required|string|max:255',
+        ]);
 
+        if (Carbon::parse($data['date'])->isSunday()) {
+            return response()->json(['message' => 'Sunday is a non-working day.'], 422);
+        }
+
+        $absent = $data['status'] === 'Absent';
+
+        $attendance = Attendance::updateOrCreate(
+            ['user_id' => $data['user_id'], 'date' => $data['date']],
+            [
+                'status'      => $data['status'],
+                'location_id' => $absent ? null : $data['location_id'],
+                'time_in'     => $absent ? null : $data['time_in'],
+                'time_out'    => $absent ? null : ($data['time_out'] ?? null),
+                'remarks'     => $data['remarks'],
+            ]
+        );
+
+        return response()->json($attendance, $attendance->wasRecentlyCreated ? 201 : 200);
+    }
     /**
      * Display the specified resource.
      */
