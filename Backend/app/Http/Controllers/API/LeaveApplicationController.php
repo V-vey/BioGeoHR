@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LeaveApplication;
 use App\Models\LeaveBalance;
+use App\Models\AuditLog;
 use Carbon\Carbon;
 
 class LeaveApplicationController extends Controller
@@ -71,11 +72,15 @@ class LeaveApplicationController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $request->validate(['remarks' => 'nullable|string|max:500']);
+
         $leaveApplication = LeaveApplication::find($id);
 
         if (!$leaveApplication) {
             return response()->json(['message' => 'Leave application not found'], 404);
         }
+
+        $remarksNote = $request->remarks ? ". Remarks: {$request->remarks}" : '';
 
         $leaveBalData = LeaveBalance::where('user_id', $leaveApplication->user_id)->first();
         $leaveBal = $this->caseLeaveBal($leaveApplication->leave_type, $leaveBalData);
@@ -89,10 +94,14 @@ class LeaveApplicationController extends Controller
             }
             $leaveBalData->decrement($leaveBal['type'], $days);
             $leaveApplication->status = $request->status;
+            $leaveApplication->remarks = $request->remarks;
             $leaveApplication->save();
+            AuditLog::record('admin', 'leave_approved', 'success', "Leave #{$leaveApplication->id} (user {$leaveApplication->user_id}), {$days} day(s){$remarksNote}");
             return response()->json(['message' => 'Leave Application Have Been Approved']);
         } elseif($request->status == "Rejected"){
             $leaveApplication->status = "Rejected";
+            $leaveApplication->remarks = $request->remarks;
+            AuditLog::record('admin', 'leave_rejected', 'success', "Leave #{$leaveApplication->id} (user {$leaveApplication->user_id}){$remarksNote}");
             $leaveApplication->save();
             return response()->json(['message' => 'Leave Application Have Been Rejected']);
         }

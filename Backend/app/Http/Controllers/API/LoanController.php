@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Loan;
 use App\Models\Users;
+use App\Models\AuditLog;
 
 class LoanController extends Controller
 {
@@ -42,7 +43,7 @@ class LoanController extends Controller
             'start_date' => $request->start_date,
             'status' => 'Active',
         ]);
-
+        AuditLog::record('admin', 'loan_created', 'success', "User {$loan->user_id}");
         return response()->json($loan, 201);
     }
 

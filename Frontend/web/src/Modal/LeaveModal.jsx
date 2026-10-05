@@ -13,6 +13,7 @@ function Balance(type, item) {
 
 export default function LeaveRequestModal({ leave, onClose, fetch }) {
   const [errorMsg, setErrorMsg] = useState("");
+  const [remarks, setRemarks] = useState(leave.remarks ?? "");
   let handleDecision;
   let buttonRes = true;
   if (leave.status == "Approved" || leave.status == "Rejected") {
@@ -24,7 +25,7 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
         const token = localStorage.getItem("token");
         await axios.put(
           `${url}/leave/${id}`,
-          { status },
+          { status, remarks },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -57,7 +58,7 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] min-h-[80%] max-h-[80%] ">
+      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] min-h-[80%]  ">
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
             onClick={onClose}
@@ -115,7 +116,17 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
             {Balance("Maternity Leave: ", leave.user?.leave_balance?.maternity)}
           </div>
         </div>
-
+        {/* editable while pending; read-only once HR has decided */}
+        {(buttonRes || leave.remarks) && (
+          <textarea
+            className="w-full bg-white border border-[#b2b2b2] rounded-[10px] min-h-15 px-4 py-2 text-center [&::placeholder]:text-center"
+            placeholder="Enter Remark (optional)"
+            maxLength={500}
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            readOnly={!buttonRes}
+          />
+        )}
         {buttonRes && (
           <div className="flex flex-row justify-end gap-2 text-[19px] text-white font-bold">
             <button

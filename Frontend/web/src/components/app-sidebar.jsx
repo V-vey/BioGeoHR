@@ -1,4 +1,10 @@
-import { Calendar, Users, LayoutDashboard, Wallet } from "lucide-react";
+import {
+  Calendar,
+  Users,
+  LayoutDashboard,
+  Wallet,
+  ScrollText,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +45,7 @@ const items = [
       { title: "Location", url: "/attendance/location" },
     ],
   },
+  { title: "Audit Log", url: "/audit-log", icon: ScrollText },
   {
     title: "Payroll",
     url: "/payroll",

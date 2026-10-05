@@ -11,6 +11,7 @@ use App\Models\Salary;
 use App\Models\Holiday;
 use App\Models\Attendance;
 use App\Models\LeaveApplication;
+use App\Models\AuditLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -99,7 +100,7 @@ class UsersController extends Controller
         ]);
        
 
-        
+        AuditLog::record('admin', 'employee_created', 'success', $users->name);
         return response()->json($users, 201);
     }
 
@@ -140,7 +141,8 @@ class UsersController extends Controller
             }
             $data['image_path'] = $request->file('image')->store('avatars', 'public');
         }
-
+        
+        AuditLog::record('admin', 'profile_updated', 'success', "{$users->name}: changed " . implode(', ', array_keys($data)));
         $users->update($data);
         return response()->json($users);
     }
@@ -155,6 +157,7 @@ class UsersController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
         else {
+            AuditLog::record('admin', 'employee_deleted', 'success', $users->name);
             $users->delete();
             return response()->json(['message' => 'User deleted successfully']);
         }
@@ -252,5 +255,25 @@ class UsersController extends Controller
             abort(404);
         }
         return Storage::disk('public')->response($path);
+    }
+    public function setActive(Request $request, string $id)
+    {
+        $request->validate(['is_active' => 'required|boolean']);
+        $user = Users::find($id);
+        if (!$user) return response()->json(['message' => 'User not found'], 404);
+
+        if ($user->id === auth()->id()) {
+            return response()->json(['message' => 'You cannot deactivate your own account.'], 422);
+        }
+
+        $user->is_active = $request->boolean('is_active');
+        $user->save();
+
+        if (!$user->is_active) {
+            $user->tokens()->delete();   // log them out of the phone right away
+        }
+
+        AuditLog::record('admin', $user->is_active ? 'employee_reactivated' : 'employee_deactivated', 'success', $user->name);
+        return response()->json($user);
     }
 }

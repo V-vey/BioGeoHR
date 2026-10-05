@@ -14,12 +14,11 @@ import Attendance from "@/Module/AttendanceMain";
 import Location from "@/Module/LocationMain";
 import FlaggedAttendance from "@/Module/FlaggedAttendance";
 import Payroll from "@/Module/PayrollMain";
+import AuditLogMain from "@/Module/AuditLogMain";
 
 import DashboardOutlet from "@/Outlet/DashboardOutlet";
-
 import AllEmployeeOutlet from "@/outlet/AllEmployeeOutlet";
 import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
-
 import NewEmployeeOutlet from "@/outlet/NewEmployeeOutlet";
 import LocationOutlet from "@/Outlet/LocationOutlet";
 import FlaggedAttendanceOutlet from "@/outlet/FlaggedAttendanceOutlet";
@@ -30,7 +29,7 @@ import PayrollSettingsOutlet from "@/outlet/PayrollSettingsOutlet";
 import LoansOutlet from "@/outlet/LoansOutlet";
 import LeaveOutlet from "@/outlet/LeaveOutlet";
 import HolidaysOutlet from "@/outlet/HolidaysOutlet";
-
+import AuditLogOutlet from "@/outlet/AuditLogOutlet";
 export const router = createBrowserRouter([
   {
     // path to where it should go
@@ -166,7 +165,12 @@ export const router = createBrowserRouter([
       },
     ],
   },
-
+  {
+    path: "audit-log",
+    element: <AuditLogMain />,
+    errorElement: <ErrorPage />,
+    children: [{ index: true, element: <AuditLogOutlet /> }],
+  },
   {
     index: true,
     element: <Navigate to={"login"} replace />,

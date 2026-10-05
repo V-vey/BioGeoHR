@@ -196,10 +196,29 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
 
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
-  const imageSrc = empData.image_path
-    ? `${url}/${empData.image_path}`
-    : null;
-
+  const imageSrc = empData.image_path ? `${url}/${empData.image_path}` : null;
+  const handleRemove = async () => {
+    const action = emp.is_active ? "Deactivate" : "Reactivate";
+    if (!window.confirm(`${action} ${emp.name}?`)) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        url + `/users/${emp.id}/active`, // was /user/
+        { is_active: !emp.is_active },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
+      );
+      onSaved();
+      onClose();
+    } catch (err) {
+      console.error("Failed to update employee status:", err);
+      setError(true);
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
       <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-full">
@@ -441,17 +460,18 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                 </div>
               </div>
               <div className="flex flex-row gap-2 justify-end">
-                {/* <button
-                  // onClick={}
+                <button
+                  onClick={handleRemove}
                   type="button"
-                  className="px-4 py-2 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white py-0.5"
+                  className="px-4 py-2 bg-[#EC6668] hover:bg-[#EC6668]/80 rounded-full text-white py-0.5"
                 >
-                  Reset Password
-                </button> */}
+                  {emp.is_active ? "Deactivate" : "Reactivate"}
+                </button>
+
                 <button
                   onClick={onView}
                   type="button"
-                  className="w-20 bg-[#2AAF56] hover:bg-[#6675EC] rounded-full text-white py-0.5"
+                  className="w-20 bg-[#2AAF56] hover:bg-[#2AAF56]/80 rounded-full text-white py-0.5"
                 >
                   Edit
                 </button>

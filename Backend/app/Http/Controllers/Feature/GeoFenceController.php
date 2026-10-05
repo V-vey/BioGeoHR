@@ -10,6 +10,7 @@ use App\Models\UserLocation;
 use App\Models\Users;
 use App\Models\Attendance;
 use App\Models\FlaggedAttendance;
+use App\Models\AuditLog;
 
 class GeoFenceController extends Controller
 {
@@ -37,8 +38,10 @@ class GeoFenceController extends Controller
 
         //Check if Its on Range
         if($haversineCal <= $location->radius){
+            AuditLog::record('check_in', 'geofence_check', 'success', "In range at {$location->name}: {$haversineCal} m");
             return response()-> json(['message' => "In Range $haversineCal"], 200);
         } else {
+            AuditLog::record('check_in', 'geofence_check', 'failed', "Out of range at {$location->name}: {$haversineCal} m");
             return response()-> json(['message' => "Out Of Range $haversineCal"], 300);
         }
         
@@ -82,10 +85,7 @@ class GeoFenceController extends Controller
                     'out_at' => now(),
                 ]);
 
-                $this->logAudit(
-                    'out_of_boundary',
-                    "Flagged outside geofence at {$location->name}, distance: {$distance}m"
-                );
+                AuditLog::record('check_in', 'out_of_boundary', 'failed', "Flagged outside geofence at {$location->name}, distance: {$distance}m");
             }
 
             return response()->json(['message' => 'Out of boundary flagged', 'distance' => $distance]);

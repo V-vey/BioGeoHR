@@ -12,7 +12,7 @@ class AbsenceService
     public function sync(Carbon $from, Carbon $to): int
     {
         $created = 0;
-        $staff = Users::has('salary')->get();
+        $staff = Users::active()->has('salary')->get();
 
         foreach ($from->copy()->daysUntil($to) as $date) {
             if ($date->isSunday() || $date->isSaturday() || Holiday::whereDate('date', $date)->exists()) continue;

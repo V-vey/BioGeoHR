@@ -35,6 +35,7 @@ class Users extends Authenticatable
         'gender',
         'nationality',
         'address',
+        'is_active'
     ];
     
     /**
@@ -46,7 +47,10 @@ class Users extends Authenticatable
         'password',
         'remember_token',
     ];
-
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
     /**
      * Get the attributes that should be cast.
      *
@@ -64,6 +68,7 @@ class Users extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean'
         ];
     }
     public function attendance()

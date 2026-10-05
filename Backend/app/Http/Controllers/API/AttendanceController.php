@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Models\LeaveApplication;
 use App\Models\Holiday;
 use App\Models\SystemSetting;
+use App\Models\AuditLog;
 use App\Http\Controllers\Feature\AttendanceService;
 use App\Service\AbsenceService;
 use Carbon\Carbon;
@@ -71,7 +72,7 @@ class AttendanceController extends Controller
                 'remarks'     => $data['remarks'],
             ]
         );
-
+        AuditLog::record('admin', 'manual_attendance', 'success', "User {$data['user_id']}, {$data['date']}, {$data['status']}. Reason: {$data['remarks']}");
         return response()->json($attendance, $attendance->wasRecentlyCreated ? 201 : 200);
     }
     /**
@@ -228,9 +229,9 @@ class AttendanceController extends Controller
         $status = $this->isLate($userCallTime, $time);
         
         if (Attendance::where('user_id', $userId)->whereDate('date', $date)->exists()) {
+            AuditLog::record('check_in', 'clock_in', 'failed', 'Already clocked in today');
             return response()->json(['message' => 'You have already clocked in today'], 409);
         }
-
         $attendance = Attendance::create([
             'user_id' => $userId,
             'location_id' => $locationId->id,
@@ -238,7 +239,7 @@ class AttendanceController extends Controller
             'date' => now('Asia/Manila')->toDateString(),
             'time_in' => $time,
         ]);
-        
+        AuditLog::record('check_in', 'clock_in', 'success', "{$status} at {$locationId->name}, {$time}");
         return response()->json($attendance, 201);
     }
 
@@ -248,7 +249,7 @@ class AttendanceController extends Controller
             ->get()
             ->unique('user_id');
         
-        $employeesCount = Users::All()->count();
+        $employeesCount = Users::active()->count();
         $onTime = 0;
         $late = 0;
         $absent = 0;
@@ -303,7 +304,7 @@ class AttendanceController extends Controller
     
     public function weeklyAttendance()
     {
-        $employeesCount = Users::all()->count();
+        $employeesCount = Users::active()->count();
         $startOfWeek = Carbon::now()->startOfWeek(Carbon::SUNDAY);
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         $result = [];

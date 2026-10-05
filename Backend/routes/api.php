@@ -16,6 +16,7 @@ use App\Http\Controllers\API\PasswordController;
 use App\Http\Controllers\API\PayslipController;
 use App\Http\Controllers\API\SystemSettingController;
 use App\Http\Controllers\API\HolidayController;
+use App\Http\Controllers\API\AuditLogController;
 //Auth
 use App\Http\Controllers\Auth\LoginAuthController;
 
@@ -67,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //can only access by HR
     Route::middleware('role:Administrative')->group(function () {
         // Route::apiResource('users', UsersController::class);
+        Route::get('audit-logs', [AuditLogController::class, 'index']);
         Route::apiResource('users', UsersController::class);
         Route::apiResource('salary', SalaryController::class);
         Route::apiResource('leave', LeaveApplicationController::class);
@@ -74,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('attendance', AttendanceController::class);
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);
-
+        Route::patch('users/{id}/active', [UsersController::class, 'setActive']);
         Route::get('loans/paidOffThisPeriod', [LoanController::class, 'paidOffThisPeriod']);
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);

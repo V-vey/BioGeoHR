@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Salary;
 use App\Models\Holiday;
 use App\Models\LeaveApplication;
+use App\Models\AuditLog;
 use App\Service\SalaryService;
 
 class SalaryController extends Controller
@@ -65,6 +66,7 @@ class SalaryController extends Controller
         if (!$salary) {
             return response()->json(['message' => 'Salary record not found'], 404);
         }else{
+            AuditLog::record('admin', 'salary_updated', 'success', "Salary record #{$id}");
             $salary->update($request->all());
             return response()->json($salary);
         }

@@ -24,6 +24,7 @@ class LeaveApplication extends Model
         'end_date',
         'reason',
         'status',
+        'remarks',
     ];
 
     public function user()

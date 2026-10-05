@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Payslip;
 use App\Models\Users;
 use App\Models\Loan;
+use App\Models\AuditLog;
 use App\Service\SalaryService;
 use Carbon\Carbon;
 use App\Service\AbsenceService;
@@ -37,7 +38,7 @@ class PayslipController extends Controller
         $salaryService = new SalaryService();
         $created = [];
 
-        $employees = Users::with('salary')->get();
+        $employees = Users::active()->with('salary')->get();
         $periodFrom = Carbon::parse($request->period_start)->startOfDay();
         $periodTo   = Carbon::parse($request->period_end)->startOfDay()
                         ->min(now('Asia/Manila')->subDay()->startOfDay());
@@ -120,6 +121,7 @@ class PayslipController extends Controller
             $created[] = $payslip;
         }
 
+        AuditLog::record('admin', 'payroll_run', 'success', "{$request->period_start} to {$request->period_end}: " . count($created) . " payslips");
         return response()->json([
             'message' => count($created) . ' payslips generated',
             'payslips' => $created,
@@ -148,7 +150,7 @@ class PayslipController extends Controller
         $salaryService = new SalaryService();
         $preview = [];
 
-        $employees = Users::with('salary')->get();
+        $employees = Users::active()->with('salary')->get();
         $periodFrom = Carbon::parse($request->period_start)->startOfDay();
         $periodTo   = Carbon::parse($request->period_end)->startOfDay()
                         ->min(now('Asia/Manila')->subDay()->startOfDay());
