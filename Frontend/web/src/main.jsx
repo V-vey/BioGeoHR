@@ -5,7 +5,21 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 
 import { router } from "./resources/routes.jsx";
+import axios from "axios";
 
+axios.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      window.location.pathname !== "/login"
+    ) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RouterProvider router={router} />

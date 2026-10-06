@@ -7,17 +7,26 @@ import { Download } from "lucide-react";
 import { url } from "@/resources/api";
 import axios from "axios";
 
-import { format, parse } from "date-fns";
+import { format, parse, differenceInMinutes } from "date-fns";
 import Loading from "@/components/Loading";
 
 import DownloadReportModal from "@/Modal/DownloadReportModal.jsx";
 import CreateAttendanceModal from "@/Modal/CreateAttendanceModal.jsx";
-
 const formatTime = (timeStr) => {
   if (!timeStr) return "--:--";
   const parsed = parse(timeStr, "HH:mm:ss", new Date());
   return format(parsed, "h:mma"); // "11:00PM"
 };
+
+const formatHours = (timeIn, timeOut) => {
+  if (!timeIn || !timeOut) return "--"; // not clocked out yet, or absent
+  const start = parse(timeIn, "HH:mm:ss", new Date());
+  const end = parse(timeOut, "HH:mm:ss", new Date());
+  const minutes = differenceInMinutes(end, start);
+  if (minutes < 0) return "--"; // clock-out earlier than clock-in
+  return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+};
+
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -68,6 +77,7 @@ export default function Attendance() {
     startIndex,
     startIndex + itemsPerPage,
   );
+
   return (
     <>
       {loading && <Loading />}
@@ -99,6 +109,7 @@ export default function Attendance() {
               status={att.status}
               clockIn={formatTime(att.clockIn)}
               clockOut={formatTime(att.clockOut)}
+              hours={formatHours(att.clockIn, att.clockOut)}
             />
           ))}
         </Containers>

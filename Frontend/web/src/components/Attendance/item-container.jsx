@@ -1,3 +1,5 @@
+import { format, parse, differenceInMinutes } from "date-fns";
+
 export default function ItemContainer({
   date,
   location,
@@ -7,6 +9,7 @@ export default function ItemContainer({
   status,
   clockIn,
   clockOut,
+  hours,
 }) {
   let statusColor;
   if (status == "On-Time") {
@@ -49,14 +52,22 @@ export default function ItemContainer({
 
         {/* line */}
         <div className="h-[1px] w-full bg-[#b8b8b8] my-0.5" />
-        <div className="flex justify-between">
-          <div className="flex gap-1 ">
-            <p className="font-semibold text-[16px]">Clock-In:</p>
-            <p className="text-[16px]">{clockIn}</p>
+        <div className="flex flex-row w-full flex-1 justify-center items-center">
+          <div className="flex-1 ">
+            <p className="m-0 leading-none  font-semibold text-[16px]">
+              Clock-In
+            </p>
+            <p className="m-0 leading-none  text-[16px]">{clockIn}</p>
           </div>
-          <div className="flex gap-1">
-            <p className="font-semibold text-[16px]">Clock-Out:</p>
-            <p className="text-[16px]">{clockOut}</p>
+          <div className="flex-1">
+            <p className="m-0 leading-none font-semibold text-[16px]">
+              Clock-Out
+            </p>
+            <p className="m-0 leading-none  text-[16px]">{clockOut}</p>
+          </div>
+          <div className="flex-1">
+            <p className="m-0 leading-none font-semibold text-[16px]">Hours</p>
+            <p className="m-0 leading-none  text-[16px]">{hours}</p>
           </div>
         </div>
       </div>

@@ -30,6 +30,7 @@ import LoansOutlet from "@/outlet/LoansOutlet";
 import LeaveOutlet from "@/outlet/LeaveOutlet";
 import HolidaysOutlet from "@/outlet/HolidaysOutlet";
 import AuditLogOutlet from "@/outlet/AuditLogOutlet";
+import PayrollReportOutlet from "@/outlet/PayrollReportOutlet";
 export const router = createBrowserRouter([
   {
     // path to where it should go
@@ -148,7 +149,11 @@ export const router = createBrowserRouter([
         element: <PayslipsOutlet />,
         errorElement: <ErrorPage />,
       },
-
+      {
+        path: "payroll-report",
+        element: <PayrollReportOutlet />,
+        errorElement: <ErrorPage />,
+      },
       // {
       //   path: "settings",
       //   element: <PayrollSettingsOutlet />,
