@@ -30,7 +30,7 @@ class LeaveApplicationController extends Controller
         $request->validate([
             'leave_type' => 'required|in:Sick Leave,Vacation Leave,Emergency Leave,Birthday Leave,Solo Parent Leave,Paternity Leave,Maternity Leave',
             'start_date' => 'required|date',
-            'end_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required',
         ]);
         $leaveBalData = LeaveBalance::where('user_id', $userId)->first();
@@ -181,6 +181,14 @@ class LeaveApplicationController extends Controller
             default:
                 break;
         }
+    }
+    public function myLeave()
+    {
+        $leaves = LeaveApplication::where('user_id', $this->getUserIdFromToken())
+            ->latest()
+            ->get(['id', 'leave_type', 'start_date', 'end_date', 'reason', 'status', 'remarks', 'created_at']);
+
+        return response()->json($leaves);
     }
     
 }

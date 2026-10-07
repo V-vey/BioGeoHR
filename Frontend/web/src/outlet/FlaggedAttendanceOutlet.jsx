@@ -67,6 +67,7 @@ export default function FlaggedAttendanceOutlet() {
         arrowSize={32}
         searchShow={true}
         totalPages={totalPages}
+        total={filteredFlagged.length}
         search={search}
         setSearch={handleSearch}
       >

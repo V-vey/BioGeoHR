@@ -20,7 +20,7 @@ class Url {
 
   //api for leavebalance
   String getLeaveBalance() {
-    return "$api/balance";
+    return "$api/myLeaveBalance";
   }
 
   //api for geofence calculation

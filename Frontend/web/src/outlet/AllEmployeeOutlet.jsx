@@ -34,8 +34,48 @@ export default function AllEmployee({}) {
     setCurrentPage(1);
   };
 
+  // what the filter panel last applied
+  const [filters, setFilters] = useState({
+    department: "All",
+    contract: "All",
+  });
+  const handleFilterApply = (applied) => {
+    setFilters(applied);
+    setCurrentPage(1);
+  };
+
+  const departments = [
+    ...new Set(employees.map((emp) => emp.department).filter(Boolean)),
+  ].sort();
+  const contractTypes = [
+    ...new Set(employees.map((emp) => emp.contract_type).filter(Boolean)),
+  ].sort();
+
+  const filterConfig = [
+    {
+      key: "department",
+      label: "Department",
+      type: "radio",
+      options: ["All", ...departments],
+    },
+    {
+      key: "contract",
+      label: "Contract",
+      type: "radio",
+      options: ["All", ...contractTypes],
+    },
+  ];
+
   const filteredEmployees = employees
-    .filter((emp) => emp.name.toLowerCase().includes(search.toLowerCase()))
+    .filter((emp) => {
+      if (!(emp.name ?? "").toLowerCase().includes(search.toLowerCase()))
+        return false;
+      if (filters.department !== "All" && emp.department !== filters.department)
+        return false;
+      if (filters.contract !== "All" && emp.contract_type !== filters.contract)
+        return false;
+      return true;
+    })
     .reverse();
 
   const itemsPerPage = 12;
@@ -62,15 +102,12 @@ export default function AllEmployee({}) {
         setCurrentPage={setCurrentPage}
         arrowSize={32}
         searchShow={true}
-        filterConfig={
-          [
-            /* ...unchanged... */
-          ]
-        }
+        filterConfig={filterConfig}
         totalPages={totalPages}
+        total={filteredEmployees.length}
         search={search}
         setSearch={handleSearch}
-        onFilterApply={(filters) => console.log(filters)}
+        onFilterApply={handleFilterApply}
       >
         {pageItems.map((emp, i) => (
           <Item key={i} onSaved={fetchEmployees} item={emp} />

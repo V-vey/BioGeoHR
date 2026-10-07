@@ -87,4 +87,17 @@ class LeaveBalanceController extends Controller
             return response()->json(['message' => 'Leave balance record deleted successfully']);
         }
     }
+
+    public function mine()
+    {
+        $balance = LeaveBalance::where('user_id', $this->getUserIdFromToken())->first();
+
+        if (!$balance) {
+            return response()->json(['message' => 'No leave balance found'], 404);
+        }
+
+        return response()->json($balance->only([
+            'sick', 'vacation', 'emergency', 'birthday', 'solo_parent', 'paternity', 'maternity',
+        ]));
+    }
 }

@@ -109,6 +109,7 @@ export default function Location() {
           setCurrentPage={setCurrentPage}
           arrowSize={32}
           totalPages={totalPages}
+          total={filteredLocations.length}
           searchShow={true}
           search={search}
           setSearch={handleSearch}

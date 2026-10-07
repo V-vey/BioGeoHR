@@ -102,6 +102,10 @@ export default function DashboardOutlet() {
         });
         console.log(response.data);
 
+        // percent with 2 decimals; 0.00 when there are no employees (avoids NaN)
+        const pct = (count, total) =>
+          total ? ((count / total) * 100).toFixed(2) : "0.00";
+
         setMetrics({
           countEmployees: response.data.employees,
           countAttendance: response.data.on_time,
@@ -109,13 +113,13 @@ export default function DashboardOutlet() {
           countAbsent: response.data.absent,
           countLeave: response.data.leave,
 
-          percentageAttendance:
-            (response.data.on_time / response.data.employees) * 100,
-          percentageLate: (response.data.late / response.data.employees) * 100,
-          percentageAbsent:
-            (response.data.absent / response.data.employees) * 100,
-          percentageLeave:
-            (response.data.leave / response.data.employees) * 100,
+          percentageAttendance: pct(
+            response.data.on_time,
+            response.data.employees,
+          ),
+          percentageLate: pct(response.data.late, response.data.employees),
+          percentageAbsent: pct(response.data.absent, response.data.employees),
+          percentageLeave: pct(response.data.leave, response.data.employees),
         });
       } catch (error) {
         console.error("Something went wrong", error);
@@ -326,7 +330,7 @@ export default function DashboardOutlet() {
           className="border-[#8E8E8E] border-1 rounded-2xl w-100 px-3"
         />
         <Link
-          to="/attendance/leave-request"
+          to="/employee"
           className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
         >
           View All
@@ -435,6 +439,7 @@ export default function DashboardOutlet() {
               minH={400}
               maxH={400}
               totalPages={totalPages}
+              total={filteredFlagged.length}
             >
               {pageItemsFlagged.map((flag, i) => (
                 <FlaggedSummary key={i} flagged={flag} />
@@ -455,6 +460,7 @@ export default function DashboardOutlet() {
               headerDefault={false}
               header={employeeHeader}
               totalPages={totalPagesEmp}
+              total={filteredEmp.length}
               spacing={false}
             >
               <div className="w-full justify-start">
@@ -480,6 +486,7 @@ export default function DashboardOutlet() {
               name="Pending"
               currentPage={currentPageLeave}
               setCurrentPage={setCurrentPageLeave}
+              total={filteredLeave.length}
               searchShow={false}
               arrowSize={32}
               minH={350}

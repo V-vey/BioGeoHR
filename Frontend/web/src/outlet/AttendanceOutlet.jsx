@@ -62,8 +62,50 @@ export default function Attendance() {
     setCurrentPage(1);
   };
 
+  // what the filter panel last applied
+  const [filters, setFilters] = useState({
+    status: "All",
+    department: "All",
+    dates: { from: "", to: "" },
+  });
+  const handleFilterApply = (applied) => {
+    setFilters(applied);
+    setCurrentPage(1);
+  };
+
+  const departments = [
+    ...new Set(attendance.map((att) => att.department).filter(Boolean)),
+  ].sort();
+
+  const filterConfig = [
+    {
+      key: "status",
+      label: "Status",
+      type: "radio",
+      options: ["All", "On-Time", "Late", "Absent"],
+    },
+    {
+      key: "department",
+      label: "Department",
+      type: "radio",
+      options: ["All", ...departments],
+    },
+    { key: "dates", label: "Date", type: "dateRange" },
+  ];
+
   const filteredAttendance = attendance
-    .filter((att) => att.name.toLowerCase().includes(search.toLowerCase()))
+    .filter((att) => {
+      const day = String(att.date).slice(0, 10);
+      if (!(att.name ?? "").toLowerCase().includes(search.toLowerCase()))
+        return false;
+      if (filters.status !== "All" && att.status !== filters.status)
+        return false;
+      if (filters.department !== "All" && att.department !== filters.department)
+        return false;
+      if (filters.dates.from && day < filters.dates.from) return false;
+      if (filters.dates.to && day > filters.dates.to) return false;
+      return true;
+    })
     .reverse();
 
   const itemsPerPage = 16;
@@ -92,9 +134,10 @@ export default function Attendance() {
           setCurrentPage={setCurrentPage}
           arrowSize={32}
           searchShow={true}
-          filterConfig={[]}
-          // onFilterApply={(filters) => console.log(filters)}
+          filterConfig={filterConfig}
+          onFilterApply={handleFilterApply}
           totalPages={totalPages}
+          total={filteredAttendance.length}
           search={search}
           setSearch={handleSearch}
         >

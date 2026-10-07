@@ -52,6 +52,7 @@ const items = [
     icon: Wallet,
     children: [
       { title: "Overview", url: "/payroll" },
+      { title: "Payroll Report", url: "/payroll/payroll-report" },
       { title: "Loans", url: "/payroll/loans" },
     ],
   },

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_biogeohr/Screens/Pages/Homepage/Container/RecentLeave/recent_leave.dart';
 
 import 'Container/ClockIn/clock_in.dart';
-import 'Container/LeaveBalance/leave_balance.dart';
+import 'Container/LeaveBalance/leave_balance_main.dart';
 import 'Container/TotalLate/total_late.dart';
 import 'Container/Paycheck/paycheck.dart';
 import 'Container/RecentAttendance/recent_attendance.dart';
@@ -24,20 +24,25 @@ class HomePageMain extends StatelessWidget {
           children: [
             Welcome(),
             ClockIn(),
-            Paycheck(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 15,
               children: [
-                Container(
-                  margin: EdgeInsets.only(right: 7.5),
-                  child: TotalLate(),
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(right: 7.5),
+                    child: TotalLate(),
+                  ),
                 ),
-                Container(
-                  margin: EdgeInsets.only(left: 7.5),
-                  child: LeaveBalance(),
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 7.5),
+                    child: Paycheck(),
+                  ),
                 ),
               ],
             ),
+            HomeLeaveBalance(),
             RecentAttendancePage(),
             RecentLeave(),
           ],

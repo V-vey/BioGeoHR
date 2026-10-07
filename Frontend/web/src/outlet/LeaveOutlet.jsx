@@ -38,10 +38,54 @@ export default function Leave() {
     setCurrentPage(1);
   };
 
+  // what the filter panel last applied
+  const [filters, setFilters] = useState({
+    status: "All",
+    type: "All",
+    dates: { from: "", to: "" },
+  });
+  const handleFilterApply = (applied) => {
+    setFilters(applied);
+    setCurrentPage(1);
+  };
+
+  const leaveTypes = [
+    ...new Set(leaveReq.map((leave) => leave.leave_type).filter(Boolean)),
+  ].sort();
+
+  const filterConfig = [
+    {
+      key: "status",
+      label: "Status",
+      type: "radio",
+      options: ["All", "Pending", "Approved", "Rejected"],
+    },
+    {
+      key: "type",
+      label: "Leave type",
+      type: "radio",
+      options: ["All", ...leaveTypes],
+    },
+    { key: "dates", label: "Leave dates", type: "dateRange" },
+  ];
+
   const filteredLeave = leaveReq
-    .filter((leave) =>
-      leave.user?.name?.toLowerCase().includes(search.toLowerCase()),
-    )
+    .filter((leave) => {
+      if (
+        !(leave.user?.name ?? "").toLowerCase().includes(search.toLowerCase())
+      )
+        return false;
+      if (filters.status !== "All" && leave.status !== filters.status)
+        return false;
+      if (filters.type !== "All" && leave.leave_type !== filters.type)
+        return false;
+      // keep any leave that overlaps the chosen dates
+      const first = String(leave.start_date).slice(0, 10);
+      const last = String(leave.end_date).slice(0, 10);
+      if (filters.dates.from && last < filters.dates.from) return false;
+      if (filters.dates.to && first > filters.dates.to) return false;
+      return true;
+    })
     .reverse();
 
   const itemsPerPage = 12;
@@ -64,15 +108,12 @@ export default function Leave() {
         setCurrentPage={setCurrentPage}
         arrowSize={32}
         searchShow={true}
-        filterConfig={
-          [
-            /* ...unchanged... */
-          ]
-        }
+        filterConfig={filterConfig}
         totalPages={totalPages}
+        total={filteredLeave.length}
         search={search}
         setSearch={handleSearch}
-        onFilterApply={(filters) => console.log(filters)}
+        onFilterApply={handleFilterApply}
       >
         {pageItems.map((leave, i) => (
           <Item fetch={leave} />

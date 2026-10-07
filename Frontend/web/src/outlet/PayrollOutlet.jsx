@@ -223,6 +223,7 @@ export default function PayrollOutlet() {
               headerDefault={false}
               header={payrollRunsHeader}
               totalPages={totalPages}
+              total={payrollRuns.length}
               spacing={false}
             >
               <div className="w-full justify-start">

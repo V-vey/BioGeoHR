@@ -167,6 +167,7 @@ export default function AuditLogOutlet() {
         currentPage={page}
         setCurrentPage={goToPage}
         totalPages={lastPage}
+        total={total}
         arrowSize={32}
         spacing={false}
       >

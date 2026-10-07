@@ -18,7 +18,7 @@ export default function Containers({
   minH,
   maxH,
   footer,
-
+  total,
   spacing = true,
 }) {
   const handleBack = () => {
@@ -84,9 +84,14 @@ export default function Containers({
             <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
             <div className="flex flex-col w-full px-4 py-2 justify-center">
               <div className="flex items-center justify-between w-full">
-                <p className="text-s text-gray-600">
-                  Page: {currentPage} to {totalPages}
-                </p>
+                <div className="text-s text-gray-600">
+                  <p className="m-0">
+                    Page: {currentPage} to {totalPages}
+                  </p>
+                  {total != null && (
+                    <p className="m-0 text-xs">Total: {total}</p>
+                  )}
+                </div>
 
                 <div className="flex flex-row gap-2">
                   <button

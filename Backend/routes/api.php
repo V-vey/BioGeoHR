@@ -65,6 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
     //periodic check
     Route::post('geofenceCheck', [GeoFenceController::class, 'periodicCheck']);
     Route::get('systemSettings', [SystemSettingController::class, 'index']);
+    
+    Route::get('myLeave', [LeaveApplicationController::class, 'myLeave']);
+    Route::get('myLeaveBalance', [LeaveBalanceController::class, 'mine']);
+    Route::post('applyLeave', [LeaveApplicationController::class, 'store']);
     //can only access by HR
     Route::middleware('role:Administrative')->group(function () {
         // Route::apiResource('users', UsersController::class);
@@ -84,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
         Route::post('payslips/run', [PayslipController::class, 'run']);
         Route::post('payslips/preview', [PayslipController::class, 'preview']);
+        Route::get('payroll-report', [PayslipController::class, 'report']);
 
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
         
