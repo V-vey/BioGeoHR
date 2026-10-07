@@ -15,9 +15,14 @@ class LeaveBadge extends StatelessWidget {
     } else if (status == "Pending") {
       designBack = Color(0x30EACA3A);
       designCircle = Color(0xFFEACA3A);
-    } else if (status == "Reject") {
+    } else if (status == "Reject" || status == "Rejected") {
+      // the server sends "Rejected"; "Reject" is kept for the old sample data
       designBack = Color(0x30EC6668);
       designCircle = Color(0xFFEC6668);
+    } else {
+      // an unknown status must not crash the screen ("late" fields were never set)
+      designBack = Color(0x30888888);
+      designCircle = Color(0xFF888888);
     }
   }
 

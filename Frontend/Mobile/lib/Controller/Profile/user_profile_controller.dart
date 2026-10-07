@@ -21,6 +21,9 @@ class UserProfileController {
       String,
       String,
       String,
+      String, // 12th: the photo path ("avatars/xxx.png"), or '' when there is none
+      String, // 13th: the previous login time, or '' when there is none
+      bool, // 14th: is the account active
     )
   >
   getUserProfile() async {
@@ -53,6 +56,10 @@ class UserProfileController {
         jsonResponse['address'].toString(),
         jsonResponse['created_at'].toString(),
         jsonResponse['updated_at'].toString(),
+        // null for people without a photo; plain .toString() would turn it into the text "null"
+        jsonResponse['image_path']?.toString() ?? '',
+        jsonResponse['last_login']?.toString() ?? '',
+        jsonResponse['is_active'] != false,
       );
     } else {
       throw Exception('Failed to load leave balance: ${response.statusCode}');

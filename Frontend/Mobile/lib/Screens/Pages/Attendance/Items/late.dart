@@ -1,42 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'monthly_counter.dart';
+
 class Late extends StatelessWidget {
-  const Late({super.key});
+  final int? days; // days late this month; null = still loading or failed
+  const Late({super.key, this.days});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(right: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.update, size: 70, color: Color(0xFFEACA3A)),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Late',
-                style: TextStyle(
-                  color: Color(0xFFEACA3A),
-                  fontFamily: 'Roboto',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              //Days
-              Text(
-                '26 Days',
-                style: TextStyle(
-                  color: Color(0xFF3A3A3A),
-                  fontFamily: 'Roboto',
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return MonthlyCounter(
+      icon: Icons.update,
+      color: const Color(0xFFEACA3A),
+      label: 'Late',
+      days: days,
     );
   }
 }

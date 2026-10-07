@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
+import '../../../../../Controller/Homepage/my_payslip.dart';
+import '../../../Profile/Sections/Salary/payslip_page.dart';
+import 'paycheck_card.dart';
 
-class Paycheck extends StatelessWidget {
+class Paycheck extends StatefulWidget {
   const Paycheck({super.key});
 
   @override
+  State<Paycheck> createState() => _PaycheckState();
+}
+
+class _PaycheckState extends State<Paycheck> {
+  late final Future<PaycheckData?> _latest = MyPayslip()
+      .getLatest(); // load once
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Color(0xFFFCFCFC),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 6.0,
-            spreadRadius: 4.0,
-            offset: const Offset(0, 2),
+    return FutureBuilder<PaycheckData?>(
+      future: _latest,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const PaycheckCard(loading: true);
+        }
+        if (snap.hasError) return const PaycheckCard(failed: true);
+        return PaycheckCard(
+          data: snap.data,
+          onViewPayslip: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PayslipPage()),
           ),
-        ],
-      ),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Row(
-          children: [
-            Text(
-              'Paycheck:',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                color: Color(0xFF6675EC),
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

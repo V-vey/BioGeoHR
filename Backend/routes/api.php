@@ -41,12 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
     //clock in and out
     Route::post('clockIn', [AttendanceController::class, 'createAttendance']);
     Route::post('clockOut', [AttendanceController::class, 'clockOut']);
+    Route::get('todayAttendance', [AttendanceController::class, 'today']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
     Route::get('location', [LocationController::class, 'index']);
 
     //late count
     Route::get('countLate', [AttendanceController::class , 'countLate']);
     Route::get('countOnTime', [AttendanceController::class, 'countOnTime']);
+    Route::get('countAbsent', [AttendanceController::class, 'countAbsent']);
     
     Route::get('recentAttendance', [AttendanceController::class, 'recentAttendance']);
     // Route::get('leave', LeaveApplicationController::class); 
@@ -57,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //profile
     Route::get('userProfile', [UsersController::class , 'userProfileDetails']);
     Route::get('avatars/{filename}', [UsersController::class, 'avatar']);
+    Route::post('updateProfile', [UsersController::class, 'updateMyProfile']);
     //password
     Route::post('changePassword', [PasswordController::class , 'update']);
 
@@ -69,6 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('myLeave', [LeaveApplicationController::class, 'myLeave']);
     Route::get('myLeaveBalance', [LeaveBalanceController::class, 'mine']);
     Route::post('applyLeave', [LeaveApplicationController::class, 'store']);
+
+    Route::get('myPayslip', [PayslipController::class, 'mine']);
+    Route::get('mySalary', [SalaryController::class, 'mine']);
     //can only access by HR
     Route::middleware('role:Administrative')->group(function () {
         // Route::apiResource('users', UsersController::class);
@@ -94,7 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
         
-        Route::apiResource('location', LocationController::class);
+        Route::apiResource('location', LocationController::class)->except(['index']);;
         // Route::get('location', [LocationController::class, "index"]);
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
 

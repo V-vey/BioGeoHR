@@ -9,8 +9,14 @@ class Biometric {
   Future<(bool, String?)> authenticateUser() async {
     try {
       availableBiometric = await auth.getAvailableBiometrics();
-      if (availableBiometric.isNotEmpty) {
-        // print("not empty");
+      if (availableBiometric.isEmpty) {
+        // Android offers nothing to apps: no fingerprint/face enrolled, or the phone's
+        // face unlock is only rated for unlocking the screen
+        return (
+          false,
+          'No fingerprint or face is available for apps on this phone. '
+              'Set one up in your phone settings.',
+        );
       }
 
       if (availableBiometric.contains(BiometricType.face)) {
@@ -41,9 +47,30 @@ class Biometric {
           IOSAuthMessages(cancelButton: 'No thanks'),
         ],
       );
-      return (didAuthenticate, null);
+      if (!didAuthenticate) {
+        return (false, 'Biometric check failed. Please try again.');
+      }
+      return (true, null);
     } on LocalAuthException catch (e) {
-      return (false, "$e");
+      // the employee needs a sentence, not the exception text
+      switch (e.code) {
+        case LocalAuthExceptionCode.userCanceled:
+          return (false, 'Biometric check was cancelled.');
+        case LocalAuthExceptionCode.noBiometricsEnrolled:
+          return (false, 'No fingerprint or face is set up on this phone.');
+        case LocalAuthExceptionCode.noBiometricHardware:
+          return (false, 'This phone has no fingerprint or face sensor.');
+        case LocalAuthExceptionCode.temporaryLockout:
+        case LocalAuthExceptionCode.biometricLockout:
+          return (
+            false,
+            'Too many attempts. Unlock your phone with your PIN, then try again.',
+          );
+        default:
+          return (false, 'Biometric check failed (${e.code.name}).');
+      }
+    } catch (_) {
+      return (false, 'Biometric check is not available on this phone.');
     }
   }
 }

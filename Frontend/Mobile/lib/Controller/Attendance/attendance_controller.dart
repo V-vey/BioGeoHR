@@ -8,6 +8,7 @@ import 'attendance_model.dart';
 class AttendanceController {
   final Url _api = Url();
 
+  /// Every attendance record of the logged-in employee (an empty list when there are none yet).
   Future<List<AttendanceModel>> getAttendance() async {
     final url = Uri.parse(_api.getAllAttendance());
     final prefs = await SharedPreferences.getInstance();
@@ -22,6 +23,13 @@ class AttendanceController {
         "Content-Type": "application/json",
       },
     );
+
+    // an error reply (expired session, server down) is a Map, not a list: stop here
+    // instead of crashing while looping over it
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load attendance: ${response.statusCode}');
+    }
+
     var jsonResponse = json.decode(response.body);
     List<AttendanceModel> attendances = [];
     for (var u in jsonResponse) {
@@ -35,8 +43,6 @@ class AttendanceController {
       attendances.add(attendance);
     }
 
-    // print(attendances);
     return attendances;
-    // return jsonResponse["message"].toString();
   }
 }

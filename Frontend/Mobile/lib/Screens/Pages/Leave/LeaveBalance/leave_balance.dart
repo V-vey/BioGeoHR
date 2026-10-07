@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../../../Controller/Homepage/leave_balance.dart'
+import '../../../../Controller/Homepage/leave_balance.dart'
     as api; // prefix: avoids the LeaveBalance name clash
 import 'leave_balance_panel.dart';
+import '../create_leave.dart';
 
 class LeaveBalance extends StatefulWidget {
-  const LeaveBalance({super.key});
+  final VoidCallback? onApplied;
+  const LeaveBalance({super.key, this.onApplied});
 
   @override
   State<LeaveBalance> createState() => _LeaveBalanceItemState();
@@ -35,7 +37,13 @@ class _LeaveBalanceItemState extends State<LeaveBalance> {
         return LeaveBalancePanel(
           balances: snap.data!,
           name: '',
-          onApply: () {},
+          onApply: () async {
+            final sent = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateLeavePage()),
+            );
+            if (sent == true) widget.onApplied?.call();
+          },
         );
       },
     );

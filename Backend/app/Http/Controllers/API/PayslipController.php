@@ -293,4 +293,38 @@ class PayslipController extends Controller
 
         return response()->json($preview);
     }
+    public function mine()
+    {
+        $p = Payslip::where('user_id', $this->getUserIdFromToken())
+            ->orderByDesc('period_end')
+            ->first();
+
+        if (!$p) {
+            return response()->json(['message' => 'No payslip yet'], 404);
+        }
+
+        $gross = $p->gross_salary / 2;                 // stored monthly, a payslip is half
+        // same split as report(): contributions and late are stored monthly, tax and loan as paid
+        $sss     = $p->sss / 2;
+        $phil    = $p->philhealth / 2;
+        $pagibig = $p->pagibig / 2;
+        $lateDed = $p->late_deduction / 2;
+        // whatever else lowered the pay (e.g. an absence deduction), so the lines add up
+        $other   = ($gross - $p->net_pay) - ($sss + $phil + $pagibig + $p->income_tax + $lateDed + $p->loan_deduction);
+
+        return response()->json([
+            'period_start' => $p->period_start,
+            'period_end'   => $p->period_end,
+            'gross'        => round($gross, 2),
+            'deductions'   => round($gross - $p->net_pay, 2),
+            'net'          => round($p->net_pay, 2),
+            'sss'          => round($sss, 2),
+            'philhealth'   => round($phil, 2),
+            'pagibig'      => round($pagibig, 2),
+            'tax'          => round($p->income_tax, 2),
+            'late'         => round($lateDed, 2),
+            'loan'         => round($p->loan_deduction, 2),
+            'other'        => abs($other) > 0.01 ? round($other, 2) : 0,
+        ]);
+    }
 }

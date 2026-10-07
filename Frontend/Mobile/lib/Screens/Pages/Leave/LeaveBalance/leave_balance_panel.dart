@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../Controller/Homepage/leave_balance.dart';
+import '../../../../Controller/Homepage/leave_balance.dart';
 import 'leave_balance_item.dart';
 
 class LeaveBalancePanel extends StatelessWidget {

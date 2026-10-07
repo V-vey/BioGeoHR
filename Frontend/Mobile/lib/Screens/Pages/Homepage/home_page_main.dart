@@ -24,23 +24,28 @@ class HomePageMain extends StatelessWidget {
           children: [
             Welcome(),
             ClockIn(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 15,
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(right: 7.5),
-                    child: TotalLate(),
+            // IntrinsicHeight + stretch: both cards take the height of the taller one (Late),
+            // so Paycheck lines up with it instead of floating in the middle
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 15,
+                children: [
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(right: 7.5),
+                      child: TotalLate(),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(left: 7.5),
-                    child: Paycheck(),
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(left: 7.5),
+                      child: Paycheck(),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             HomeLeaveBalance(),
             RecentAttendancePage(),

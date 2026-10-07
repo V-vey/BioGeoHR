@@ -11,8 +11,12 @@ class UserProfile extends StatefulWidget {
   final String address;
   final String contact;
   final String email;
+  final String imagePath; // current photo, handed to the Edit Profile screen
+  final VoidCallback? onSaved; // reload the profile after an edit
   const UserProfile({
     super.key,
+    this.imagePath = '',
+    this.onSaved,
     required this.name,
     required this.dateOfBirth,
     required this.gender,
@@ -82,7 +86,12 @@ class _UserProfileState extends State<UserProfile> {
                   email: widget.email,
                 ),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
-                EditProfileButton(),
+                EditProfileButton(
+                  contact: widget.contact,
+                  address: widget.address,
+                  imagePath: widget.imagePath,
+                  onSaved: widget.onSaved,
+                ),
               ],
             ],
           ),

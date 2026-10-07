@@ -5,12 +5,14 @@ class LeaveItem extends StatelessWidget {
   final String status;
   final String type;
   final String date;
+  final String? remarks; // HR's remarks on a decided leave; hidden when empty
 
   const LeaveItem({
     super.key,
     required this.status,
     required this.type,
     required this.date,
+    this.remarks,
   });
 
   @override
@@ -56,6 +58,19 @@ class LeaveItem extends StatelessWidget {
             ),
           ),
 
+          if (remarks != null && remarks!.trim().isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(left: 15, right: 15, bottom: 4),
+              child: Text(
+                'HR remarks: $remarks',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 12,
+                  color: Color(0x803A3A3A),
+                ),
+              ),
+            ),
           SizedBox(height: 5),
           Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
         ],

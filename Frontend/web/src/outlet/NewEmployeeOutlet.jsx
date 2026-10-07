@@ -222,7 +222,20 @@ export default function NewEmployeeForm() {
 
           <Section title="Employment Details">
             <Field label="Department" required>
-              <input className={inputClass} onChange={update("department")} />
+              <div className="relative">
+                <select
+                  className={`${inputClass} appearance-none pr-8`}
+                  onChange={update("department")}
+                >
+                  <option value="">Select</option>
+                  <option>Administrative</option>
+                  <option>Basic Education</option>
+                  <option>Special Need Education</option>
+                  <option>Preschool</option>
+                  <option>Mainstreaming</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </Field>
             <Field label="Position" required>
               <input className={inputClass} onChange={update("position")} />

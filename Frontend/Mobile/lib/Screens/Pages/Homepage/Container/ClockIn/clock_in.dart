@@ -7,6 +7,7 @@ import 'time.dart';
 import 'location_list.dart';
 import 'clock_in_button.dart';
 import '../../../../../Controller/Homepage/ClockIn/geofence_periodic_check.dart';
+import '../../../../../Controller/Homepage/ClockIn/today_attendance.dart';
 //testing
 import '../../../../../Controller/Homepage/leave_balance.dart';
 
@@ -25,11 +26,10 @@ class ClockIn extends StatefulWidget {
   State<ClockIn> createState() => _ClockInState();
 }
 
-class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
+class _ClockInState extends State<ClockIn> {
   //with AutomaticKeepAliveClientMixin and bool get wantKeepAlive will make it run
   @override
-  bool get wantKeepAlive => true;
-
+  // bool get wantKeepAlive => true;
   final LeaveBalance bal = LeaveBalance();
 
   final GetLocation location = GetLocation();
@@ -81,13 +81,48 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    fetchGeofenceInterval();
+    _init();
   }
 
-  void start() {
+  Future<void> _init() async {
+    await fetchGeofenceInterval(); // start() needs the interval
+    await resync();
+  }
+
+  /// Ask the server whether the employee is clocked in today, and make the timer match.
+  /// This is what brings the clock back after the app was closed, restarted or logged
+  /// out and in again. Returns true when they are clocked in and not clocked out.
+  Future<bool> resync() async {
+    try {
+      final today = await GetTodayAttendance().get();
+      if (!mounted) return false;
+
+      if (today != null && today.running) {
+        setState(() {
+          duration = Duration(
+            seconds: today.elapsedSeconds,
+          ); // the server's count
+          status = 'Active';
+        });
+        start(askLocation: false); // no-op if the timer is already running
+        return true;
+      }
+      if (isRunning) {
+        reset(); // clocked out somewhere else (or never clocked in)
+        setStatusInactive();
+      }
+      return false;
+    } catch (e) {
+      return false; // no connection: leave the clock as it is
+    }
+  }
+
+  void start({bool askLocation = true}) {
     if (isRunning == true) return;
     isRunning = true;
-    requestBackgroundLocation();
+    // when resuming after a restart the permission was already handled, so do not
+    // send the employee to the settings screen again
+    if (askLocation) requestBackgroundLocation();
     Workmanager().registerPeriodicTask(
       "geofence-check",
       "geofenceCheckTask",
@@ -183,7 +218,7 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    // super.build(context);
     //for the timer to global call function
     return Container(
       width: 350,
@@ -223,6 +258,7 @@ class _ClockInState extends State<ClockIn> with AutomaticKeepAliveClientMixin {
                 isRunning: isRunning,
                 statusActive: setStatusActive,
                 statusInactive: setStatusInactive,
+                resync: resync,
               ),
             ],
           ),

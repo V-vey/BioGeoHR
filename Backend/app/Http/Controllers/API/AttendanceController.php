@@ -154,9 +154,24 @@ class AttendanceController extends Controller
         $userId = $this->getUserIdFromToken();
 
         // $attendance = Attendance::where("user_id", $userId)->get();
+        // this month only, the same as countLate (the phone shows both as "monthly")
         $late = Attendance::where("user_id", $userId)
-        ->where("status", "On-time")->count();
+        ->whereMonth('date', Carbon::now()->month)
+        ->whereYear('date', Carbon::now()->year)
+        ->where("status", "On-Time")->count();
         return response()->json(['message' => $late]);
+    }
+    /*
+        Absent COUNT FUNCTION (this month; the Absent rows come from the absence sync / manual entry)
+    */
+    public function countAbsent(){
+        $userId = $this->getUserIdFromToken();
+
+        $absent = Attendance::where("user_id", $userId)
+        ->whereMonth('date', Carbon::now()->month)
+        ->whereYear('date', Carbon::now()->year)
+        ->where("status", "Absent")->count();
+        return response()->json(['message' => $absent]);
     }
 
     /*
@@ -165,12 +180,23 @@ class AttendanceController extends Controller
     public function recentAttendance(){
         $userId = $this->getUserIdFromToken();
 
-        $recent = Attendance::where("user_id", $userId)->whereNotNull("time_out")->latest()->first();
+        $recent = Attendance::where("user_id", $userId)
+            ->whereNotNull("time_in")
+            ->whereNotNull("time_out")
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->first();
+
+        // nobody has finished a day yet: a normal "empty" answer, not a crash
+        if (!$recent) {
+            return response()->json(['message' => 'No attendance yet'], 404);
+        }
+
         $location = Location::where('id', $recent->location_id)->first();
         // $timeIn = $recent->time_in->format('g:iA');
         // $timeOut = $recent->time_out->format('g:iA');
         return response()->json([
-            'location' => $location->name,
+            'location' => $location?->name ?? 'Unknown Location',
             'date' => $recent->date,
             'status' => $recent->status,
             'clock_in' => $recent->time_in,
@@ -202,6 +228,42 @@ class AttendanceController extends Controller
             'time_out' => $time,
         ]);
         return $attendance;
+    }
+
+    /**
+     * Today's attendance for the clock on the phone, so it can pick up where it left off
+     * after the app was closed or restarted. 404 when the employee has not clocked in today.
+     */
+    public function today()
+    {
+        $userId = $this->getUserIdFromToken();
+        $now = now('Asia/Manila');
+
+        $attendance = Attendance::where('user_id', $userId)
+            ->whereDate('date', $now->toDateString())
+            ->whereNotNull('time_in')
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$attendance) {
+            return response()->json(['message' => 'Not clocked in today'], 404);
+        }
+
+        $running = $attendance->time_out === null;
+        $elapsed = 0;
+        if ($running) {
+            // measured here on the server, so a wrong phone clock or timezone cannot skew the timer
+            $started = Carbon::parse($now->toDateString() . ' ' . $attendance->time_in, 'Asia/Manila');
+            $elapsed = max(0, $started->diffInSeconds($now, false));
+        }
+
+        return response()->json([
+            'status'          => $attendance->status,
+            'time_in'         => $attendance->time_in,
+            'time_out'        => $attendance->time_out,
+            'running'         => $running,
+            'elapsed_seconds' => (int) $elapsed,
+        ]);
     }
 
     private function isLate($userCallTime, $timeIn){

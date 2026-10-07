@@ -1,42 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'monthly_counter.dart';
+
 class OnTime extends StatelessWidget {
-  const OnTime({super.key});
+  final int? days; // days on time this month; null = still loading or failed
+  const OnTime({super.key, this.days});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(right: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.alarm, size: 70, color: Color(0xFF2AAF56)),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'On-Time',
-                style: TextStyle(
-                  color: Color(0xFF2AAF56),
-                  fontFamily: 'Roboto',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              //Days
-              Text(
-                '26 Days',
-                style: TextStyle(
-                  color: Color(0xFF3A3A3A),
-                  fontFamily: 'Roboto',
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return MonthlyCounter(
+      icon: Icons.alarm,
+      color: const Color(0xFF2AAF56),
+      label: 'On-Time',
+      days: days,
     );
   }
 }

@@ -18,6 +18,10 @@ class AttendanceBadge extends StatelessWidget {
     } else if (status == "Absent") {
       designBack = Color(0x30EC6668);
       designCircle = Color(0xFFEC6668);
+    } else {
+      // an unknown status must not crash the screen ("late" fields were never set)
+      designBack = Color(0x30888888);
+      designCircle = Color(0xFF888888);
     }
   }
 

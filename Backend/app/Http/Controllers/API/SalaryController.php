@@ -73,6 +73,32 @@ class SalaryController extends Controller
     }
 
     /**
+     * The logged-in employee's own salary (the phone's Salary Info card).
+     */
+    public function mine()
+    {
+        $salary = Salary::where('user_id', $this->getUserIdFromToken())
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$salary || !$salary->salary_basis) {
+            return response()->json(['message' => 'No salary record yet'], 404);
+        }
+
+        $service = new SalaryService();
+        $daily = $service->dailyWage($salary->salary_basis, $salary->working_days_per_month);
+        $hourly = $service->hourlyRate($daily, $salary->working_hours_per_day);
+
+        return response()->json([
+            'monthly_salary' => (float) $salary->salary_basis,
+            'working_hours_per_day' => (float) $salary->working_hours_per_day,
+            'working_days_per_month' => (float) $salary->working_days_per_month,
+            'daily_rate' => round($daily, 2),
+            'hourly_rate' => round($hourly, 2),
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)

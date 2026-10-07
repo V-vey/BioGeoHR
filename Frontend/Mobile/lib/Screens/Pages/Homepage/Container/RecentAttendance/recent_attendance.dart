@@ -23,6 +23,11 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
   String clockIn = '';
   String clockOut = '';
 
+  // what the card shows: still loading, nothing recorded yet, or the server failed
+  bool loading = true;
+  bool empty = false;
+  bool failed = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,25 +36,40 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
   }
 
   Future<void> _loadRecentAttendance() async {
-    final result = await attendance.getRecentAttendance();
+    try {
+      final result = await attendance.getRecentAttendance();
+      if (!mounted) return; // the screen was closed while waiting
 
-    setState(() {
-      location = result.$1;
-      date = result.$2;
-      status = result.$3;
-      // clockIn = result.$4;
-      // clockOut = result.$5;
+      // null = the employee has no finished day yet
+      if (result == null) {
+        setState(() {
+          loading = false;
+          empty = true;
+        });
+        return;
+      }
 
       DateFormat inputFormat = DateFormat("HH:mm:ss");
-
-      DateTime parsedTimeClockIn = inputFormat.parse(result.$4);
-      DateTime parsedTimeClockOut = inputFormat.parse(result.$5);
-
       DateFormat outputFormat = DateFormat("h:mm a");
 
-      clockIn = outputFormat.format(parsedTimeClockIn);
-      clockOut = outputFormat.format(parsedTimeClockOut);
-    });
+      final parsedIn = outputFormat.format(inputFormat.parse(result.$4));
+      final parsedOut = outputFormat.format(inputFormat.parse(result.$5));
+
+      setState(() {
+        location = result.$1;
+        date = result.$2;
+        status = result.$3;
+        clockIn = parsedIn;
+        clockOut = parsedOut;
+        loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        loading = false;
+        failed = true;
+      });
+    }
   }
 
   bool isVisible = false;
@@ -91,14 +111,40 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
             ),
             Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
             SizedBox(height: 5),
-            AttendanceItemLayout(
-              status: status,
-              location: location,
-              date: date,
-              isVisible: isVisible,
-              clockIn: clockIn,
-              clockOut: clockOut,
-            ), // Recent
+            if (loading)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else if (failed)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Unavailable',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            else if (empty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'No attendance yet',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            else
+              AttendanceItemLayout(
+                status: status,
+                location: location,
+                date: date,
+                isVisible: isVisible,
+                clockIn: clockIn,
+                clockOut: clockOut,
+              ), // Recent
           ],
         ),
       ),

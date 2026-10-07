@@ -31,7 +31,8 @@ class Clockinbutton extends StatelessWidget {
   //status
   final VoidCallback statusActive;
   final VoidCallback statusInactive;
-  String clockText = "Clock In";
+  // ask the server if we are already clocked in today (true = yes, and the timer was resumed)
+  final Future<bool> Function() resync;
   //clockIn Out
   final SaveclockInOut clock = SaveclockInOut();
 
@@ -43,6 +44,7 @@ class Clockinbutton extends StatelessWidget {
     required this.isRunning,
     required this.statusActive,
     required this.statusInactive,
+    required this.resync,
   });
 
   @override
@@ -69,7 +71,6 @@ class Clockinbutton extends StatelessWidget {
             if (isRunning) {
               timerReset();
               statusInactive();
-              clockText = "Clock In";
               clock.clockOut();
               return;
             }
@@ -104,14 +105,29 @@ class Clockinbutton extends StatelessWidget {
             }
 
             //the biometric
-            if (await biometric.authenticateUser() == (true, null)) {
+            final bio = await biometric.authenticateUser();
+            if (!bio.$1) {
+              // say why, so a missing or failed fingerprint/face is not a silent nothing
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(bio.$2 ?? 'Biometric check failed. Please try again.'),
+                ),
+              );
+              return;
+            }
+            if (bio.$1) {
               final success = await clock.clockIn();
               if (!success) {
+                // "already clocked in today" is not a failure: pick the timer back up
+                final alreadyIn = await resync();
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Failed to save attendance. Please try again.',
+                      alreadyIn
+                          ? 'You are already clocked in today.'
+                          : 'Failed to save attendance. Please try again.',
                     ),
                   ),
                 );
@@ -119,13 +135,12 @@ class Clockinbutton extends StatelessWidget {
               }
               timerStart();
               statusActive();
-              clockText = "Clock Out";
               // requestBackgroundLocation();
             }
           },
 
           child: Text(
-            clockText,
+            isRunning ? "Clock Out" : "Clock In",
             style: TextStyle(
               fontFamily: 'Roboto',
               fontSize: 15,

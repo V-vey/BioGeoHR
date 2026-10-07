@@ -166,10 +166,21 @@ class UsersController extends Controller
         $userId = $this->getUserIdFromToken();
 
         $user = Users::where('id', $userId)->first();
-        
-        //add pic soon
+
+        // the newest successful login is this session's own, so the one before it is the "last login"
+        $lastLogin = AuditLog::where('user_id', $userId)
+            ->where('category', 'login')
+            ->where('status', 'success')
+            ->orderByDesc('id')
+            ->skip(1)
+            ->first();
+
         return response()->json([
+            'is_active' => (bool) $user->is_active,
+            'last_login' => $lastLogin?->created_at,
             'name' => $user->name,
+            // e.g. "avatars/xxxx.png" (or null); the phone loads it from GET /api/avatars/{file} with its token
+            'image_path' => $user->image_path,
             'email' => $user->email,
             'contact' => $user->contact_number,
             'department' => $user->department,
@@ -180,6 +191,54 @@ class UsersController extends Controller
             'address' => $user->address,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at
+        ]);
+    }
+    /**
+     * The employee edits their own contact number, address and photo (the phone's Edit Profile).
+     * Only these three fields are accepted, so name, department, salary etc. stay HR-only.
+     */
+    public function updateMyProfile(Request $request)
+    {
+        $user = Users::find($this->getUserIdFromToken());
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $request->validate([
+            'contact_number' => ['sometimes', 'required', 'regex:/^[0-9+\-\s()]{7,20}$/'],
+            'address'        => 'sometimes|required|string|max:255',
+            'image'          => 'nullable|image|max:2048',
+        ], [
+            'contact_number.regex' => 'Enter a valid phone number.',
+        ]);
+
+        $changed = [];
+        if ($request->has('contact_number') && $request->contact_number !== $user->contact_number) {
+            $user->contact_number = $request->contact_number;
+            $changed[] = 'contact number';
+        }
+        if ($request->has('address') && $request->address !== $user->address) {
+            $user->address = $request->address;
+            $changed[] = 'address';
+        }
+        if ($request->hasFile('image')) {
+            if ($user->image_path) {
+                Storage::disk('public')->delete($user->image_path);
+            }
+            $user->image_path = $request->file('image')->store('avatars', 'public');
+            $changed[] = 'photo';
+        }
+
+        if ($changed) {
+            $user->save();
+            AuditLog::record('employee', 'profile_updated', 'success', "{$user->name}: changed " . implode(', ', $changed), $user->id, $user->email);
+        }
+
+        return response()->json([
+            'message'    => $changed ? 'Profile updated' : 'Nothing to change',
+            'contact'    => $user->contact_number,
+            'address'    => $user->address,
+            'image_path' => $user->image_path,
         ]);
     }
     public function byUser(string $userId)

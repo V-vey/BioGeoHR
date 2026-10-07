@@ -30,6 +30,9 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
   String address = '----------';
   String createdAt = '----------';
   String updatedAt = '----------';
+  String imagePath = ''; // the photo, '' = none
+  String lastLogin = '----------';
+  String accountStatus = '----------';
 
   //final Logintext logintext = Logintext();
 
@@ -64,6 +67,17 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
       // Updated At
       DateTime parsedUpdatedAt = DateTime.parse(result.$11);
       updatedAt = DateFormat('MMMM d, yyyy').format(parsedUpdatedAt);
+
+      imagePath = result.$12;
+
+      // Last login ('' = this is the first login ever)
+      lastLogin = result.$13.isEmpty
+          ? 'First login'
+          : DateFormat(
+              'MMM d, yyyy h:mm a',
+            ).format(DateTime.parse(result.$13).toLocal());
+
+      accountStatus = result.$14 ? 'Active' : 'Deactivated';
     });
   }
 
@@ -80,6 +94,7 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
             contact: contact,
             department: department,
             position: position,
+            imagePath: imagePath,
           ),
           UserProfile(
             name: name,
@@ -89,12 +104,14 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
             address: address,
             contact: contact,
             email: email,
+            imagePath: imagePath,
+            onSaved: _loadData, // reload after the employee edits their profile
           ),
           AccountDetails(
             createdAt: createdAt,
             updatedAt: updatedAt,
-            lastLogin: "SOON",
-            accountStatus: "SOON",
+            lastLogin: lastLogin,
+            accountStatus: accountStatus,
           ),
           SalaryInfo(),
           ChangePassword(),

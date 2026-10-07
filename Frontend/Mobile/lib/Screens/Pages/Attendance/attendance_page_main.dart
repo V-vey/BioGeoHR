@@ -1,186 +1,202 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_biogeohr/Controller/Attendance/attendance_model.dart';
+import 'package:intl/intl.dart';
 
-import 'monthly_attendance.dart';
+import '../../../Controller/Attendance/attendance_model.dart';
 import '../../../Controller/Attendance/attendance_controller.dart';
-
 import '../../Reusable/Items/attendance_item_layout.dart';
-import 'package:flutter_biogeohr/Screens/Pages/Attendance/Items/atttendance_pages.dart';
+import 'Items/atttendance_pages.dart';
+import 'monthly_attendance.dart';
 
 class AttendancePageMain extends StatefulWidget {
-  const AttendancePageMain({super.key});
+  // optional loaders so the screen can be tested without a server
+  final Future<List<AttendanceModel>> Function()? loader;
+  final Future<int> Function()? loadOnTime;
+  final Future<int> Function()? loadLate;
+  final Future<int> Function()? loadAbsent;
+
+  const AttendancePageMain({
+    super.key,
+    this.loader,
+    this.loadOnTime,
+    this.loadLate,
+    this.loadAbsent,
+  });
 
   @override
   State<AttendancePageMain> createState() => _AttendancePageMainState();
 }
 
 class _AttendancePageMainState extends State<AttendancePageMain> {
-  late Future<List<AttendanceModel>> attendance;
-  final AttendanceController attendanceController = AttendanceController();
+  // loaded once; it must be assigned before the first build, or the screen crashes
+  late final Future<List<AttendanceModel>> _records =
+      (widget.loader ?? AttendanceController().getAttendance)();
 
   // Track the active page state
   int _currentPage = 1;
   final int _itemsPerPage = 7;
 
-  @override
-  void initState() {
-    super.initState();
-    // attendance = attendanceController.getAttendance();
-    _loadData();
+  // which rows are opened (tap a row to show the clock in / out times)
+  final Set<int> _opened = {};
+
+  // "08:21:00" -> "8:21 AM"; anything else ("--:--") is shown as it is
+  String _time(String t) {
+    try {
+      return DateFormat('h:mm a').format(DateFormat('HH:mm:ss').parse(t));
+    } catch (_) {
+      return t;
+    }
   }
 
-  Future<void> _loadData() async {
-    setState(() {});
+  // "2026-10-05" -> "Oct 5, 2026"
+  String _date(String d) {
+    try {
+      return DateFormat('MMM d, yyyy').format(DateTime.parse(d));
+    } catch (_) {
+      return d;
+    }
   }
+
+  // the "All Attendance" card; only its body changes between loading / error / empty / list
+  Widget _card(Widget body) {
+    return Container(
+      width: 350,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Color(0xFFFCFCFC),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 6.0,
+            spreadRadius: 4.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        spacing: 5,
+        children: [
+          SizedBox(),
+          Container(
+            padding: EdgeInsets.all(5),
+            child: Text(
+              'All Attendance',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                color: Color(0xFF6675EC),
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          //line
+          Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
+          body,
+        ],
+      ),
+    );
+  }
+
+  Widget _message(String text) => Padding(
+    padding: const EdgeInsets.all(20),
+    child: Text(text, style: const TextStyle(color: Colors.grey)),
+  );
 
   @override
   Widget build(BuildContext context) {
-    // var items = Container(
-    //   margin: EdgeInsets.all(15),
-    //   child: Column(
-    //     children: [MonthlyAttendance(), SizedBox(height: 15), Attendance()],
-    //   ),
-    // );
-    var items = FutureBuilder<List<AttendanceModel>>(
-      future: attendance,
-      builder: (context, snapshot) {
-        // Show a loader while waiting for backend response
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return SingleChildScrollView(
+      child: Container(
+        margin: EdgeInsets.all(15),
+        child: Column(
+          children: [
+            //Top part the monthly attendance num
+            MonthlyAttendance(
+              loadOnTime: widget.loadOnTime,
+              loadLate: widget.loadLate,
+              loadAbsent: widget.loadAbsent,
+            ),
+            //spacing
+            SizedBox(height: 15),
 
-        // Show error if backend request fails
-        if (snapshot.hasError) {
-          return Center(child: Text('Error loading data: ${snapshot.error}'));
-        }
-
-        // Handle case where data returns empty
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No attendance records found.'));
-        }
-
-        // Safely extract your loaded list of elements
-        final List<AttendanceModel> records = snapshot.data!;
-
-        // Calculate the slice of 7 records to show for the current page
-        final int startIndex = (_currentPage - 1) * _itemsPerPage;
-        final int endIndex = startIndex + _itemsPerPage;
-
-        //Compute dynamic total pages based on your dataset size
-        final int totalPages = (records.length / _itemsPerPage).ceil();
-
-        //Safely extract only the records needed for this page
-        final List<AttendanceModel> pageRecords = records.length > startIndex
-            ? records.sublist(
-                startIndex,
-                endIndex > records.length ? records.length : endIndex,
-              )
-            : [];
-
-        return Container(
-          margin: EdgeInsets.all(15),
-          child: Column(
-            children: [
-              //Top part the monthly attendance num
-              MonthlyAttendance(),
-              //spacing
-              SizedBox(height: 15),
-
-              SingleChildScrollView(
-                child: Container(
-                  width: 350,
-                  constraints: const BoxConstraints(
-                    maxHeight:
-                        520, // The item block will NEVER go further than 400 pixels wide
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Color(0xFFFCFCFC),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(20),
-                        blurRadius: 6.0,
-                        spreadRadius: 4.0,
-                        offset: const Offset(0, 2),
+            FutureBuilder<List<AttendanceModel>>(
+              future: _records,
+              builder: (context, snapshot) {
+                // loader while waiting for the backend
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return _card(
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    ],
-                  ),
-                  child: Column(
+                    ),
+                  );
+                }
+
+                // the request failed
+                if (snapshot.hasError) {
+                  return _card(_message('Could not load your attendance'));
+                }
+
+                // newest day first
+                final records = [...(snapshot.data ?? <AttendanceModel>[])]
+                  ..sort((a, b) => b.date.compareTo(a.date));
+
+                // nothing recorded yet
+                if (records.isEmpty) {
+                  return _card(_message('No attendance yet'));
+                }
+
+                // Calculate the slice of 7 records to show for the current page
+                final int totalPages = (records.length / _itemsPerPage).ceil();
+                final int page = _currentPage > totalPages
+                    ? totalPages
+                    : _currentPage;
+                final int startIndex = (page - 1) * _itemsPerPage;
+                final int endIndex = startIndex + _itemsPerPage > records.length
+                    ? records.length
+                    : startIndex + _itemsPerPage;
+
+                return _card(
+                  Column(
                     spacing: 5,
                     children: [
-                      SizedBox(),
-                      Container(
-                        padding: EdgeInsets.all(5),
-                        child: Text(
-                          'All Attendance',
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            color: Color(0xFF6675EC),
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
+                      for (var i = startIndex; i < endIndex; i++)
+                        GestureDetector(
+                          onTap: () => setState(() {
+                            _opened.contains(i)
+                                ? _opened.remove(i)
+                                : _opened.add(i);
+                          }),
+                          child: AttendanceItemLayout(
+                            status: records[i].status,
+                            location: records[i].location,
+                            date: _date(records[i].date),
+                            isVisible: _opened.contains(i),
+                            clockIn: _time(records[i].clockIn),
+                            clockOut: _time(records[i].clockOut),
                           ),
                         ),
-                      ),
-                      //line
-                      Container(
-                        height: 1,
-                        width: 350,
-                        color: Color(0xFFE0E0E0),
-                      ),
-                      // Expanded(
-                      //   //ITEMS
-                      //   child: ListView.builder(
-                      //     // padding: const EdgeInsets.all(15),
-                      //     itemCount: pageRecords.length,
-                      //     itemBuilder: (context, index) {
-                      //       final record = pageRecords[index];
-                      //       return AttendanceItemLayout(
-                      //         status: record.status,
-                      //         location: record.location,
-                      //         date: record.date,
-                      //         isVisible: false,
-                      //         clockIn: record.clockIn,
-                      //         clockOut: record.clockOut,
-                      //       );
-                      //     },
-                      //   ),
-                      // ),
-                      // AttendanceItems(),
-                      // Spacer(),
-
-                      // Padding(
-                      // padding: const EdgeInsets.(
-                      //   vertical: 10,
-                      // ), // Optional padding
-                      Column(
-                        children: [
-                          Container(
-                            height: 1,
-                            width: 350,
-                            color: Color(0xFFE0E0E0),
-                          ),
-                        ],
-                      ),
+                      Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
                       AttendancePages(
-                        pageNum: _currentPage,
-                        totalPages: totalPages == 0
-                            ? 1
-                            : totalPages, // Safely handles empty states
+                        pageNum: page,
+                        totalPages: totalPages,
                         onPageChanged: (newPage) {
                           setState(() {
                             _currentPage = newPage;
+                            _opened.clear();
                           });
                         },
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
-    return items;
   }
 }

@@ -71,7 +71,7 @@ class AccountDetailsOpen extends StatelessWidget {
           Row(
             children: [
               Text(
-                "Last Login: ",
+                "Last Login:",
                 style: TextStyle(
                   color: Color(0xBF3A3A3A),
                   fontFamily: 'Roboto',

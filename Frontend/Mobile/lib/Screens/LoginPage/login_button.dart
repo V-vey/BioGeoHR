@@ -56,6 +56,17 @@ class Loginbutton extends StatelessWidget {
             return;
           }
 
+          if (isSuccessful["authenticated"] == "Account Deactivated") {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Your account has been deactivated. Please contact HR.',
+                ),
+              ),
+            );
+            return;
+          }
+
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => Homepage()),

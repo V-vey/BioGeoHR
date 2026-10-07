@@ -8,7 +8,8 @@ import '../../Service/url.dart';
 class RecentAttendance {
   final Url _api = Url();
 
-  Future<(String, String, String, String, String)> getRecentAttendance() async {
+  /// The last finished day, or null when there is none yet (the server answers 404).
+  Future<(String, String, String, String, String)?> getRecentAttendance() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -22,9 +23,12 @@ class RecentAttendance {
         "Content-Type": "application/json",
       },
     );
-    Map<String, dynamic> jsonResponse = await jsonDecode(response.body);
+
+    // no attendance yet: a normal empty state, not an error
+    if (response.statusCode == 404) return null;
 
     if (response.statusCode == 200) {
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       return (
         jsonResponse['location'].toString(),
         jsonResponse['date'].toString(),
@@ -33,7 +37,7 @@ class RecentAttendance {
         jsonResponse['clock_out'].toString(),
       );
     } else {
-      throw Exception('Failed to load leave balance: ${response.statusCode}');
+      throw Exception('Failed to load recent attendance: ${response.statusCode}');
     }
   }
 }

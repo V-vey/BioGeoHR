@@ -260,72 +260,80 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                 <div className="flex flex-col gap-2 w-full">
                   {/* employee info */}
                   <div className="flex flex-row gap-2 w-full">
-                    <div className="flex flex-row items-center gap-2 bg-white  px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                      <div className="border rounded-[10px] w-20 h-20 overflow-hidden">
-                        <AuthImage
-                          src={imageSrc}
-                          fallback={fallbackImage}
-                          alt={`${emp.name || "User"}'s Profile`}
-                          className="object-cover scale-110"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-4 h-full py-2">
-                        <div className="flex flex-col items-start">
-                          <div className="flex flex-row w-full justify-between">
-                            <p className="m-0 leading-none text-[16px] text-start font-medium">
-                              {emp.name}
-                            </p>
-                            {emp.gender === "Male" ? (
-                              <Mars className="w-4 h-4 text-[#6675EC]" />
-                            ) : (
-                              <Venus className="w-4 h-4 text-[#EC6668]" />
-                            )}
-                          </div>
-
-                          <p className="m-0 leading-none text-[13px] font-regular">
-                            {emp.email}
-                          </p>
-                          <p className="m-0 leading-none text-[13px] font-regular">
-                            {emp.contact_number}
-                          </p>
+                    <div className="flex-2">
+                      <div className="flex flex-row items-center gap-2  bg-white  px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
+                        <div className="border rounded-[10px] w-20 h-20 overflow-hidden">
+                          <AuthImage
+                            src={imageSrc}
+                            fallback={fallbackImage}
+                            alt={`${emp.name || "User"}'s Profile`}
+                            className="object-cover scale-110"
+                          />
                         </div>
-                        <div className="flex flex-col justify-end items-end">
-                          <p className="m-0 leading-none text-[13px] text-end font-medium">
-                            {emp.department} | {emp.position}
-                          </p>
-                          <p className="m-0 leading-none text-[13px] font-regular">
-                            {emp.contract_type}
-                          </p>
+                        <div className="flex flex-col gap-4 h-full w-full py-2">
+                          <div className="flex flex-col items-start">
+                            <div className="flex flex-row w-full justify-between">
+                              <p className="m-0 leading-none text-[16px] text-start font-medium">
+                                {emp.name}
+                              </p>
+                              {emp.gender === "Male" ? (
+                                <Mars className="w-4 h-4 text-[#6675EC]" />
+                              ) : (
+                                <Venus className="w-4 h-4 text-[#EC6668]" />
+                              )}
+                            </div>
+
+                            <p className="m-0 leading-none text-[13px] font-regular">
+                              {emp.email}
+                            </p>
+                            <p className="m-0 leading-none text-[13px] font-regular">
+                              {emp.contact_number}
+                            </p>
+                          </div>
+                          <div className="flex flex-col justify-end items-end">
+                            <p className="m-0 leading-none text-[13px] text-end font-medium">
+                              {emp.department} | {emp.position}
+                            </p>
+                            <p className="m-0 leading-none text-[13px] font-regular">
+                              {emp.contract_type}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                     {/* personal info */}
-                    <div className="flex flex-col gap-2 bg-white w-full p-2 rounded-[10px]  border border-[#b2b2b2]">
-                      <h2>On-Time</h2>
-                      <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                        <p className="text-[26px] font-medium text-[#b2b2b2] ">
-                          {empData?.on_time}
-                        </p>
-                        <Clock className="text-[#2AAF56] w-10 h-10 text-[10px] " />
+                    <div className="flex-1">
+                      <div className="flex flex-col gap-2 bg-white w-full h-full p-2 rounded-[10px]  border border-[#b2b2b2]">
+                        <h2>On-Time</h2>
+                        <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
+                          <p className="text-[26px] font-medium text-[#b2b2b2] ">
+                            {empData?.on_time}
+                          </p>
+                          <Clock className="text-[#2AAF56] w-10 h-10 text-[10px] " />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 bg-white w-full p-2 rounded-[10px]  border border-[#b2b2b2]">
-                      <h2>Late</h2>
-                      <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                        <p className="text-[26px] font-medium text-[#b2b2b2] ">
-                          {empData?.late}
-                        </p>
+                    <div className="flex-1">
+                      <div className="flex flex-col flex-1 gap-2 bg-white w-full h-full p-2 rounded-[10px]  border border-[#b2b2b2]">
+                        <h2>Late</h2>
+                        <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
+                          <p className="text-[26px] font-medium text-[#b2b2b2] ">
+                            {empData?.late}
+                          </p>
 
-                        <History className="text-[#EACA3A] w-10 h-10 text-[10px] " />
+                          <History className="text-[#EACA3A] w-10 h-10 text-[10px] " />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 bg-white w-full p-2 rounded-[10px]  border border-[#b2b2b2]">
-                      <h2>Absent</h2>
-                      <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                        <p className="text-[26px] font-medium text-[#b2b2b2] ">
-                          {empData?.absent}
-                        </p>
-                        <TriangleAlert className="text-[#EC6668] w-10 h-10 text-[10px] " />
+                    <div className="flex-1">
+                      <div className="flex flex-col gap-2 bg-white w-full h-full p-2 rounded-[10px]  border border-[#b2b2b2]">
+                        <h2>Absent</h2>
+                        <div className="flex flex-row items-center justify-between gap-2 bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
+                          <p className="text-[26px] font-medium text-[#b2b2b2] ">
+                            {empData?.absent}
+                          </p>
+                          <TriangleAlert className="text-[#EC6668] w-10 h-10 text-[10px] " />
+                        </div>
                       </div>
                     </div>
                   </div>

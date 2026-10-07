@@ -43,9 +43,24 @@ class Url {
     return "$api/clockOut";
   }
 
+  //api for today's clock state (resume the timer after a restart)
+  String todayAttendance() {
+    return "$api/todayAttendance";
+  }
+
   //api to countLate
   String countLate() {
     return "$api/countLate";
+  }
+
+  //api to countOnTime
+  String countOnTime() {
+    return "$api/countOnTime";
+  }
+
+  //api to countAbsent
+  String countAbsent() {
+    return "$api/countAbsent";
   }
 
   //api for RecentAttendance
@@ -74,5 +89,30 @@ class Url {
 
   String systemSettings() {
     return "$api/systemSettings";
+  }
+
+  //api for the latest payslip
+  String getMyPayslip() {
+    return "$api/myPayslip";
+  }
+
+  //api for the employee to edit their own contact, address and photo
+  String updateProfile() {
+    return "$api/updateProfile";
+  }
+
+  //api for the employee's own salary (Salary Info card)
+  String getMySalary() {
+    return "$api/mySalary";
+  }
+
+  //api for the logged-in employee's own leave requests
+  String getMyLeave() {
+    return "$api/myLeave";
+  }
+
+  //api to apply for leave
+  String applyLeave() {
+    return "$api/applyLeave";
   }
 }
