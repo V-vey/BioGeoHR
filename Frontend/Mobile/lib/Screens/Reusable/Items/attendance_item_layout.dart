@@ -11,6 +11,7 @@ class AttendanceItemLayout extends StatelessWidget {
   // item hidden
   final String clockIn;
   final String clockOut;
+  final String duration; // hours worked, e.g. "9h 02m"; "--" when unknown
 
   const AttendanceItemLayout({
     super.key,
@@ -20,6 +21,7 @@ class AttendanceItemLayout extends StatelessWidget {
     required this.isVisible,
     required this.clockIn,
     required this.clockOut,
+    this.duration = '--',
   });
 
   @override
@@ -97,6 +99,16 @@ class AttendanceItemLayout extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    "Duration: $duration", //Hours worked
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Color(0x503A3A3A),
+                    ),
                   ),
                   SizedBox(width: 0, height: 5),
                 ],

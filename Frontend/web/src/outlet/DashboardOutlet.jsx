@@ -455,8 +455,8 @@ export default function DashboardOutlet() {
               currentPage={currentPageEmp}
               setCurrentPage={setCurrentPageEmp}
               arrowSize={32}
-              minH={350}
-              maxH={350}
+              minH={380}
+              maxH={380}
               headerDefault={false}
               header={employeeHeader}
               totalPages={totalPagesEmp}
@@ -464,7 +464,7 @@ export default function DashboardOutlet() {
               spacing={false}
             >
               <div className="w-full justify-start">
-                <div className="flex flex-row items-center bg-[#E0E0E0] px-4 py-1">
+                <div className="flex flex-row items-center border-b border-[#b2b2b2] px-4 py-1">
                   <p className="flex-1 text-start font-medium">Name</p>
                   <p className="flex-1 text-start font-medium">Department</p>
                   <p className="flex-1 text-start font-medium">Position</p>
@@ -486,16 +486,21 @@ export default function DashboardOutlet() {
               name="Pending"
               currentPage={currentPageLeave}
               setCurrentPage={setCurrentPageLeave}
+              totalPages={totalPagesLeave}
               total={filteredLeave.length}
               searchShow={false}
               arrowSize={32}
-              minH={350}
-              maxH={350}
+              minH={380}
+              maxH={380}
               header={leaveHeader}
               headerDefault={false}
             >
-              {pageItemsLeave.map((leave, i) => (
-                <PendingLeave fetch={fetchPending} key={i} item={leave} />
+              {pageItemsLeave.map((leave) => (
+                <PendingLeave
+                  fetch={fetchPending}
+                  key={leave.id}
+                  item={leave}
+                />
               ))}
             </Containers>
           </div>

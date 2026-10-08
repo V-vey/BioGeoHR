@@ -115,4 +115,9 @@ class Url {
   String applyLeave() {
     return "$api/applyLeave";
   }
+
+  //api to cancel one of the employee's own pending leave requests
+  String cancelLeave(int id) {
+    return "$api/myLeave/$id";
+  }
 }

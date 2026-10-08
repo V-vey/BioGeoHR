@@ -182,6 +182,30 @@ class LeaveApplicationController extends Controller
                 break;
         }
     }
+    /**
+     * The employee cancels one of their own requests (the phone's Cancel button).
+     * Only a request that is still Pending can be cancelled: once HR has decided, it stays.
+     * A pending request has not touched the leave balance, so there is nothing to give back.
+     */
+    public function cancelMine(string $id)
+    {
+        $userId = $this->getUserIdFromToken();
+        $leave = LeaveApplication::where('id', $id)->where('user_id', $userId)->first();
+
+        if (!$leave) {
+            return response()->json(['message' => 'Leave request not found'], 404);
+        }
+        if ($leave->status !== 'Pending') {
+            return response()->json(['message' => 'Only a pending request can be cancelled'], 422);
+        }
+
+        $days = $this->dateComp($leave->start_date, $leave->end_date);
+        $leave->delete();
+        AuditLog::record('leave', 'leave_cancelled', 'success', "{$leave->leave_type}, {$days} day(s), cancelled by the employee");
+
+        return response()->json(['message' => 'Leave request cancelled']);
+    }
+
     public function myLeave()
     {
         $leaves = LeaveApplication::where('user_id', $this->getUserIdFromToken())

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import LocationModal from "@/Modal/LocationModal";
@@ -26,10 +26,14 @@ export default function Items({
   const onView = () => {
     setView(true);
   };
-  const [viewport, setViewport] = useState({
-    center: [centerLng, centerLat],
-    zoom: 15.5,
-  });
+  // The map always looks at this location. It is worked out from the props every time,
+  // not stored in state: a stored copy is only read when the card first appears, so after
+  // a page change or an edit (View > save > refresh) the map kept looking at the old place
+  // and the circle was drawn off-screen. The cards are not draggable, so nothing needs saving.
+  const viewport = useMemo(
+    () => ({ center: [centerLng, centerLat], zoom: 15.5 }),
+    [centerLng, centerLat],
+  );
 
   const center =
     centerLng != null && centerLat != null ? [centerLng, centerLat] : null;
@@ -64,7 +68,7 @@ export default function Items({
         <div className="relative h-[350px] w-full overflow-hidden rounded-b-[15px]">
           <Map
             viewport={viewport}
-            onViewportChange={setViewport}
+            onViewportChange={() => {}}
             ref={mapRef}
             center={[centerLng, centerLat]}
             zoom={viewport.zoom}
@@ -91,7 +95,7 @@ export default function Items({
               <span className="text-muted-foreground">lng:</span> {centerLng}
             </span>
             <span>
-              <span className="text-muted-foreground">lat:</span> {centerLng}
+              <span className="text-muted-foreground">lat:</span> {centerLat}
             </span>
             <span>
               <span className="text-muted-foreground">Radius:</span> {radius}

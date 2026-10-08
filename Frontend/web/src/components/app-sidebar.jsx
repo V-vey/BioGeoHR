@@ -41,6 +41,7 @@ const items = [
     children: [
       { title: "All Attendance", url: "/attendance" },
       { title: "Holidays", url: "/attendance/holidays" },
+      { title: "Working Hours", url: "/attendance/working-hours" },
       { title: "Flagged Attendance", url: "/attendance/flagged" },
       { title: "Location", url: "/attendance/location" },
     ],

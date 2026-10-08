@@ -144,6 +144,7 @@ export default function PayrollReportOutlet() {
     "Gov't",
     "Tax",
     "Late ded.",
+    "Absent ded.",
     "Loan",
     ...(hasOther ? ["Other"] : []),
     "Net pay",
@@ -163,6 +164,7 @@ export default function PayrollReportOutlet() {
       fmt(r.government),
       fmt(r.tax),
       fmt(r.late_deduction),
+      fmt(r.absent_deduction),
       fmt(r.loan),
       ...(hasOther ? [fmt(r.other_adjustments)] : []),
       fmt(r.net),
@@ -180,6 +182,7 @@ export default function PayrollReportOutlet() {
     fmt(total("government")),
     fmt(total("tax")),
     fmt(total("late_deduction")),
+    fmt(total("absent_deduction")),
     fmt(total("loan")),
     ...(hasOther ? [fmt(total("other_adjustments"))] : []),
     fmt(total("net")),
@@ -207,7 +210,7 @@ export default function PayrollReportOutlet() {
     const doc = new jsPDF({ orientation: "landscape" });
 
     doc.setFontSize(14);
-    doc.text("Academia de Santiago of Tarlac", 14, 14);
+    doc.text("BioGeoHR", 14, 14);
     doc.setFontSize(11);
     doc.text("Payroll Report", 14, 21);
     doc.setFontSize(9);
@@ -223,9 +226,17 @@ export default function PayrollReportOutlet() {
       body: reportBody(money),
       foot: [reportTotals(money)],
       styles: { fontSize: 7, halign: "right" },
-      columnStyles: { 0: { halign: "left" }, 1: { halign: "left" }, 2: { halign: "left" } },
+      columnStyles: {
+        0: { halign: "left" },
+        1: { halign: "left" },
+        2: { halign: "left" },
+      },
       headStyles: { fillColor: [42, 175, 86] },
-      footStyles: { fillColor: [235, 235, 235], textColor: 20, fontStyle: "bold" },
+      footStyles: {
+        fillColor: [235, 235, 235],
+        textColor: 20,
+        fontStyle: "bold",
+      },
     });
 
     doc.save(`${fileStem}.pdf`);
@@ -311,6 +322,7 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Gov't</th>
                 <th className="px-3 py-2 text-right font-medium">Tax</th>
                 <th className="px-3 py-2 text-right font-medium">Late Ded</th>
+                <th className="px-3 py-2 text-right font-medium">Absent Ded</th>
                 <th className="px-3 py-2 text-right font-medium">Loan</th>
                 <th className="px-3 py-2 text-right font-medium">Net Pay</th>
               </tr>
@@ -331,6 +343,9 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{money(r.tax)}</td>
                   <td className="px-3 py-2 text-right">
                     {money(r.late_deduction)}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {money(r.absent_deduction)}
                   </td>
                   <td className="px-3 py-2 text-right">{money(r.loan)}</td>
                   <td className="px-3 py-2 text-right font-medium">

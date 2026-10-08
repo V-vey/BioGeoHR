@@ -33,14 +33,16 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
             },
           },
         );
-        if (!fetch == null) {
+        // only the Dashboard passes a reload function; the other pages pass nothing
+        if (typeof fetch === "function") {
           fetch();
         }
         onClose();
-        alert("The Leave Have Been " + { status });
+        alert(`The leave request has been ${status.toLowerCase()}.`);
       } catch (error) {
         console.error("Failed to update leave application:", error);
-        // alert(error.response?.data?.message || "Something went wrong.");
+        // show why, for example "Insufficient leave balance"
+        setErrorMsg(error.response?.data?.message || "Something went wrong.");
       }
     };
   }

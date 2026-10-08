@@ -87,17 +87,19 @@ class UsersController extends Controller
                 'paternity' => 7,
                 'maternity' => 120,
             ]);
-        } 
-        LeaveBalance::create([
-            'user_id' => $users->id,
-            'sick' => 0,
-            'vacation' => 0,
-            'emergency' => 0,
-            'birthday' => 0,
-            'solo_parent' => 0,
-            'paternity' => 0,
-            'maternity' => 0,
-        ]);
+        } else {
+            // not Regular yet (Probationary): the row exists, with no credits
+            LeaveBalance::create([
+                'user_id' => $users->id,
+                'sick' => 0,
+                'vacation' => 0,
+                'emergency' => 0,
+                'birthday' => 0,
+                'solo_parent' => 0,
+                'paternity' => 0,
+                'maternity' => 0,
+            ]);
+        }
        
 
         AuditLog::record('admin', 'employee_created', 'success', $users->name);

@@ -13,6 +13,7 @@ class LeaveRequestData {
   final String reason;
   final String status; // "Pending" | "Approved" | "Rejected"
   final String? remarks; // what HR wrote when deciding (can be empty)
+  final DateTime? createdAt; // when the employee submitted it
 
   LeaveRequestData({
     required this.id,
@@ -22,7 +23,25 @@ class LeaveRequestData {
     required this.reason,
     required this.status,
     this.remarks,
+    this.createdAt,
   });
+
+  /// Calendar days covered, counted the way the server counts them (both ends included).
+  int get days => endDate.difference(startDate).inDays + 1;
+
+  /// "1 day" / "2 days"
+  String get durationText => days == 1 ? '1 day' : '$days days';
+
+  /// "4/7/2026 - 4/8/2026" (the style of the mockup)
+  String get dateSpan {
+    final f = DateFormat('M/d/yyyy');
+    return '${f.format(startDate)} - ${f.format(endDate)}';
+  }
+
+  /// "4/6/2026", or '' when the server did not send it
+  String get submittedOn => createdAt == null
+      ? ''
+      : DateFormat('M/d/yyyy').format(createdAt!.toLocal());
 
   /// "Oct 14 – Oct 15, 2026", or "Oct 12, 2026" for a one-day leave.
   String get dateRange {
@@ -41,6 +60,7 @@ class LeaveRequestData {
         reason: (j['reason'] ?? '').toString(),
         status: j['status'].toString(),
         remarks: j['remarks']?.toString(),
+        createdAt: DateTime.tryParse((j['created_at'] ?? '').toString()),
       );
 }
 

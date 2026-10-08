@@ -262,14 +262,15 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                   <div className="flex flex-row gap-2 w-full">
                     <div className="flex-2">
                       <div className="flex flex-row items-center gap-2  bg-white  px-4 py-3 border border-[#b2b2b2] rounded-[10px]">
-                        <div className="border rounded-[10px] w-20 h-20 overflow-hidden">
+                        <div className="w-25 h-25 shrink-0 border border-[#b2b2b2] rounded-[10px] overflow-hidden">
                           <AuthImage
                             src={imageSrc}
                             fallback={fallbackImage}
                             alt={`${emp.name || "User"}'s Profile`}
-                            className="object-cover scale-110"
+                            className="w-full h-full object-cover"
                           />
                         </div>
+
                         <div className="flex flex-col gap-4 h-full w-full py-2">
                           <div className="flex flex-col items-start">
                             <div className="flex flex-row w-full justify-between">
@@ -433,7 +434,7 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                       src={imageSrc}
                       fallback={fallbackImage}
                       alt={`${emp.name || "User"}'s Profile`}
-                      className="object-cover scale-110"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <ProfInf label={"Name: "} data={emp.name} />

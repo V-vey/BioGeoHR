@@ -13,9 +13,7 @@ export default function ItemContainer({ item, onSaved }) {
   });
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
-  const imageSrc = item.image_path
-    ? `${url}/${item.image_path}`
-    : null;
+  const imageSrc = item.image_path ? `${url}/${item.image_path}` : null;
   const onView = () => {
     setView(true);
   };
@@ -45,7 +43,7 @@ export default function ItemContainer({ item, onSaved }) {
                   src={imageSrc}
                   fallback={fallbackImage}
                   alt={`${item.name || "User"}'s Profile`}
-                  className="object-cover scale-110"
+                  className="w-full h-full object-cover"
                 />
               </div>
 

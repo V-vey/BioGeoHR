@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('myLeave', [LeaveApplicationController::class, 'myLeave']);
     Route::get('myLeaveBalance', [LeaveBalanceController::class, 'mine']);
     Route::post('applyLeave', [LeaveApplicationController::class, 'store']);
+    Route::delete('myLeave/{id}', [LeaveApplicationController::class, 'cancelMine']);
 
     Route::get('myPayslip', [PayslipController::class, 'mine']);
     Route::get('mySalary', [SalaryController::class, 'mine']);

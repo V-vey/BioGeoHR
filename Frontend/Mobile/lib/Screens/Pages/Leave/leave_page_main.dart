@@ -26,7 +26,10 @@ class _LeavePageMainState extends State<LeavePageMain> {
               onApplied: () => setState(() => reload++),
             ),
             const SizedBox(height: 15),
-            LeaveHistory(key: ValueKey('his$reload')),
+            LeaveHistory(
+              key: ValueKey('his$reload'),
+              onChanged: () => setState(() => reload++),
+            ),
           ],
         ),
       ),

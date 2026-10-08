@@ -181,6 +181,7 @@ class SalaryService
         */
    
         $absenceDeduction = 0;
+        $absentDays = 0;
         if ($periodStart && $periodEnd) {
             $absentDays = Attendance::where('user_id', $userId)
                 ->where('status', 'Absent')
@@ -203,6 +204,7 @@ class SalaryService
             'net_pay' => $netPay,
             'income_tax' => $incomeTax,
             'absence_deduction' => $absenceDeduction,
+            'absent_days' => $absentDays,
             'semi_month' => $semiMonth,
             'paycheck' => $paycheck,
             'taxable_income' => $taxableIncome,

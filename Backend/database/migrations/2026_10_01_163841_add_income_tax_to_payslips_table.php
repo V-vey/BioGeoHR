@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
 {
-    Schema::table('payslips', function (Blueprint $table) {
-        $table->decimal('income_tax', 10, 2)->default(0);
-    });
+    if (!Schema::hasColumn('payslips', 'income_tax')) {
+        Schema::table('payslips', function (Blueprint $table) {
+            $table->decimal('income_tax', 10, 2)->default(0);
+        });
+    }
 }
 
 public function down(): void

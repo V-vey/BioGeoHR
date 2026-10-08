@@ -36,7 +36,6 @@ class _LeaveBalanceItemState extends State<LeaveBalance> {
         }
         return LeaveBalancePanel(
           balances: snap.data!,
-          name: '',
           onApply: () async {
             final sent = await Navigator.push<bool>(
               context,

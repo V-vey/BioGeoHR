@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../Controller/Attendance/attendance_model.dart';
 import '../../../Controller/Attendance/attendance_controller.dart';
+import '../../../Controller/Attendance/work_duration.dart';
 import '../../Reusable/Items/attendance_item_layout.dart';
 import 'Items/atttendance_pages.dart';
 import 'monthly_attendance.dart';
@@ -176,6 +177,11 @@ class _AttendancePageMainState extends State<AttendancePageMain> {
                             isVisible: _opened.contains(i),
                             clockIn: _time(records[i].clockIn),
                             clockOut: _time(records[i].clockOut),
+                            duration: workDuration(
+                              records[i].clockIn,
+                              records[i].clockOut,
+                              date: records[i].date,
+                            ),
                           ),
                         ),
                       Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),

@@ -4,6 +4,7 @@ import 'package:flutter_biogeohr/Screens/Reusable/Items/attendance_item_layout.d
 // import 'RecentAttendanceItem.dart';
 // import '../../../../Reusable/Items/AttendanceItem.dart';
 import '../../../../../Controller/Homepage/recent_attendance.dart';
+import '../../../../../Controller/Attendance/work_duration.dart';
 
 //format time
 import 'package:intl/intl.dart';
@@ -22,6 +23,7 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
   String status = '';
   String clockIn = '';
   String clockOut = '';
+  String duration = '--';
 
   // what the card shows: still loading, nothing recorded yet, or the server failed
   bool loading = true;
@@ -61,6 +63,7 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
         status = result.$3;
         clockIn = parsedIn;
         clockOut = parsedOut;
+        duration = workDuration(result.$4, result.$5, date: result.$2);
         loading = false;
       });
     } catch (_) {
@@ -144,6 +147,7 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
                 isVisible: isVisible,
                 clockIn: clockIn,
                 clockOut: clockOut,
+                duration: duration,
               ), // Recent
           ],
         ),

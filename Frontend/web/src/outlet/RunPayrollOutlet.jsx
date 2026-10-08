@@ -103,7 +103,16 @@ export default function RunPayrollOutlet() {
   const govt = (r) => Number(r.sss) + Number(r.philhealth) + Number(r.pagibig);
 
   const totals = useMemo(() => {
-    const t = { count: 0, gross: 0, gov: 0, tax: 0, late: 0, loan: 0, net: 0 };
+    const t = {
+      count: 0,
+      gross: 0,
+      gov: 0,
+      tax: 0,
+      late: 0,
+      absent: 0,
+      loan: 0,
+      net: 0,
+    };
     rows
       .filter((r) => !excluded.includes(r.user_id))
       .forEach((r) => {
@@ -112,6 +121,7 @@ export default function RunPayrollOutlet() {
         t.gov += govt(r);
         t.tax += Number(r.income_tax);
         t.late += Number(r.late_deduction);
+        t.absent += Number(r.absence_deduction);
         t.loan += Number(r.loan_deduction);
         t.net += Number(r.net_pay);
         // overtime Comment
@@ -121,6 +131,7 @@ export default function RunPayrollOutlet() {
   }, [rows, excluded]);
 
   const lateCount = rows.filter((r) => Number(r.late_deduction) > 0).length;
+  const absentCount = rows.filter((r) => Number(r.absent_days) > 0).length;
 
   return (
     <div className="bg-white border border-[#eef0f5] rounded-[14px] overflow-hidden">
@@ -196,9 +207,11 @@ export default function RunPayrollOutlet() {
       <div className="mx-4 mt-4 md:mx-6 flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
-          Late deduction: 1 day's pay after 3 lates this month. SSS, PhilHealth,
-          Pag-IBIG and BIR income tax are withheld. Loan installments are
-          deducted on the second cutoff.
+          Late deduction: 1 day's pay after 3 lates this month. Absence
+          deduction: 1 day's pay for each day marked Absent (approved leave and
+          holidays are not counted). SSS, PhilHealth, Pag-IBIG and BIR income
+          tax are withheld. Loan installments are deducted on the second
+          cutoff.
         </span>
       </div>
 
@@ -224,6 +237,7 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Gov't</th>
                   <th className="py-2 px-2 font-semibold">Tax</th>
                   <th className="py-2 px-2 font-semibold">Late</th>
+                  <th className="py-2 px-2 font-semibold">Absent</th>
                   <th className="py-2 px-2 font-semibold">Loan</th>
                   {/* overtime Comment
                   <th className="py-2 px-2 font-semibold">Overtime</th>
@@ -236,7 +250,7 @@ export default function RunPayrollOutlet() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="py-6 text-center text-sm text-[#8a90a3]"
                     >
                       Loading preview...
@@ -245,7 +259,7 @@ export default function RunPayrollOutlet() {
                 ) : rows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="py-6 text-center text-sm text-[#8a90a3]"
                     >
                       No employees to pay for this period.
@@ -254,6 +268,7 @@ export default function RunPayrollOutlet() {
                 ) : (
                   rows.map((r) => {
                     const hasLate = Number(r.late_deduction) > 0;
+                    const absentDays = Number(r.absent_days) || 0;
                     return (
                       <tr
                         key={r.user_id}
@@ -279,6 +294,12 @@ export default function RunPayrollOutlet() {
                               Late deduction applied
                             </div>
                           )}
+                          {absentDays > 0 && (
+                            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#EC6668]">
+                              <TriangleAlert className="w-3 h-3" />
+                              Absent {absentDays} day{absentDays > 1 ? "s" : ""}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-2 text-sm">
                           {money(r.gross_salary)}
@@ -289,6 +310,9 @@ export default function RunPayrollOutlet() {
                         </td>
                         <td className="py-3 px-2 text-sm">
                           {money(r.late_deduction)}
+                        </td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.absence_deduction)}
                         </td>
                         <td className="py-3 px-2 text-sm">
                           {money(r.loan_deduction)}
@@ -342,6 +366,12 @@ export default function RunPayrollOutlet() {
               </span>
             </div>
             <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Absence deductions</span>
+              <span className="font-semibold text-[#EC6668]">
+                −{money(totals.absent)}
+              </span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-[#8a90a3]">Loan deductions</span>
               <span className="font-semibold text-[#EC6668]">
                 −{money(totals.loan)}
@@ -366,6 +396,15 @@ export default function RunPayrollOutlet() {
               <span className="text-xs text-[#8a6d10] text-left leading-relaxed">
                 {lateCount} employee{lateCount > 1 ? "s have" : " has"} a late
                 deduction this period. Review before running.
+              </span>
+            </div>
+          )}
+          {absentCount > 0 && (
+            <div className="flex items-start gap-2.5 mt-4 p-3 rounded-[8px] bg-[#EC6668]/10">
+              <TriangleAlert className="w-4 h-4 text-[#EC6668] shrink-0 mt-0.5" />
+              <span className="text-xs text-[#EC6668] text-left leading-relaxed">
+                {absentCount} employee{absentCount > 1 ? "s have" : " has"} an
+                absence deduction this period. Review before running.
               </span>
             </div>
           )}

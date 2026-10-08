@@ -178,14 +178,14 @@ export default function EdiPofiletModal({
                     <img
                       src={photoPreview}
                       alt={`${emp.name || "User"}'s Profile`}
-                      className="object-cover scale-110"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <AuthImage
                       src={imageSrc}
                       fallback={fallbackImage}
                       alt={`${emp.name || "User"}'s Profile`}
-                      className="object-cover scale-110"
+                      className="w-full h-full object-cover"
                     />
                   )}
                   <div className="absolute inset-0 bg-black/40 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -306,13 +306,13 @@ export default function EdiPofiletModal({
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-1 rounded-full border border-[#b2b2b2]"
+                className="px-4 py-1 rounded-full text-white bg-[#EC6668] hover:bg-[#EC6668]/80"
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#6675EC]"
+                className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80"
               >
                 Save
               </button>

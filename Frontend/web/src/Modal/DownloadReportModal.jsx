@@ -52,7 +52,7 @@ export default function DownloadReportModal({ attendance, onClose }) {
     const doc = new jsPDF({ orientation: "landscape" });
 
     doc.setFontSize(14);
-    doc.text("Academia de Santiago of Tarlac", 14, 14);
+    doc.text("BioGeoHR", 14, 14);
     doc.setFontSize(11);
     doc.text("Attendance Report", 14, 21);
     doc.setFontSize(9);

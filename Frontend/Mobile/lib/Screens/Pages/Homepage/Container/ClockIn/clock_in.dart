@@ -28,7 +28,6 @@ class ClockIn extends StatefulWidget {
 
 class _ClockInState extends State<ClockIn> {
   //with AutomaticKeepAliveClientMixin and bool get wantKeepAlive will make it run
-  @override
   // bool get wantKeepAlive => true;
   final LeaveBalance bal = LeaveBalance();
 

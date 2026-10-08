@@ -116,6 +116,7 @@ export default function Location() {
         >
           {pageItems.map((loc) => (
             <Items
+              key={loc.id}
               id={loc.id}
               name={loc.name}
               centerLat={loc.latitude}

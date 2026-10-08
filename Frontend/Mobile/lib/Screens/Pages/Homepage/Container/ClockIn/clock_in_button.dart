@@ -16,6 +16,36 @@ import '../../../../../Controller/Homepage/ClockIn/save_attendance_clock_in.dart
 import '../../../../../Controller/Homepage/count_late.dart';
 import 'package:geolocator/geolocator.dart';
 
+/// The "are you sure?" pop-up before clocking in or out. true = go ahead.
+/// It cannot be dismissed by tapping outside, so the employee has to pick a button.
+Future<bool> _confirm(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+}) async {
+  if (!context.mounted) return false;
+  final ok = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}
+
 class Clockinbutton extends StatelessWidget {
   final AuthStorage authStorage = AuthStorage();
   final Biometric biometric = Biometric();
@@ -56,11 +86,16 @@ class Clockinbutton extends StatelessWidget {
             // 1. Remove the standard 48.0 minimum height constraint
             minimumSize: Size.zero,
 
-            // 2. Clear out all the default internal text padding
-            padding: EdgeInsets.zero,
+            // 2. A small, even padding around the text, so the colour has room to show
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
 
             // 3. Remove the built-in target interaction tap boundary box size
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+
+            // red while clocked in (tap to clock out), green otherwise (tap to clock in)
+            backgroundColor: isRunning ? Color(0xFFEC6668) : Color(0xFF2AAF56),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
 
           onPressed: () async {
@@ -69,9 +104,29 @@ class Clockinbutton extends StatelessWidget {
 
             //check if the timer is running
             if (isRunning) {
+              // ask first: a stray tap would end the day
+              if (!await _confirm(
+                context,
+                title: 'Clock out?',
+                message:
+                    'You will end your day. You cannot clock in again today after clocking out.',
+                confirmLabel: 'Clock Out',
+              )) {
+                return;
+              }
               timerReset();
               statusInactive();
               clock.clockOut();
+              return;
+            }
+
+            // ask first: there is only one clock-in a day, so make sure it is on purpose
+            if (!await _confirm(
+              context,
+              title: 'Clock in?',
+              message: 'You can only clock in once a day.',
+              confirmLabel: 'Clock In',
+            )) {
               return;
             }
 
@@ -111,7 +166,9 @@ class Clockinbutton extends StatelessWidget {
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(bio.$2 ?? 'Biometric check failed. Please try again.'),
+                  content: Text(
+                    bio.$2 ?? 'Biometric check failed. Please try again.',
+                  ),
                 ),
               );
               return;
@@ -145,7 +202,7 @@ class Clockinbutton extends StatelessWidget {
               fontFamily: 'Roboto',
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF3A3A3A),
+              color: Colors.white,
             ),
           ),
         ),

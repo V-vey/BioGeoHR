@@ -115,8 +115,8 @@ export default function Leave() {
         setSearch={handleSearch}
         onFilterApply={handleFilterApply}
       >
-        {pageItems.map((leave, i) => (
-          <Item fetch={leave} />
+        {pageItems.map((leave) => (
+          <Item key={leave.id} fetch={leave} />
         ))}
       </Containers>
     </div>

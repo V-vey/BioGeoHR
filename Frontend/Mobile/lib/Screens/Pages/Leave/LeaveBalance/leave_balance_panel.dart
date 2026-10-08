@@ -4,15 +4,9 @@ import 'leave_balance_item.dart';
 
 class LeaveBalancePanel extends StatelessWidget {
   final LeaveBalances balances;
-  final String name;
   final VoidCallback? onApply;
 
-  const LeaveBalancePanel({
-    super.key,
-    required this.balances,
-    this.name = '',
-    this.onApply,
-  });
+  const LeaveBalancePanel({super.key, required this.balances, this.onApply});
 
   @override
   Widget build(BuildContext context) {
@@ -54,16 +48,6 @@ class LeaveBalancePanel extends StatelessWidget {
                   color: Color(0xFF6675EC),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              Expanded(
-                // a long name is cut with "..."
-                child: Text(
-                  name,
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
             ],

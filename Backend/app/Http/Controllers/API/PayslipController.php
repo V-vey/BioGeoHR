@@ -188,8 +188,12 @@ class PayslipController extends Controller
             $gross   = $p->gross_salary / 2;
             $gov     = ($p->sss + $p->philhealth + $p->pagibig) / 2;
             $lateDed = $p->late_deduction / 2;
-            // whatever else lowered the pay (e.g. an absence deduction), so the columns add up
+      
             $other   = ($gross - $p->net_pay) - ($gov + $p->income_tax + $lateDed + $p->loan_deduction);
+
+            $absentDays  = (int) ($byStatus['Absent'] ?? 0);
+            $absenceDed  = ($absentDays > 0 && $other > 0.01) ? $other : 0;
+            $other      -= $absenceDed;
 
             return [
                 'user_id'           => $p->user_id,
@@ -205,6 +209,7 @@ class PayslipController extends Controller
                 'government'        => round($gov, 2),
                 'tax'               => round($p->income_tax, 2),
                 'late_deduction'    => round($lateDed, 2),
+                'absent_deduction'  => round($absenceDed, 2),
                 'loan'              => round($p->loan_deduction, 2),
                 'other_adjustments' => abs($other) > 0.01 ? round($other, 2) : 0,
                 'net'               => round($p->net_pay, 2),
@@ -284,6 +289,9 @@ class PayslipController extends Controller
                 'pagibig' => $result['pagibig'],
                 'income_tax' => $result['income_tax'],
                 'late_deduction' => $result['late_deduction'],
+                // one day's pay for each day marked Absent in this period (already inside net_pay)
+                'absent_days' => $result['absent_days'],
+                'absence_deduction' => round($result['absence_deduction'], 2),
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
                 // overtime Comment

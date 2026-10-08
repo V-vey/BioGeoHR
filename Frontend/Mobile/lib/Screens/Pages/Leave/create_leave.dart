@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../Controller/Leave/apply_leave.dart';
+import 'leave_card.dart';
 
 class CreateLeavePage extends StatefulWidget {
   const CreateLeavePage({super.key});
@@ -53,7 +54,20 @@ class _CreateLeavePageState extends State<CreateLeavePage> {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat('MMM d, yyyy');
+    final fmt = DateFormat('M/d/yyyy');
+
+    Widget dateButton(String hint, DateTime? value, bool start) => Expanded(
+      child: OutlinedButton(
+        onPressed: () => _pickDate(start: start),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF3A3A3A),
+          side: const BorderSide(color: Color(0xFF3A3A3A)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Text(value == null ? hint : fmt.format(value)),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Apply for leave'),
@@ -64,37 +78,77 @@ class _CreateLeavePageState extends State<CreateLeavePage> {
           spacing: 15,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
-              initialValue: _type,
-              decoration: const InputDecoration(
-                labelText: 'Leave type',
-                border: OutlineInputBorder(),
+            // Leave Type: [ dropdown ]
+            LeaveCard(
+              child: Row(
+                children: [
+                  const Text(
+                    'Leave Type:',
+                    style: TextStyle(fontSize: 16, color: Color(0x993A3A3A)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _type,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: [
+                        for (final t in types)
+                          DropdownMenuItem(value: t, child: Text(t)),
+                      ],
+                      onChanged: (v) => setState(() => _type = v!),
+                    ),
+                  ),
+                ],
               ),
-              items: [
-                for (final t in types)
-                  DropdownMenuItem(value: t, child: Text(t)),
-              ],
-              onChanged: (v) => setState(() => _type = v!),
             ),
-            OutlinedButton(
-              onPressed: () => _pickDate(start: true),
-              child: Text(_start == null ? 'Start date' : fmt.format(_start!)),
-            ),
-            OutlinedButton(
-              onPressed: () => _pickDate(start: false),
-              child: Text(_end == null ? 'End date' : fmt.format(_end!)),
-            ),
-            TextField(
-              controller: _reason,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Reason',
-                border: OutlineInputBorder(),
+            // Date: [ start ] [ end ]
+            LeaveCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const LeaveCardTitle('Date'),
+                  Row(
+                    spacing: 12,
+                    children: [
+                      dateButton('Start Date', _start, true),
+                      dateButton('End Date', _end, false),
+                    ],
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: _sending ? null : _submit,
-              child: Text(_sending ? 'Sending...' : 'Submit'),
+            // Reason: a big text area
+            LeaveCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const LeaveCardTitle('Reason'),
+                  TextField(
+                    controller: _reason,
+                    minLines: 9,
+                    maxLines: 9,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: LeavePillButton(
+                label: _sending ? 'Sending...' : 'Create',
+                color: leaveGreen,
+                onPressed: _sending ? null : _submit,
+              ),
             ),
           ],
         ),
