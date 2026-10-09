@@ -20,6 +20,7 @@ import Loading from "@/components/Loading";
 import Fallback from "@/assets/user.svg";
 import AuthImage from "@/components/AuthImage";
 import EditProfile from "@/Modal/EditProfileModal";
+
 function ProfInf({ label, data }) {
   return (
     <div className="flex flex-col flex-1 justify-start items-start ">
@@ -397,8 +398,8 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
               </div>
               <div className="flex-1 flex flex-col  gap-2 ">
                 <div className="flex-1 items-center bg-white w-full px-4 py-3.5 border border-[#b2b2b2] rounded-[10px] ">
-                  <p className="text-[#b2b2b2] text-[20px] font-bold text-start">
-                    Leave Balance:
+                  <p className="text-[#b2b2b2] text-[20px] font-bold text-center">
+                    Leave Balance
                   </p>
                 </div>
                 {Balance("Sick Leave: ", empData?.leave_balance?.sick)}

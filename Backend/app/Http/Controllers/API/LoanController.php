@@ -12,19 +12,21 @@ class LoanController extends Controller
 {
     public function index()
     {
-        $loans = Loan::with('user:id,name,department,position')->get();
+        $loans = Loan::with('user:id,name,department,position,image_path')->get();
         return response()->json($loans);
     }
     public function store(Request $request)
     {
 
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'loan_type' => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
-            'total_amount' => 'required|numeric|min:0',
-            'monthly_deduction' => 'required|numeric|min:0',
-            'start_date' => 'required|date'
-        ]);
+    $request->validate([
+        'user_id'           => 'required|exists:users,id',
+        'loan_type'         => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
+        'total_amount'      => 'required|numeric|gt:0',
+        'monthly_deduction' => 'required|numeric|gt:0|lte:total_amount',   // never more than the loan
+        'start_date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->toDateString(),
+    ], [
+        'monthly_deduction.lte' => 'The monthly deduction cannot be more than the loan amount.',
+    ]);
 
         $hasActiveLoan = Loan::where('user_id', $request->user_id)
             ->where('status', 'Active')
@@ -63,9 +65,24 @@ class LoanController extends Controller
             return response()->json(['message' => 'Loan not found'], 404);
         }
 
-        $loan->update($request->only([
-            'loan_type', 'total_amount', 'monthly_deduction', 'start_date',
-        ]));
+        $data = $request->validate([
+            'loan_type'         => 'sometimes|in:SSS,Pag-IBIG,Company,Cash Advance',
+            'total_amount'      => 'sometimes|numeric|gt:0',
+            'monthly_deduction' => 'sometimes|numeric|gt:0',
+            'start_date'        => 'sometimes|date|after_or_equal:2020-01-01|before_or_equal:' . now()->addYear()->toDateString(),
+        ]);
+
+
+        $total = $data['total_amount'] ?? $loan->total_amount;
+        if (($data['monthly_deduction'] ?? $loan->monthly_deduction) > $total) {
+            return response()->json(['message' => 'The monthly deduction cannot be more than the loan amount.'], 422);
+        }
+
+        if (isset($data['total_amount'])) {
+            $data['remaining_balance'] = max(0, $loan->remaining_balance + ($data['total_amount'] - $loan->total_amount));
+        }
+
+        $loan->update($data);
 
         return response()->json($loan);
     }

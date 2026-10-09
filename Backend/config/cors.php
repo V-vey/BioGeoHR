@@ -20,10 +20,13 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:5173',
+        'https://hpmhtxqk-5173.asse.devtunnels.ms',
     ],
-
-    'allowed_origins_patterns' => [],
+    //http://localhost:5173
+    //https://hpmhtxqk-5173.asse.devtunnels.ms/
+    'allowed_origins_patterns' => [
+    '#^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$#',
+    ],
 
     'allowed_headers' => ['*'],
 

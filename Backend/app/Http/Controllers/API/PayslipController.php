@@ -80,6 +80,7 @@ class PayslipController extends Controller
             if ($isDesignatedCutoff) {
                 $loan = Loan::where('user_id', $employee->id)
                     ->where('status', 'Active')
+                    ->whereDate('start_date', '<=', $request->period_end)
                     ->first();
                 if ($loan) {
                     $loanDeduction = min($loan->monthly_deduction, $loan->remaining_balance);

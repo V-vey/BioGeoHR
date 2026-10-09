@@ -4,20 +4,28 @@ import { url } from "@/resources/api";
 import { Plus, CircleOff, Landmark, Wallet, Info } from "lucide-react";
 import StatusBadge from "@/components/Payroll/StatusBadge";
 import Loading from "@/components/Loading";
+import AuthImage from "@/components/AuthImage";
+import Fallback from "@/assets/user.svg";
 
 const LOAN_TYPES = ["SSS", "Pag-IBIG", "Company", "Cash Advance"];
 
 const peso = (n) =>
-  "₱" +
-  Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0 });
+  "₱" + Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0 });
 
-const initials = (name) =>
-  (name || "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
+// The employee's photo, or the grey silhouette when there is none or it cannot be loaded:
+// the same round picture as on the All Employee page.
+function Avatar({ user }) {
+  return (
+    <div className="flex rounded-full w-10 h-10 border items-center overflow-hidden shrink-0">
+      <AuthImage
+        src={user?.image_path ? `${url}/${user.image_path}` : null}
+        fallback={Fallback}
+        alt={`${user?.name || "Employee"}'s photo`}
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
 
 const emptyForm = {
   user_id: "",
@@ -56,6 +64,13 @@ function NewLoanModal({ employees, onClose, onSaved }) {
 
   const fieldClass =
     "w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white";
+
+  // earliest start date = today; latest = one year from today (YYYY-MM-DD, on this computer's
+  // clock: toISOString() would use UTC and be a day behind in the Philippines in the morning)
+  const today = new Date().toLocaleDateString("en-CA");
+  const nextYear = new Date();
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+  const maxStartDate = nextYear.toLocaleDateString("en-CA");
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-5">
@@ -118,6 +133,7 @@ function NewLoanModal({ employees, onClose, onSaved }) {
             required
             type="number"
             min="0"
+            max={form.total_amount}
             step="0.01"
             value={form.monthly_deduction}
             onChange={update("monthly_deduction")}
@@ -130,6 +146,8 @@ function NewLoanModal({ employees, onClose, onSaved }) {
           <input
             required
             type="date"
+            min={today}
+            max={maxStartDate}
             value={form.start_date}
             onChange={update("start_date")}
             className={fieldClass}
@@ -206,7 +224,7 @@ export default function LoansOutlet() {
 
       {/* Stat row */}
       <div className="flex w-full justify-between gap-4">
-        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
+        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-[#b2b2b2] rounded-[10px]">
           <div className="font-medium text-[#6675EC] text-left">
             Active Loans
           </div>
@@ -217,7 +235,7 @@ export default function LoansOutlet() {
             <Wallet className="text-[#6675EC] w-10 h-10" />
           </div>
         </div>
-        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
+        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-[#b2b2b2] rounded-[10px]">
           <div className="font-medium text-[#6675EC] text-left">
             Total Outstanding
           </div>
@@ -228,10 +246,8 @@ export default function LoansOutlet() {
             <Landmark className="text-[#2AAF56] w-10 h-10" />
           </div>
         </div>
-        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-[0_0_6.3px_3px_rgba(0,0,0,0.25)]">
-          <div className="font-medium text-[#6675EC] text-left">
-            Fully Paid
-          </div>
+        <div className="flex-1 min-w-37.5 px-3 py-2 bg-white border border-[#b2b2b2] rounded-[10px]">
+          <div className="font-medium text-[#6675EC] text-left">Fully Paid</div>
           <div className="flex items-start justify-between">
             <span className="text-[24px] font-regular text-[#3A3A3A]">
               {paidCount}
@@ -242,7 +258,7 @@ export default function LoansOutlet() {
       </div>
 
       {/* Policy note */}
-      <div className="flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 rounded-[10px]">
+      <div className="flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 border border-[#b2b2b2] rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
           Loans are interest-free with a fixed monthly deduction, taken once a
@@ -255,7 +271,7 @@ export default function LoansOutlet() {
       </div>
 
       {/* Loans table */}
-      <div className="bg-white border border-[#eef0f5] rounded-[14px] overflow-hidden">
+      <div className="bg-white border border-[#b2b2b2] rounded-[10px] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#eef0f5]">
           <div className="text-left">
             <h2 className="m-0 text-base font-bold text-[#3A3A3A]">
@@ -307,9 +323,7 @@ export default function LoansOutlet() {
                   >
                     <td className="py-3 pl-5 pr-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold shrink-0 bg-[#6675EC]">
-                          {initials(loan.user?.name)}
-                        </div>
+                        <Avatar user={loan.user} />
                         <div>
                           <div className="text-sm font-semibold text-[#3A3A3A]">
                             {loan.user?.name ?? "Unknown employee"}

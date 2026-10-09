@@ -290,3 +290,18 @@ code {
     @apply bg-transparent! dark:invert;
   }
 }
+
+/* ---- Fit-to-screen (see lib/fitScreen.js) -------------------------------------------------
+   On narrow screens the whole page is scaled down with CSS zoom, but vh / svh units are not
+   scaled with it. The parts that must fill the screen height are therefore divided by the
+   scale, so they still reach the bottom of the window. */
+html[data-fit] #root,
+html[data-fit] .min-h-svh {
+  min-height: calc(100svh / var(--fit));
+}
+html[data-fit] .h-svh {
+  height: calc(100svh / var(--fit));
+}
+html[data-fit] .login-container {
+  min-height: calc(100vh / var(--fit));
+}

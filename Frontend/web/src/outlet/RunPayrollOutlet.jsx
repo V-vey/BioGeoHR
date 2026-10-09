@@ -215,7 +215,7 @@ export default function RunPayrollOutlet() {
         </span>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
+      <div className="flex flex-col 2xl:flex-row gap-4 p-4 md:p-6">
         {/* Employee table */}
         <div className="flex-1 min-w-0 border border-[#eef0f5] rounded-[12px] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#eef0f5]">
@@ -336,7 +336,7 @@ export default function RunPayrollOutlet() {
         </div>
 
         {/* Summary panel */}
-        <div className="w-full lg:w-80 shrink-0 border border-[#eef0f5] rounded-[12px] p-5 h-fit">
+        <div className="w-full 2xl:w-80 shrink-0 border border-[#eef0f5] rounded-[12px] p-5 h-fit">
           <div className="text-sm font-bold text-[#3A3A3A] mb-4">
             Pay run summary
           </div>

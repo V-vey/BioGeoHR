@@ -6,6 +6,10 @@ import "./index.css";
 
 import { router } from "./resources/routes.jsx";
 import axios from "axios";
+import { installFitScreen } from "./lib/fitScreen";
+
+// scale the page down on laptop-size screens so every screen shows the same layout
+installFitScreen();
 
 axios.interceptors.response.use(
   (res) => res,
