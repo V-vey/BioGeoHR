@@ -5,11 +5,14 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import { format } from "date-fns";
 import Loading from "@/components/Loading";
+import { useDataChanged } from "@/lib/dataChanged";
 
 export default function FlaggedAttendanceOutlet() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flagged, setFlagged] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reload, setReload] = useState(0);
+  useDataChanged(["flag"], () => setReload((n) => n + 1)); // a new flag appears by itself
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,7 +32,7 @@ export default function FlaggedAttendanceOutlet() {
       }
     };
     fetchFlagged();
-  }, []);
+  }, [reload]);
 
   const [search, setSearch] = useState("");
   const handleSearch = (value) => {

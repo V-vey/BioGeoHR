@@ -104,12 +104,12 @@ class Clockinbutton extends StatelessWidget {
 
             //check if the timer is running
             if (isRunning) {
-              // ask first: a stray tap would end the day
+              // ask first: a stray tap would stop the clock
               if (!await _confirm(
                 context,
                 title: 'Clock out?',
                 message:
-                    'You will end your day. You cannot clock in again today after clocking out.',
+                    'Your work time stops now. You can clock in again later today if you need to.',
                 confirmLabel: 'Clock Out',
               )) {
                 return;
@@ -120,11 +120,11 @@ class Clockinbutton extends StatelessWidget {
               return;
             }
 
-            // ask first: there is only one clock-in a day, so make sure it is on purpose
+            // ask first, so a stray tap does not start the clock
             if (!await _confirm(
               context,
               title: 'Clock in?',
-              message: 'You can only clock in once a day.',
+              message: 'Your work time starts now.',
               confirmLabel: 'Clock In',
             )) {
               return;
@@ -176,14 +176,14 @@ class Clockinbutton extends StatelessWidget {
             if (bio.$1) {
               final success = await clock.clockIn();
               if (!success) {
-                // "already clocked in today" is not a failure: pick the timer back up
+                // "already clocked in" is not a failure: pick the timer back up
                 final alreadyIn = await resync();
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                       alreadyIn
-                          ? 'You are already clocked in today.'
+                          ? 'You are already clocked in.'
                           : 'Failed to save attendance. Please try again.',
                     ),
                   ),

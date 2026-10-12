@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../Controller/Homepage/leave_balance.dart' show LeaveBalances;
 import '../../../Controller/Leave/apply_leave.dart';
+import '../Homepage/Container/LeaveBalance/leave_balance_main.dart';
 import 'leave_card.dart';
 
 class CreateLeavePage extends StatefulWidget {
-  const CreateLeavePage({super.key});
+  // optional loader for the balance card, so the page can be tested without a server
+  final Future<LeaveBalances> Function()? balanceLoader;
+
+  const CreateLeavePage({super.key, this.balanceLoader});
 
   @override
   State<CreateLeavePage> createState() => _CreateLeavePageState();
@@ -78,6 +83,9 @@ class _CreateLeavePageState extends State<CreateLeavePage> {
           spacing: 15,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // the same Leave Balance card as the home screen, so the credits are in view
+            // while choosing the type and the days
+            HomeLeaveBalance(loader: widget.balanceLoader),
             // Leave Type: [ dropdown ]
             LeaveCard(
               child: Row(

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 
 import axios from "axios";
 import { url } from "@/resources/api";
+import { notifyError } from "@/lib/dialog";
 import "./login.css";
 
 // 1. FIXED: Removed the broken empty import string from line 7
@@ -32,8 +33,9 @@ function LoginPageMain() {
       await axios.post(url + "/login", loginForm).then(async (response) => {
         //block the user if they are not HR
         if (response.data.user !== "HR") {
-          alert(
+          notifyError(
             "You are not authorized to access this page. Only HR users can log in.",
+            "Not allowed",
           );
           return;
         }
@@ -57,14 +59,14 @@ function LoginPageMain() {
           }
           navigate("/dashboard");
         } else {
-          alert("Please try again. Something went Wrong");
+          notifyError("Please try again. Something went wrong.", "Could not log in");
         }
       });
     } catch (error) {
       if (error.response?.status === 300) {
-        alert("User not found. Please check your email.");
+        notifyError("User not found. Please check your email.", "Could not log in");
       } else if (error.response?.status === 301) {
-        alert("Password is incorrect. Please try again.");
+        notifyError("Password is incorrect. Please try again.", "Could not log in");
       } else {
         console.error("Error during login:", error);
       }

@@ -63,7 +63,12 @@ class _RecentAttendancePageState extends State<RecentAttendancePage> {
         status = result.$3;
         clockIn = parsedIn;
         clockOut = parsedOut;
-        duration = workDuration(result.$4, result.$5, date: result.$2);
+        duration = workDuration(
+          result.$4,
+          result.$5,
+          date: result.$2,
+          workedSeconds: result.$6,
+        );
         loading = false;
       });
     } catch (_) {

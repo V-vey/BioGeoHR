@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_biogeohr/Screens/LoginPage/text_box_password.dart';
+import '../../../../../Controller/Profile/user_profile_controller.dart';
 import 'user_profile_open.dart';
 import 'edit_profile_button.dart';
 
@@ -11,10 +12,23 @@ class UserProfile extends StatefulWidget {
   final String address;
   final String contact;
   final String email;
+  // the government numbers HR saved ('' = not set); shown read-only, only HR can change them
+  final List<FamilyMember> family; // spouse and children; shown only
+  final String employmentStatus; // Contractual or Permanent ('' = not set)
+  final String tin;
+  final String sssNumber;
+  final String philhealthNumber;
+  final String pagibigNumber;
   final String imagePath; // current photo, handed to the Edit Profile screen
   final VoidCallback? onSaved; // reload the profile after an edit
   const UserProfile({
     super.key,
+    this.family = const [],
+    this.employmentStatus = '',
+    this.tin = '',
+    this.sssNumber = '',
+    this.philhealthNumber = '',
+    this.pagibigNumber = '',
     this.imagePath = '',
     this.onSaved,
     required this.name,
@@ -84,6 +98,12 @@ class _UserProfileState extends State<UserProfile> {
                   address: widget.address,
                   contact: widget.contact,
                   email: widget.email,
+                  family: widget.family,
+                  employmentStatus: widget.employmentStatus,
+                  tin: widget.tin,
+                  sssNumber: widget.sssNumber,
+                  philhealthNumber: widget.philhealthNumber,
+                  pagibigNumber: widget.pagibigNumber,
                 ),
                 Container(width: 350, height: 1, color: Color(0xFFE0E0E0)),
                 EditProfileButton(

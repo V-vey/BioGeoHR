@@ -1,6 +1,7 @@
 import axios from "axios";
 import { url } from "@/resources/api";
 import React, { useState, useEffect } from "react";
+import { notifySuccess, notifyError } from "@/lib/dialog";
 
 export default function MapController({
   centerLng,
@@ -35,14 +36,13 @@ export default function MapController({
           })
           .then((response) => {
             if (response.status == 200) {
-              alert("New Location Successfuly");
-              alert("Edited Save");
+              notifySuccess("The location was updated.", "Location saved");
               refresh();
               onClose();
             }
           });
       } catch (e) {
-        alert("Something went wrong:", e);
+        notifyError("Please try again.");
       }
     } else if (!modal) {
       try {
@@ -56,11 +56,11 @@ export default function MapController({
           })
           .then((response) => {
             if (response.status == 201) {
-              alert("New Location Successfuly");
+              notifySuccess("The location was added.", "Location added");
             }
           });
       } catch (e) {
-        alert("Something went wrong:", e);
+        notifyError("Please try again.");
       }
     }
   };
@@ -77,13 +77,13 @@ export default function MapController({
         })
         .then((response) => {
           if (response.status == 200) {
-            alert("Delete Successful");
+            notifySuccess("The location was deleted.", "Location deleted");
             refresh();
             onClose();
           }
         });
     } catch (e) {
-      alert("Something went wrong:", e);
+      notifyError("Please try again.");
     }
   };
   return (
@@ -144,8 +144,8 @@ export default function MapController({
                 type="range"
                 name="radius"
                 id="radius"
-                min={100}
-                max={200}
+                min={10}
+                max={50}
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
                 className="

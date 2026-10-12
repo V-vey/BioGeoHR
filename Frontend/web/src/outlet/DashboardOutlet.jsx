@@ -6,7 +6,7 @@ import LeaveLayout from "@/components/Dashboard/leave-request";
 import EmployeeList from "@/components/Dashboard/list-of-employee";
 import PendingLeave from "@/components/Dashboard/pending-leave";
 import FlaggedSummary from "@/components/Dashboard/flagged-summary";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Containers from "@/components/container";
 import Test from "@/components/Dashboard/testingCard";
 import Loading from "@/components/Loading";
@@ -15,12 +15,17 @@ import CalendarV from "@/components/Dashboard/calendarV2";
 import axios from "axios";
 import { url } from "@/resources/api";
 import { Link } from "react-router-dom";
+import { useDataChanged } from "@/lib/dataChanged";
 // ICONS
 import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
   const [pending, setPending] = useState(5);
   const done = () => setPending((p) => Math.max(0, p - 1));
+  // bumped when the Notifier reports something new, so the cards below ask the server again
+  const [attTick, setAttTick] = useState(0);
+  const [flagTick, setFlagTick] = useState(0);
+  const [leaveTick, setLeaveTick] = useState(0);
   //Calendar
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -128,7 +133,7 @@ export default function DashboardOutlet() {
       }
     };
     fetchData();
-  }, []);
+  }, [attTick, leaveTick]);
 
   //FLAGGED
   const [flagged, setFlagged] = useState([]);
@@ -167,7 +172,7 @@ export default function DashboardOutlet() {
       }
     };
     fetchFlagged();
-  }, []);
+  }, [flagTick]);
   const [searchFlagged, setSearchFlagged] = useState("");
   const [currentPageFlagged, setCurrentPageFlagged] = useState(1);
   const filteredFlagged = flagged
@@ -211,6 +216,13 @@ export default function DashboardOutlet() {
   useEffect(() => {
     fetchPending();
   }, []);
+
+  useDataChanged(["attendance"], () => setAttTick((n) => n + 1));
+  useDataChanged(["flag"], () => setFlagTick((n) => n + 1));
+  useDataChanged(["leave"], () => {
+    setLeaveTick((n) => n + 1);
+    fetchPending();
+  });
 
   const leaveHeader = (
     <div className="flex flex-row justify-between items-center">
@@ -271,50 +283,66 @@ export default function DashboardOutlet() {
   }, []);
 
   //EMPLOYEE
-  const [employees, setEmployees] = useState([]);
-  // change to today attendance
+  // Today's attendance, one page at a time: the server searches, counts and pages it.
+  const EMP_PER_PAGE = 5;
+  const [employees, setEmployees] = useState([]); // the records of the current page only
+  const [totalEmp, setTotalEmp] = useState(0);
+  const [totalPagesEmp, setTotalPagesEmp] = useState(1);
+  const [currentPageEmp, setCurrentPageEmp] = useState(1);
+  const [searchEmp, setSearchEmp] = useState("");
+  const [searchEmpSent, setSearchEmpSent] = useState("");
+  const empLoaded = useRef(false);
+
+  // wait for a pause in typing before asking the server, and start again at page 1
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchEmpSent(searchEmp.trim());
+      setCurrentPageEmp(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchEmp]);
+
+  useEffect(() => {
+    let cancelled = false;
     const token = localStorage.getItem("token");
     const fetchEmployees = async () => {
       try {
+        const today = new Date().toLocaleDateString("en-CA"); // local date, yyyy-mm-dd
+        const params = {
+          date_from: today,
+          date_to: today,
+          page: currentPageEmp,
+          per_page: EMP_PER_PAGE,
+        };
+        if (searchEmpSent) params.search = searchEmpSent;
         const response = await axios.get(url + "/attendance", {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         });
-        const today = new Date().toISOString().slice(0, 10);
-        const todaysRecords = response.data.filter((r) => r.date === today);
-        setEmployees(todaysRecords);
+        if (cancelled) return;
+        const page = response.data;
+        setEmployees(page.data);
+        setTotalEmp(page.total);
+        setTotalPagesEmp(Math.max(1, page.last_page));
+        if (page.data.length === 0 && page.total > 0 && currentPageEmp > page.last_page)
+          setCurrentPageEmp(page.last_page);
       } catch (error) {
         console.error("Failed to load employee list:", error);
       } finally {
-        done();
+        if (!empLoaded.current) {
+          empLoaded.current = true;
+          done();
+        }
       }
     };
     fetchEmployees();
-  }, []);
-  const [currentPageEmp, setCurrentPageEmp] = useState(1);
-  const [searchEmp, setSearchEmp] = useState("");
-  const handleSearch = (value) => {
-    setSearchEmp(value);
-    setCurrentPageEmp(1);
-  };
-
-  const filteredEmp = employees
-    .filter((emp) => emp.name.toLowerCase().includes(searchEmp.toLowerCase()))
-    .reverse();
-
-  const itemsPerPageEmp = 5;
-  const totalPagesEmp = Math.max(
-    1,
-    Math.ceil(filteredEmp.length / itemsPerPageEmp),
-  );
-  const startIndexEmp = (currentPageEmp - 1) * itemsPerPageEmp;
-  const pageItemsEmp = filteredEmp.slice(
-    startIndexEmp,
-    startIndexEmp + itemsPerPageEmp,
-  );
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPageEmp, searchEmpSent, attTick]);
   const employeeHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Employee List</h2>
@@ -460,7 +488,7 @@ export default function DashboardOutlet() {
               headerDefault={false}
               header={employeeHeader}
               totalPages={totalPagesEmp}
-              total={filteredEmp.length}
+              total={totalEmp}
               spacing={false}
             >
               <div className="w-full justify-start">
@@ -473,7 +501,7 @@ export default function DashboardOutlet() {
                 </div>
                 <div className="h-2" />
                 <div className="flex flex-col gap-2">
-                  {pageItemsEmp.map((emp, i) => (
+                  {employees.map((emp, i) => (
                     <EmployeeList emp={emp} key={i} />
                   ))}
                 </div>

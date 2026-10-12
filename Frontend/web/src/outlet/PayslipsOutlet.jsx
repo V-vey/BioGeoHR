@@ -54,57 +54,69 @@ function buildSlip(p) {
 
 export default function PayslipsOutlet() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [payslips, setPayslips] = useState([]);
+  const [periods, setPeriods] = useState([]); // every pay period, newest first (no payslips)
+  const [inPeriodRaw, setInPeriodRaw] = useState([]); // the payslips of the chosen period only
+  const [yearPayslips, setYearPayslips] = useState([]); // one employee's payslips for the year
   const [loading, setLoading] = useState(true);
   const [employeeId, setEmployeeId] = useState(null);
 
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    "ngrok-skip-browser-warning": "true",
+  });
+
+  // the list of periods, to fill the period picker
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const fetchPayslips = async () => {
+    const fetchPeriods = async () => {
       try {
-        const response = await axios.get(url + "/payslips", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
+        const response = await axios.get(url + "/payslips/periods", {
+          headers: authHeaders(),
         });
-        setPayslips(response.data);
+        setPeriods(response.data);
+        if (response.data.length === 0) setLoading(false); // nothing to load next
       } catch (error) {
-        console.error("Failed to load payslips:", error);
-      } finally {
+        console.error("Failed to load pay periods:", error);
         setLoading(false);
       }
     };
-    fetchPayslips();
+    fetchPeriods();
   }, []);
-
-  const periods = useMemo(() => {
-    const seen = {};
-    payslips.forEach((p) => {
-      seen[periodKey(p)] = {
-        period_start: p.period_start,
-        period_end: p.period_end,
-      };
-    });
-    return Object.values(seen).sort(
-      (a, b) => new Date(b.period_start) - new Date(a.period_start),
-    );
-  }, [payslips]);
 
   const wanted = `${searchParams.get("start")}_${searchParams.get("end")}`;
   const period =
     periods.find((p) => periodKey(p) === wanted) ?? periods[0] ?? null;
+  const start = period?.period_start;
+  const end = period?.period_end;
+
+  // the payslips of the chosen period (one period at a time)
+  useEffect(() => {
+    if (!start || !end) return;
+    let cancelled = false;
+    const fetchPeriod = async () => {
+      try {
+        const response = await axios.get(url + "/payslips", {
+          params: { period_start: start, period_end: end },
+          headers: authHeaders(),
+        });
+        if (!cancelled) setInPeriodRaw(response.data);
+      } catch (error) {
+        console.error("Failed to load payslips:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchPeriod();
+    return () => {
+      cancelled = true;
+    };
+  }, [start, end]);
 
   const inPeriod = useMemo(
     () =>
-      period
-        ? payslips
-            .filter((p) => periodKey(p) === periodKey(period))
-            .sort((a, b) =>
-              (a.user?.name ?? "").localeCompare(b.user?.name ?? ""),
-            )
-        : [],
-    [payslips, period],
+      [...inPeriodRaw].sort((a, b) =>
+        (a.user?.name ?? "").localeCompare(b.user?.name ?? ""),
+      ),
+    [inPeriodRaw],
   );
 
   const current =
@@ -112,19 +124,41 @@ export default function PayslipsOutlet() {
 
   const slip = current ? buildSlip(current) : null;
 
+  // year-to-date needs that employee's payslips of the year, not everyone's
+  const currentUserId = current?.user_id;
+  const currentYear = current ? new Date(current.period_end).getFullYear() : null;
+  useEffect(() => {
+    if (!currentUserId || !currentYear) return;
+    let cancelled = false;
+    const fetchYear = async () => {
+      try {
+        const response = await axios.get(url + "/payslips", {
+          params: { user_id: currentUserId, year: currentYear },
+          headers: authHeaders(),
+        });
+        if (!cancelled) setYearPayslips(response.data);
+      } catch (error) {
+        console.error("Failed to load year-to-date payslips:", error);
+      }
+    };
+    fetchYear();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, currentYear]);
+
   const ytd = useMemo(() => {
     if (!current) return null;
-    const year = new Date(current.period_end).getFullYear();
-    const mine = payslips.filter(
+    const mine = yearPayslips.filter(
       (p) =>
         p.user_id === current.user_id &&
-        new Date(p.period_end).getFullYear() === year &&
+        new Date(p.period_end).getFullYear() === currentYear &&
         new Date(p.period_end) <= new Date(current.period_end),
     );
     const gross = mine.reduce((s, p) => s + halfGross(p), 0);
     const net = mine.reduce((s, p) => s + Number(p.net_pay), 0);
     return { gross, deductions: Math.max(0, gross - net), net };
-  }, [payslips, current]);
+  }, [yearPayslips, current, currentYear]);
 
   const choosePeriod = (key) => {
     const [start, end] = key.split("_");

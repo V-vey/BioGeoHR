@@ -7,6 +7,7 @@ import "./index.css";
 import { router } from "./resources/routes.jsx";
 import axios from "axios";
 import { installFitScreen } from "./lib/fitScreen";
+import DialogHost from "./components/DialogHost.jsx";
 
 // scale the page down on laptop-size screens so every screen shows the same layout
 installFitScreen();
@@ -27,5 +28,6 @@ axios.interceptors.response.use(
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <DialogHost />
   </React.StrictMode>,
 );

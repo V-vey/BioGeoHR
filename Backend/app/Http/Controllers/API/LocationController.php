@@ -26,7 +26,7 @@ class LocationController extends Controller
             'name' => 'required',
             'longitude' => 'required',
             'latitude' => 'required',
-            'radius' => 'required|numeric|min:100|max:200',
+            'radius' => 'required|numeric|min:10|max:50',
         ]);
 
         $locations = Location::create([
@@ -64,7 +64,7 @@ class LocationController extends Controller
             return response()->json(['message' => 'Location not found'], 404);
         }
         $request->validate([
-            'radius' => 'sometimes|numeric|min:100|max:200',
+            'radius' => 'sometimes|numeric|min:10|max:50',
         ]);
         $locations->update($request->all());
         return response()->json($locations);

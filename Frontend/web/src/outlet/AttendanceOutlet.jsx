@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import Containers from "../components/container.jsx";
 import Item from "@/components/Attendance/item-container.jsx";
-import { useFilterPanel } from "../hooks/useFilterPanel.js";
 import { Download } from "lucide-react";
 
 import { url } from "@/resources/api";
+import { useDataChanged } from "@/lib/dataChanged";
 import axios from "axios";
 
 import { format, parse, differenceInMinutes } from "date-fns";
@@ -27,40 +27,45 @@ const formatHours = (timeIn, timeOut) => {
   return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 };
 
+// A day can have several clock-ins (the employee clocks in again after clocking out). The server
+// adds the sessions up, so the hours are what was really worked, not first in to last out.
+const formatWorked = (att) => {
+  const sessions = att.sessions > 1 ? ` · ${att.sessions} sessions` : "";
+  if (att.workedSeconds > 0) {
+    const minutes = Math.floor(att.workedSeconds / 60);
+    return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m${sessions}`;
+  }
+  return formatHours(att.clockIn, att.clockOut);
+};
+
+const ITEMS_PER_PAGE = 16;
+
+// Searching, filtering and paging are done by the server (one page at a time), so this
+// page stays fast however many attendance records there are.
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState([]); // the records of the current page only
+  const [total, setTotal] = useState(0); // how many records match the search and filters
+  const [totalPages, setTotalPages] = useState(1);
+  const [departments, setDepartments] = useState([]); // for the filter panel
+  const [loading, setLoading] = useState(true); // the first load
+  const [reload, setReload] = useState(0); // bump it to ask the server again
+  useDataChanged(["attendance"], () => setReload((n) => n + 1)); // new clock-ins appear by themselves
   const [showDownload, setShowDownload] = useState(false);
   const [showCreateAttendance, setShowCreateAttendnace] = useState(false);
-  const token = localStorage.getItem("token");
-
-  const fetchAttendance = async () => {
-    try {
-      const response = await axios.get(url + "/attendance", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      setAttendance(response.data);
-    } catch (error) {
-      console.error("Failed to Load Locations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAttendance();
-  }, []);
 
   const [search, setSearch] = useState("");
-  const handleSearch = (value) => {
-    setSearch(value);
-    setCurrentPage(1);
-  };
+  const [searchSent, setSearchSent] = useState(""); // the search the server was last asked for
+
+  // wait for a pause in typing before asking the server, and start again at page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchSent(search.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // what the filter panel last applied
   const [filters, setFilters] = useState({
@@ -73,9 +78,44 @@ export default function Attendance() {
     setCurrentPage(1);
   };
 
-  const departments = [
-    ...new Set(attendance.map((att) => att.department).filter(Boolean)),
-  ].sort();
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPage = async () => {
+      try {
+        const params = { page: currentPage, per_page: ITEMS_PER_PAGE };
+        if (searchSent) params.search = searchSent;
+        if (filters.status !== "All") params.status = filters.status;
+        if (filters.department !== "All") params.department = filters.department;
+        if (filters.dates.from) params.date_from = filters.dates.from;
+        if (filters.dates.to) params.date_to = filters.dates.to;
+
+        const response = await axios.get(url + "/attendance", {
+          params,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        if (cancelled) return; // a newer request has replaced this one
+        const page = response.data;
+        setRows(page.data);
+        setTotal(page.total);
+        setTotalPages(Math.max(1, page.last_page));
+        setDepartments(page.departments ?? []);
+        // the page we asked for no longer exists (for example after a filter): go to the last one
+        if (page.data.length === 0 && page.total > 0 && currentPage > page.last_page)
+          setCurrentPage(page.last_page);
+      } catch (error) {
+        console.error("Failed to load attendance:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchPage();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, searchSent, filters, reload]);
 
   const filterConfig = [
     {
@@ -92,33 +132,6 @@ export default function Attendance() {
     },
     { key: "dates", label: "Date", type: "dateRange" },
   ];
-
-  const filteredAttendance = attendance
-    .filter((att) => {
-      const day = String(att.date).slice(0, 10);
-      if (!(att.name ?? "").toLowerCase().includes(search.toLowerCase()))
-        return false;
-      if (filters.status !== "All" && att.status !== filters.status)
-        return false;
-      if (filters.department !== "All" && att.department !== filters.department)
-        return false;
-      if (filters.dates.from && day < filters.dates.from) return false;
-      if (filters.dates.to && day > filters.dates.to) return false;
-      return true;
-    })
-    .reverse();
-
-  const itemsPerPage = 16;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAttendance.length / itemsPerPage),
-  );
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const pageItems = filteredAttendance.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
 
   return (
     <>
@@ -137,11 +150,11 @@ export default function Attendance() {
           filterConfig={filterConfig}
           onFilterApply={handleFilterApply}
           totalPages={totalPages}
-          total={filteredAttendance.length}
+          total={total}
           search={search}
-          setSearch={handleSearch}
+          setSearch={setSearch}
         >
-          {pageItems.map((att, i) => (
+          {rows.map((att, i) => (
             <Item
               key={i}
               date={format(new Date(att.date), "MMMM d, yyyy")}
@@ -152,7 +165,7 @@ export default function Attendance() {
               status={att.status}
               clockIn={formatTime(att.clockIn)}
               clockOut={formatTime(att.clockOut)}
-              hours={formatHours(att.clockIn, att.clockOut)}
+              hours={formatWorked(att)}
             />
           ))}
         </Containers>
@@ -180,13 +193,13 @@ export default function Attendance() {
       </div>
       {showDownload && (
         <DownloadReportModal
-          attendance={attendance}
+          departments={departments}
           onClose={() => setShowDownload(false)}
         />
       )}
       {showCreateAttendance && (
         <CreateAttendanceModal
-          onSaved={fetchAttendance}
+          onSaved={() => setReload((n) => n + 1)}
           onClose={() => setShowCreateAttendnace(false)}
         />
       )}

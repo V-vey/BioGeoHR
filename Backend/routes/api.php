@@ -17,6 +17,7 @@ use App\Http\Controllers\API\PayslipController;
 use App\Http\Controllers\API\SystemSettingController;
 use App\Http\Controllers\API\HolidayController;
 use App\Http\Controllers\API\AuditLogController;
+use App\Http\Controllers\API\NotificationController;
 //Auth
 use App\Http\Controllers\Auth\LoginAuthController;
 
@@ -80,10 +81,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:Administrative')->group(function () {
         // Route::apiResource('users', UsersController::class);
         Route::get('audit-logs', [AuditLogController::class, 'index']);
+        Route::get('notifications/poll', [NotificationController::class, 'poll']);
         Route::apiResource('users', UsersController::class);
         Route::apiResource('salary', SalaryController::class);
         Route::apiResource('leave', LeaveApplicationController::class);
         Route::apiResource('balance', LeaveBalanceController::class);
+        // the fixed-name routes go before the resource, or attendance/{id} would swallow them
+        Route::get('attendance/export', [AttendanceController::class, 'export']);
         Route::apiResource('attendance', AttendanceController::class);
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);
@@ -92,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);
         Route::get('user/{userId}', [UsersController::class, 'byUser']);
+        // fixed-name route first, or payslips/{payslip} would swallow it
+        Route::get('payslips/periods', [PayslipController::class, 'periods']);
         Route::apiResource('payslips', PayslipController::class)->only(['index', 'show']);
         Route::post('payslips/run', [PayslipController::class, 'run']);
         Route::post('payslips/preview', [PayslipController::class, 'preview']);

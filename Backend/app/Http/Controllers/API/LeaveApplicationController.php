@@ -206,13 +206,29 @@ class LeaveApplicationController extends Controller
         return response()->json(['message' => 'Leave request cancelled']);
     }
 
-    public function myLeave()
+    public function myLeave(Request $request)
     {
-        $leaves = LeaveApplication::where('user_id', $this->getUserIdFromToken())
-            ->latest()
-            ->get(['id', 'leave_type', 'start_date', 'end_date', 'reason', 'status', 'remarks', 'created_at']);
+        $columns = ['id', 'leave_type', 'start_date', 'end_date', 'reason', 'status', 'remarks', 'created_at'];
+        $query = LeaveApplication::where('user_id', $this->getUserIdFromToken())->latest()->orderByDesc('id');
 
-        return response()->json($leaves);
+        // The phone asks for one page at a time (newest first), so a long history is never sent whole.
+        // Without "page" the answer is the whole list, as it always was.
+        if ($request->has('page')) {
+            $request->validate([
+                'page'     => 'integer|min:1',
+                'per_page' => 'sometimes|integer|min:1|max:50',
+            ]);
+            $page = $query->paginate((int) $request->input('per_page', 5), $columns);
+
+            return response()->json([
+                'data'         => $page->items(),
+                'current_page' => $page->currentPage(),
+                'last_page'    => $page->lastPage(),
+                'total'        => $page->total(),
+            ]);
+        }
+
+        return response()->json($query->get($columns));
     }
     
 }

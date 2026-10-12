@@ -5,6 +5,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 // import '../../Service/AuthStorage.dart';
 import '../../Service/url.dart';
 
+/// A spouse or a child of the employee, as HR saved it. Shown on the profile only.
+class FamilyMember {
+  final String relationship; // Spouse or Child
+  final String name;
+  final String birthday; // yyyy-MM-dd, or '' when HR left it blank
+
+  const FamilyMember({
+    required this.relationship,
+    required this.name,
+    required this.birthday,
+  });
+}
+
 class UserProfileController {
   final Url _api = Url();
 
@@ -24,6 +37,11 @@ class UserProfileController {
       String, // 12th: the photo path ("avatars/xxx.png"), or '' when there is none
       String, // 13th: the previous login time, or '' when there is none
       bool, // 14th: is the account active
+      // 15th: details HR saved that are not needed to log in ('' for each one that is not set
+      // yet), keyed tin / sss / philhealth / pagibig (government numbers) and status
+      // (Contractual or Permanent)
+      Map<String, String>,
+      List<FamilyMember>, // 16th: the spouse and children (empty when none)
     )
   >
   getUserProfile() async {
@@ -60,6 +78,21 @@ class UserProfileController {
         jsonResponse['image_path']?.toString() ?? '',
         jsonResponse['last_login']?.toString() ?? '',
         jsonResponse['is_active'] != false,
+        {
+          'tin': jsonResponse['tin']?.toString() ?? '',
+          'sss': jsonResponse['sss_number']?.toString() ?? '',
+          'philhealth': jsonResponse['philhealth_number']?.toString() ?? '',
+          'pagibig': jsonResponse['pagibig_number']?.toString() ?? '',
+          'status': jsonResponse['employment_status']?.toString() ?? '',
+        },
+        [
+          for (final m in (jsonResponse['family'] as List? ?? const []))
+            FamilyMember(
+              relationship: m['relationship']?.toString() ?? '',
+              name: m['name']?.toString() ?? '',
+              birthday: m['birthday']?.toString().split(' ').first ?? '',
+            ),
+        ],
       );
     } else {
       throw Exception('Failed to load leave balance: ${response.statusCode}');

@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
                 $accessToken->delete();
                 return false;       // the request gets a 401
             }
+            // the web's pop-up poll must not count as activity: it puts this value back afterwards
+            if (request()->is('api/notifications/poll')) {
+                request()->attributes->set('previous_last_used_at', $lastActive);
+            }
             return true;
         });
     }

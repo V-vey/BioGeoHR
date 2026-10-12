@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
+import { notifySuccess, notifyError } from "@/lib/dialog";
 import { Plus, CircleOff, Landmark, Wallet, Info } from "lucide-react";
 import StatusBadge from "@/components/Payroll/StatusBadge";
 import Loading from "@/components/Loading";
@@ -52,11 +53,14 @@ function NewLoanModal({ employees, onClose, onSaved }) {
           "ngrok-skip-browser-warning": "true",
         },
       });
-      alert("Loan created");
+      notifySuccess("The loan was added.", "Loan created");
       onSaved();
       onClose();
     } catch (error) {
-      alert(error.response?.data?.message ?? "Could not create the loan.");
+      notifyError(
+        error.response?.data?.message ?? "Could not create the loan.",
+        "Could not create the loan",
+      );
     } finally {
       setSaving(false);
     }

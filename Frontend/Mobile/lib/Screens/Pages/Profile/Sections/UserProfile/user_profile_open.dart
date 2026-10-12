@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../../Controller/Profile/user_profile_controller.dart';
 
 class UserProfileOpen extends StatelessWidget {
   final String name;
@@ -8,9 +11,22 @@ class UserProfileOpen extends StatelessWidget {
   final String address;
   final String contact;
   final String email;
+  // the government numbers HR saved; '' shows "Not set"
+  final List<FamilyMember> family; // spouse and children
+  final String employmentStatus; // Contractual or Permanent
+  final String tin;
+  final String sssNumber;
+  final String philhealthNumber;
+  final String pagibigNumber;
 
   const UserProfileOpen({
     super.key,
+    this.family = const [],
+    this.employmentStatus = '',
+    this.tin = '',
+    this.sssNumber = '',
+    this.philhealthNumber = '',
+    this.pagibigNumber = '',
     required this.name,
     required this.dateOfBirth,
     required this.gender,
@@ -19,6 +35,39 @@ class UserProfileOpen extends StatelessWidget {
     required this.contact,
     required this.email,
   });
+
+  // "Ana Cruz, Mar 4, 1990" (just the name when the birthday was left blank)
+  String _familyText(FamilyMember m) {
+    if (m.birthday.isEmpty) return m.name;
+    try {
+      return '${m.name}, ${DateFormat('MMM d, yyyy').format(DateTime.parse(m.birthday))}';
+    } catch (_) {
+      return m.name;
+    }
+  }
+
+  // one "Label:  value" line, in the same style as the others
+  Widget _row(String label, String value) {
+    const style = TextStyle(
+      color: Color(0xBF3A3A3A),
+      fontFamily: 'Roboto',
+      fontSize: 15,
+      fontWeight: FontWeight.normal,
+    );
+    return Row(
+      children: [
+        Text(label, style: style),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value.isEmpty ? 'Not set' : value,
+            textAlign: TextAlign.end,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +239,16 @@ class UserProfileOpen extends StatelessWidget {
               ),
             ],
           ),
+          _row('Employment Status:', employmentStatus),
+          _row('TIN:', tin),
+          _row('SSS No.:', sssNumber),
+          _row('PhilHealth No.:', philhealthNumber),
+          _row('Pag-IBIG No.:', pagibigNumber),
+          // the family, one line each: "Spouse:  Ana Cruz, Mar 4, 1990"
+          if (family.isEmpty)
+            _row('Family:', '')
+          else
+            for (final m in family) _row('${m.relationship}:', _familyText(m)),
         ],
       ),
     );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
@@ -30,15 +30,16 @@ const periodLabel = (p) =>
 
 export default function PayrollReportOutlet() {
   const [loading, setLoading] = useState(true);
-  const [payslips, setPayslips] = useState([]);
+  const [periods, setPeriods] = useState([]); // one entry per pay period, newest first
   const [selected, setSelected] = useState("");
   const [rows, setRows] = useState([]);
   const fetchPayslips = async () => {
     try {
-      const response = await axios.get(url + "/payslips", {
+      // only the list of periods, not every payslip ever made
+      const response = await axios.get(url + "/payslips/periods", {
         headers: headers(),
       });
-      setPayslips(response.data);
+      setPeriods(response.data);
       // no payslips = no period to load a report for
       if (response.data.length === 0) setLoading(false);
     } catch (error) {
@@ -58,21 +59,7 @@ export default function PayrollReportOutlet() {
     setCurrentPage(1); // new search starts at page 1
   };
 
-  // filter 1: the pay period (one entry per distinct period, newest first)
-  const periods = useMemo(() => {
-    const seen = {};
-    payslips.forEach((p) => {
-      seen[periodKey(p)] = {
-        period_start: p.period_start,
-        period_end: p.period_end,
-      };
-    });
-    return Object.values(seen).sort(
-      (a, b) => new Date(b.period_start) - new Date(a.period_start),
-    );
-  }, [payslips]);
-
-  // the newest period until HR picks another one
+  // filter 1: the pay period (the newest period until HR picks another one
   const period =
     periods.find((p) => periodKey(p) === selected) ?? periods[0] ?? null;
   const start = period?.period_start;
@@ -141,7 +128,9 @@ export default function PayrollReportOutlet() {
     "Leave",
     "Hours",
     "Gross",
-    "Gov't",
+    "SSS",
+    "PhilHealth",
+    "Pag-IBIG",
     "Tax",
     "Late ded.",
     "Absent ded.",
@@ -161,7 +150,9 @@ export default function PayrollReportOutlet() {
       r.leave_days,
       r.hours,
       fmt(r.gross),
-      fmt(r.government),
+      fmt(r.sss),
+      fmt(r.philhealth),
+      fmt(r.pagibig),
       fmt(r.tax),
       fmt(r.late_deduction),
       fmt(r.absent_deduction),
@@ -179,7 +170,9 @@ export default function PayrollReportOutlet() {
     total("leave_days"),
     total("hours").toFixed(1),
     fmt(total("gross")),
-    fmt(total("government")),
+    fmt(total("sss")),
+    fmt(total("philhealth")),
+    fmt(total("pagibig")),
     fmt(total("tax")),
     fmt(total("late_deduction")),
     fmt(total("absent_deduction")),
@@ -319,7 +312,9 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Leave</th>
                 <th className="px-3 py-2 text-right font-medium">Hours</th>
                 <th className="px-3 py-2 text-right font-medium">Gross</th>
-                <th className="px-3 py-2 text-right font-medium">Gov't</th>
+                <th className="px-3 py-2 text-right font-medium">SSS</th>
+                <th className="px-3 py-2 text-right font-medium">PhilHealth</th>
+                <th className="px-3 py-2 text-right font-medium">Pag-IBIG</th>
                 <th className="px-3 py-2 text-right font-medium">Tax</th>
                 <th className="px-3 py-2 text-right font-medium">Late Ded</th>
                 <th className="px-3 py-2 text-right font-medium">Absent Ded</th>
@@ -337,9 +332,11 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{r.leave_days}</td>
                   <td className="px-3 py-2 text-right">{r.hours}</td>
                   <td className="px-3 py-2 text-right">{money(r.gross)}</td>
+                  <td className="px-3 py-2 text-right">{money(r.sss)}</td>
                   <td className="px-3 py-2 text-right">
-                    {money(r.government)}
+                    {money(r.philhealth)}
                   </td>
+                  <td className="px-3 py-2 text-right">{money(r.pagibig)}</td>
                   <td className="px-3 py-2 text-right">{money(r.tax)}</td>
                   <td className="px-3 py-2 text-right">
                     {money(r.late_deduction)}

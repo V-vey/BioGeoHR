@@ -5,6 +5,9 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import Fallback from "@/assets/user.svg";
 import AuthImage from "@/components/AuthImage";
+import { notifySuccess, notifyError } from "@/lib/dialog";
+import FamilyTable from "@/components/FamilyTable";
+import { familyFromServer, cleanFamily } from "@/lib/family";
 
 function Field({ label, value, onChange, type = "text" }) {
   return (
@@ -28,7 +31,7 @@ function Section({ label, children }) {
   );
 }
 
-function Select({ label, value, onChange, options }) {
+function Select({ label, value, onChange, options, placeholder }) {
   const hasValue = value && !options.includes(value);
   return (
     <div className="flex flex-col flex-1 items-start">
@@ -38,6 +41,8 @@ function Select({ label, value, onChange, options }) {
         onChange={onChange}
         className="w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white"
       >
+        {/* for a value an older account may not have yet: shown as is, not as the first option */}
+        {placeholder && <option value="">{placeholder}</option>}
         {hasValue && <option value={value}>{value}</option>}
         {options.map((o) => (
           <option key={o} value={o}>
@@ -67,10 +72,16 @@ export default function EdiPofiletModal({
     nationality: empData.nationality,
     gender: empData.gender,
     address: empData.address,
+    family: familyFromServer(empData.family_members),
+    tin: empData.tin ?? "",
+    sss_number: empData.sss_number ?? "",
+    philhealth_number: empData.philhealth_number ?? "",
+    pagibig_number: empData.pagibig_number ?? "",
 
     department: empData.department,
     position: empData.position,
     contract_type: empData.contract_type,
+    employment_status: empData.employment_status ?? "",
     salary_basis: empData.salary?.salary_basis,
     call_time: empData.call_time,
     working_hours_per_day: empData.salary?.working_hours_per_day,
@@ -102,10 +113,16 @@ export default function EdiPofiletModal({
       position: empData.position,
       call_time: empData.call_time,
       contract_type: empData.contract_type,
+      employment_status: empData.employment_status ?? "",
       date_of_birth: empData.date_of_birth,
       gender: empData.gender,
       nationality: empData.nationality,
       address: empData.address,
+      family: familyFromServer(empData.family_members),
+      tin: empData.tin ?? "",
+      sss_number: empData.sss_number ?? "",
+      philhealth_number: empData.philhealth_number ?? "",
+      pagibig_number: empData.pagibig_number ?? "",
       salary_basis: empData.salary?.salary_basis,
       working_hours_per_day: empData.salary?.working_hours_per_day,
       working_days_per_month: empData.salary?.working_days_per_month,
@@ -128,10 +145,13 @@ export default function EdiPofiletModal({
       working_hours_per_day,
       working_days_per_month,
       image,
+      family,
       ...profile
     } = form;
     const data = new FormData();
     Object.entries(profile).forEach(([k, v]) => data.append(k, v ?? ""));
+    // the whole family list is sent every time (as JSON) and replaces the saved one
+    data.append("family", JSON.stringify(cleanFamily(family)));
     if (photoFile) data.append("image", photoFile);
     data.append("_method", "PUT");
     try {
@@ -143,12 +163,17 @@ export default function EdiPofiletModal({
           { headers },
         );
       }
-      alert("Profile updated");
+      notifySuccess("The changes were saved.", "Profile updated");
       onSaved?.();
       onSavedAllEmployee?.();
       onClose();
     } catch (error) {
-      alert("Could not save changes.");
+      // the server says what is wrong (for example a number that is already used)
+      const errors = error.response?.data?.errors;
+      notifyError(
+        errors ? Object.values(errors)[0][0] : "Could not save changes.",
+        "Could not save",
+      );
     }
   };
 
@@ -246,6 +271,42 @@ export default function EdiPofiletModal({
                 type="text"
               />
             </Section>
+            <Section label={"Government IDs"}>
+              <SectionInside>
+                <Field
+                  label={"TIN"}
+                  value={form.tin}
+                  onChange={update("tin")}
+                  type="text"
+                />
+                <Field
+                  label={"SSS No."}
+                  value={form.sss_number}
+                  onChange={update("sss_number")}
+                  type="text"
+                />
+              </SectionInside>
+              <SectionInside>
+                <Field
+                  label={"PhilHealth No."}
+                  value={form.philhealth_number}
+                  onChange={update("philhealth_number")}
+                  type="text"
+                />
+                <Field
+                  label={"Pag-IBIG No."}
+                  value={form.pagibig_number}
+                  onChange={update("pagibig_number")}
+                  type="text"
+                />
+              </SectionInside>
+            </Section>
+            <Section label={"Family (spouse and children)"}>
+              <FamilyTable
+                value={form.family}
+                onChange={(family) => setForm((f) => ({ ...f, family }))}
+              />
+            </Section>
             {/* </div> */}
             <Section label={"Employee Details"}>
               <SectionInside>
@@ -273,6 +334,13 @@ export default function EdiPofiletModal({
                   value={form.contract_type}
                   onChange={update("contract_type")}
                   options={["Probationary", "Regular"]}
+                />
+                <Select
+                  label="Employment Status"
+                  value={form.employment_status}
+                  onChange={update("employment_status")}
+                  options={["Contractual", "Permanent"]}
+                  placeholder="Not set"
                 />
                 <Field
                   label={"Salary Basis"}

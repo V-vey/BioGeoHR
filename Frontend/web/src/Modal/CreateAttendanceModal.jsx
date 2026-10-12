@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
+import { notifyError } from "@/lib/dialog";
 
 const fieldClass = "w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white";
 const headers = () => ({
@@ -55,10 +56,11 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
       onClose();
     } catch (error) {
       const errors = error.response?.data?.errors;
-      alert(
+      notifyError(
         errors
           ? Object.values(errors).flat().join("\n")
           : error.response?.data?.message || "Could not save the attendance.",
+        "Could not save",
       );
       setLoading(false);
     }

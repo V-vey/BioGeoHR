@@ -9,7 +9,8 @@ class RecentAttendance {
   final Url _api = Url();
 
   /// The last finished day, or null when there is none yet (the server answers 404).
-  Future<(String, String, String, String, String)?> getRecentAttendance() async {
+  // the 6th item is the day's hours in seconds with every clock-in session added up (0 if unknown)
+  Future<(String, String, String, String, String, int)?> getRecentAttendance() async {
     //get global var
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -35,6 +36,7 @@ class RecentAttendance {
         jsonResponse['status'].toString(),
         jsonResponse['clock_in'].toString(),
         jsonResponse['clock_out'].toString(),
+        (jsonResponse['worked_seconds'] as num?)?.toInt() ?? 0,
       );
     } else {
       throw Exception('Failed to load recent attendance: ${response.statusCode}');

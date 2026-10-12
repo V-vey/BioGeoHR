@@ -4,12 +4,22 @@
 /// [timeIn] / [timeOut] are the server's "HH:mm:ss" times (anything else counts as missing).
 /// [date] ("2026-10-07" or a full timestamp) is only used to tell a day that is still in
 /// progress from one where the employee forgot to clock out. [now] is for tests.
+///
+/// A day can have several clock-ins (in, out, in again). When the server sends [workedSeconds],
+/// the total of all sessions, that is shown (the time between sessions is not counted); without
+/// it the times above are used.
 String workDuration(
   String timeIn,
   String timeOut, {
   String date = '',
   DateTime? now,
+  int? workedSeconds,
 }) {
+  if (workedSeconds != null && workedSeconds > 0) {
+    final h = workedSeconds ~/ 3600;
+    final m = (workedSeconds % 3600) ~/ 60;
+    return h == 0 ? '${m}m' : '${h}h ${m.toString().padLeft(2, '0')}m';
+  }
   final start = _seconds(timeIn);
   final end = _seconds(timeOut);
 

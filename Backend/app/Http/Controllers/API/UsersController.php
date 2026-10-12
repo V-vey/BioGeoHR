@@ -12,11 +12,50 @@ use App\Models\Holiday;
 use App\Models\Attendance;
 use App\Models\LeaveApplication;
 use App\Models\AuditLog;
+use App\Models\FamilyMember;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class UsersController extends Controller
 {
+    // The numbers government forms ask for: field => [name shown in messages, example].
+    // All optional; the format comes from Users::GOV_ID_GROUPS.
+    private const GOV_IDS = [
+        'tin'               => ['TIN', '123-456-789-000'],
+        'sss_number'        => ['SSS number', '12-3456789-0'],
+        'philhealth_number' => ['PhilHealth number', '12-345678901-2'],
+        'pagibig_number'    => ['Pag-IBIG number', '1234-5678-9012'],
+    ];
+
+    /** Writes each number the same way (123456789 -> 123-456-789) before it is checked and saved. */
+    private function normalizeGovIds(Request $request): void
+    {
+        foreach (array_keys(self::GOV_IDS) as $field) {
+            if ($request->has($field)) {
+                $request->merge([$field => Users::formatGovId($field, $request->input($field))]);
+            }
+        }
+    }
+
+    /** Validation rules for the four numbers; [$rules, $messages]. $ignoreId = the employee being edited. */
+    private function govIdValidation($ignoreId = null): array
+    {
+        $rules = [];
+        $messages = [];
+        foreach (self::GOV_IDS as $field => [$label, $example]) {
+            $rules[$field] = [
+                'nullable',
+                'regex:' . Users::govIdRegex($field),
+                Rule::unique('users', $field)->ignore($ignoreId),
+            ];
+            $messages["$field.regex"] = "Enter a valid $label, for example $example.";
+            $messages["$field.unique"] = "This $label already belongs to another employee.";
+        }
+        return [$rules, $messages];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -28,10 +67,84 @@ class UsersController extends Controller
     }
 
     /**
+     * The spouse and children sent by the forms: a JSON list in the "family" field, for example
+     * [{"relationship":"Spouse","name":"Ana Cruz","birthday":"1990-03-04"}, ...].
+     * Returns [rows, null] when it is fine, [null, "message"] when something is wrong, and
+     * [null, null] when the request does not carry a family list at all (leave it as it is).
+     * An empty list [] means "no family members".
+     */
+    private function parseFamily(Request $request): array
+    {
+        if (!$request->has('family')) {
+            return [null, null];
+        }
+        $raw = $request->input('family');
+        $list = is_array($raw) ? $raw : ($raw === null || $raw === '' ? [] : json_decode((string) $raw, true));
+        if (!is_array($list)) {
+            return [null, 'The family list is not valid.'];
+        }
+        if (count($list) > 20) {
+            return [null, 'At most 20 family members can be added.'];
+        }
+
+        $rows = [];
+        $spouses = 0;
+        foreach (array_values($list) as $i => $member) {
+            $n = $i + 1;
+            $relationship = $member['relationship'] ?? '';
+            $name = trim((string) ($member['name'] ?? ''));
+            $birthday = $member['birthday'] ?? null;
+            $birthday = ($birthday === '' || $birthday === null) ? null : (string) $birthday;
+
+            if (!in_array($relationship, ['Spouse', 'Child'], true)) {
+                return [null, "Family member {$n}: choose Spouse or Child."];
+            }
+            if ($name === '') {
+                return [null, "Family member {$n}: enter a name."];
+            }
+            if (mb_strlen($name) > 100) {
+                return [null, "Family member {$n}: the name is too long."];
+            }
+            if ($birthday !== null) {
+                $date = \DateTime::createFromFormat('!Y-m-d', $birthday);
+                if (!$date || $date->format('Y-m-d') !== $birthday) {
+                    return [null, "Family member {$n}: the birthday is not a valid date."];
+                }
+                if ($date > new \DateTime('today')) {
+                    return [null, "Family member {$n}: the birthday cannot be in the future."];
+                }
+            }
+            if ($relationship === 'Spouse') {
+                $spouses++;
+            }
+            $rows[] = ['relationship' => $relationship, 'name' => $name, 'birthday' => $birthday];
+        }
+        if ($spouses > 1) {
+            return [null, 'Only one spouse can be added.'];
+        }
+
+        return [$rows, null];
+    }
+
+    /** Replaces the employee's family list with these rows (checked by parseFamily). */
+    private function saveFamily(Users $user, array $rows): void
+    {
+        DB::transaction(function () use ($user, $rows) {
+            $user->familyMembers()->delete();
+            foreach ($rows as $row) {
+                FamilyMember::create($row + ['user_id' => $user->id]);
+            }
+        });
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        $this->normalizeGovIds($request);
+        [$govRules, $govMessages] = $this->govIdValidation();
+
         $request->validate([
             'name' => 'required',
             'email' => 'required|email',
@@ -41,6 +154,7 @@ class UsersController extends Controller
             'position' => 'required',
             'call_time' => 'required',
             'contract_type' => 'required|in:Probationary,Regular',
+            'employment_status' => 'required|in:Contractual,Permanent',
             'date_of_birth' => 'required|date',
             'gender' => 'required',
             'nationality' => 'required',
@@ -50,7 +164,14 @@ class UsersController extends Controller
             'monthly_salary' => 'required',
             'working_hours_per_day' => 'required',
             'working_days_per_month' => 'required'
-        ]);
+        ] + $govRules, $govMessages);
+
+        // spouse and children (shown on the profile only); checked before anything is saved
+        [$family, $familyError] = $this->parseFamily($request);
+        if ($familyError) {
+            return response()->json(['message' => $familyError, 'errors' => ['family' => [$familyError]]], 422);
+        }
+
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('avatars', 'public') : null;
         
         $users = Users::create([
@@ -62,12 +183,21 @@ class UsersController extends Controller
             'position' => $request->position,
             'call_time' => $request->call_time,
             'contract_type' => $request->contract_type,
+            'employment_status' => $request->employment_status,
             'date_of_birth' => $request->date_of_birth,
             'gender' => $request->gender,
             'nationality' => $request->nationality,
+            'tin' => $request->tin,
+            'sss_number' => $request->sss_number,
+            'philhealth_number' => $request->philhealth_number,
+            'pagibig_number' => $request->pagibig_number,
             'address' => $request->address,
             'image_path' => $imagePath
         ]);
+
+        if ($family) {
+            $this->saveFamily($users, $family);
+        }
 
         Salary::create([
             'user_id' => $users->id,
@@ -131,11 +261,23 @@ class UsersController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        // the edit form sends every field; an empty number is saved as empty, a filled one is checked
+        $this->normalizeGovIds($request);
+        [$govRules, $govMessages] = $this->govIdValidation($users->id);
+
         $request->validate([
             'image' => 'nullable|image|max:2048',
-        ]);
+            // the edit form sends it every time; older accounts may still have none
+            'employment_status' => 'sometimes|nullable|in:Contractual,Permanent',
+        ] + $govRules, $govMessages);
 
-        $data = $request->except(['image', '_method']);
+        // the whole family list is replaced when the form sends one; left alone when it does not
+        [$family, $familyError] = $this->parseFamily($request);
+        if ($familyError) {
+            return response()->json(['message' => $familyError, 'errors' => ['family' => [$familyError]]], 422);
+        }
+
+        $data = $request->except(['image', '_method', 'family']);
 
         if ($request->hasFile('image')) {
             if ($users->image_path) {
@@ -144,8 +286,16 @@ class UsersController extends Controller
             $data['image_path'] = $request->file('image')->store('avatars', 'public');
         }
         
-        AuditLog::record('admin', 'profile_updated', 'success', "{$users->name}: changed " . implode(', ', array_keys($data)));
+        // the log names the fields that changed, never their values
+        $changed = array_keys($data);
+        if ($family !== null) {
+            $changed[] = 'family';
+        }
+        AuditLog::record('admin', 'profile_updated', 'success', "{$users->name}: changed " . implode(', ', $changed));
         $users->update($data);
+        if ($family !== null) {
+            $this->saveFamily($users, $family);
+        }
         return response()->json($users);
     }
 
@@ -187,10 +337,20 @@ class UsersController extends Controller
             'contact' => $user->contact_number,
             'department' => $user->department,
             'position' => $user->position,
+            'employment_status' => $user->employment_status,
             'date_of_birth' => $user->date_of_birth,
             'gender' => $user->gender,
             'nationality' => $user->nationality,
+            'tin' => $user->tin,
+            'sss_number' => $user->sss_number,
+            'philhealth_number' => $user->philhealth_number,
+            'pagibig_number' => $user->pagibig_number,
             'address' => $user->address,
+            'family' => $user->familyMembers->map(fn ($m) => [
+                'relationship' => $m->relationship,
+                'name' => $m->name,
+                'birthday' => $m->birthday,
+            ])->values(),
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at
         ]);
@@ -245,7 +405,7 @@ class UsersController extends Controller
     }
     public function byUser(string $userId)
     {
-        $users = Users::with(['salary', 'leaveBalance', 'attendance.location', 'leaveApplication.user.leaveBalance'])->find($userId);
+        $users = Users::with(['salary', 'leaveBalance', 'familyMembers', 'attendance.location', 'leaveApplication.user.leaveBalance'])->find($userId);
         if (!$users) {
             return response()->json(['message' => 'User not found'], 404);
         }

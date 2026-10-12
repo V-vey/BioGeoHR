@@ -16,9 +16,13 @@ class RecentLeave extends StatefulWidget {
 class _RecentLeaveState extends State<RecentLeave> {
   static const int _show = 3; // how many recent requests the home card lists
 
+  // The newest few only: the server is asked for just that many, not the whole history.
+  Future<List<LeaveRequestData>> _recent() async =>
+      (await MyLeave().getPage(1, perPage: _show)).records;
+
   // loaded once (creating the Future inside build would call the server on every rebuild)
   late final Future<List<LeaveRequestData>> _leaves =
-      (widget.loader ?? MyLeave().getAll)();
+      (widget.loader ?? _recent)();
 
   Widget _message(String text) => Padding(
     padding: const EdgeInsets.all(16),

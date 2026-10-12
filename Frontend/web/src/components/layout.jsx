@@ -4,10 +4,13 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import Notifier from "@/components/Notifier";
 
 export default function Layout({ children, nav }) {
   return (
     <SidebarProvider>
+      {/* pop-up messages for new leave requests, late/absent clock-ins and flags */}
+      <Notifier />
       {/* ITEM INSIDE */}
       <AppSidebar />
 

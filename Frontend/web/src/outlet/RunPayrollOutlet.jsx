@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { url } from "@/resources/api";
+import { notifySuccess, notifyError } from "@/lib/dialog";
 import {
   Check,
   ArrowLeft,
@@ -93,10 +94,10 @@ export default function RunPayrollOutlet() {
         },
         { headers },
       );
-      alert(res.data.message);
+      notifySuccess(res.data.message, "Payroll run");
       navigate(`/payroll/payslips?start=${periodStart}&end=${periodEnd}`);
     } catch (error) {
-      alert("Something went wrong while running payroll.");
+      notifyError("Something went wrong while running payroll.", "Payroll not run");
     }
   };
 

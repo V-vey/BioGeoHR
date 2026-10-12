@@ -33,6 +33,9 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
   String imagePath = ''; // the photo, '' = none
   String lastLogin = '----------';
   String accountStatus = '----------';
+  // government numbers: '' until loaded, and for any number HR has not set (shown as "Not set")
+  Map<String, String> govIds = const {};
+  List<FamilyMember> family = const []; // spouse and children, shown only
 
   //final Logintext logintext = Logintext();
 
@@ -78,6 +81,9 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
             ).format(DateTime.parse(result.$13).toLocal());
 
       accountStatus = result.$14 ? 'Active' : 'Deactivated';
+
+      govIds = result.$15;
+      family = result.$16;
     });
   }
 
@@ -104,6 +110,12 @@ class _ProfilePageMainState extends State<ProfilePageMain> {
             address: address,
             contact: contact,
             email: email,
+            family: family,
+            employmentStatus: govIds['status'] ?? '',
+            tin: govIds['tin'] ?? '',
+            sssNumber: govIds['sss'] ?? '',
+            philhealthNumber: govIds['philhealth'] ?? '',
+            pagibigNumber: govIds['pagibig'] ?? '',
             imagePath: imagePath,
             onSaved: _loadData, // reload after the employee edits their profile
           ),

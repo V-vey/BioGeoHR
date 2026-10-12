@@ -20,6 +20,8 @@ import Loading from "@/components/Loading";
 import Fallback from "@/assets/user.svg";
 import AuthImage from "@/components/AuthImage";
 import EditProfile from "@/Modal/EditProfileModal";
+import { confirmDialog } from "@/lib/dialog";
+import { FamilyView } from "@/components/FamilyTable";
 
 function ProfInf({ label, data }) {
   return (
@@ -200,7 +202,13 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
   const imageSrc = empData.image_path ? `${url}/${empData.image_path}` : null;
   const handleRemove = async () => {
     const action = emp.is_active ? "Deactivate" : "Reactivate";
-    if (!window.confirm(`${action} ${emp.name}?`)) return;
+    const confirmed = await confirmDialog(
+      emp.is_active
+        ? "They will not be able to log in. You can reactivate them later."
+        : "They will be able to log in again.",
+      { title: `${action} ${emp.name}?`, confirmLabel: action },
+    );
+    if (!confirmed) return;
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
@@ -222,7 +230,8 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
   };
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50  p-5">
-      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-full">
+      {/* the card never grows past the screen: the header stays put and the part below it scrolls */}
+      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-full overflow-hidden">
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
             onClick={onClose}
@@ -232,8 +241,9 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
           </button>
           <h2 className="font-bold">Employee Profile</h2>
         </div>
-        <div className="flex flex-col gap-2 w-full h-full ">
-          <div className="flex flex-row justify-center gap-10 py-2 bg-white border border-[#b2b2b2] rounded-[10px]">
+        <div className="flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto pr-1">
+          {/* the tabs stay visible while the page scrolls under them */}
+          <div className="sticky top-0 z-10 flex flex-row justify-center gap-10 py-2 bg-white border border-[#b2b2b2] rounded-[10px]">
             <button
               onClick={() => setIsOverview(true)}
               className={`pb-1 border-b-2 transition-colors ${
@@ -460,12 +470,42 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
 
               <div className="flex flex-col gap-4 p-5 bg-white rounded-[10px] border border-[#b2b2b2]">
                 <h3 className="font-semibold text-[#3A3A3A] text-[21px]">
+                  Family
+                </h3>
+                {/* for display only: no pay or tax calculation uses it */}
+                <FamilyView members={empData.family_members} />
+              </div>
+
+              <div className="flex flex-col gap-4 p-5 bg-white rounded-[10px] border border-[#b2b2b2]">
+                <h3 className="font-semibold text-[#3A3A3A] text-[21px]">
+                  Government IDs
+                </h3>
+                <div className="flex flex-row items-center gap-2 ">
+                  <ProfInf label={"TIN: "} data={emp.tin || "Not set"} />
+                  <ProfInf label={"SSS No.: "} data={emp.sss_number || "Not set"} />
+                  <ProfInf
+                    label={"PhilHealth No.: "}
+                    data={emp.philhealth_number || "Not set"}
+                  />
+                  <ProfInf
+                    label={"Pag-IBIG No.: "}
+                    data={emp.pagibig_number || "Not set"}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 p-5 bg-white rounded-[10px] border border-[#b2b2b2]">
+                <h3 className="font-semibold text-[#3A3A3A] text-[21px]">
                   Employee Details
                 </h3>
                 <div className="flex flex-row items-center gap-2 ">
                   <ProfInf label={"Department: "} data={emp.department} />
                   <ProfInf label={"Position: "} data={emp.position} />
                   <ProfInf label={"Contract Type: "} data={emp.contract_type} />
+                  <ProfInf
+                    label={"Employment Status: "}
+                    data={emp.employment_status || "Not set"}
+                  />
                   <ProfInf label={"Call Time: "} data={emp.call_time} />
                 </div>
               </div>

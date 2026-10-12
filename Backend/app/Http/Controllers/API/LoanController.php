@@ -7,9 +7,34 @@ use Illuminate\Http\Request;
 use App\Models\Loan;
 use App\Models\Users;
 use App\Models\AuditLog;
+use App\Models\Salary;
+use App\Service\SalaryService;
 
 class LoanController extends Controller
 {
+    /**
+     * A loan is only accepted when the employee's pay can cover its monthly deduction.
+     * The deduction comes out of one cutoff (the second of the month), so it may not be more than
+     * what one cutoff pays after contributions and tax. Returns the message to show, or null if fine.
+     */
+    private function unaffordable(int|string $userId, float $monthlyDeduction): ?string
+    {
+        $salary = Salary::where('user_id', $userId)->orderByDesc('id')->first();
+        if (!$salary || !$salary->salary_basis) {
+            return 'This employee has no salary record yet. Set the salary before adding a loan.';
+        }
+
+        $max = (new SalaryService())->cutoffNetPay($salary->salary_basis);
+        if (round($monthlyDeduction, 2) > $max) {
+            $limit = number_format(max(0, $max), 2);
+            return 'The monthly deduction (₱' . number_format($monthlyDeduction, 2)
+                . ") is more than this employee's pay for one cutoff after contributions and tax (₱{$limit}). "
+                . "Lower it to ₱{$limit} or less.";
+        }
+
+        return null;
+    }
+
     public function index()
     {
         $loans = Loan::with('user:id,name,department,position,image_path')->get();
@@ -34,6 +59,10 @@ class LoanController extends Controller
 
         if ($hasActiveLoan) {
             return response()->json(['message' => 'Employee already has an active loan'], 422);
+        }
+
+        if ($problem = $this->unaffordable($request->user_id, (float) $request->monthly_deduction)) {
+            return response()->json(['message' => $problem], 422);
         }
 
         $loan = Loan::create([
@@ -76,6 +105,12 @@ class LoanController extends Controller
         $total = $data['total_amount'] ?? $loan->total_amount;
         if (($data['monthly_deduction'] ?? $loan->monthly_deduction) > $total) {
             return response()->json(['message' => 'The monthly deduction cannot be more than the loan amount.'], 422);
+        }
+
+        // only when the deduction itself is being changed, so other edits to an older loan still work
+        if (isset($data['monthly_deduction'])
+            && ($problem = $this->unaffordable($loan->user_id, (float) $data['monthly_deduction']))) {
+            return response()->json(['message' => $problem], 422);
         }
 
         if (isset($data['total_amount'])) {

@@ -3,6 +3,9 @@ import { Calendar, ChevronDown, User } from "lucide-react";
 
 import axios from "axios";
 import { url } from "@/resources/api";
+import { notifySuccess, notifyError } from "@/lib/dialog";
+import FamilyTable from "@/components/FamilyTable";
+import { cleanFamily } from "@/lib/family";
 function Field({ label, required, span = 1, children }) {
   return (
     <div
@@ -58,10 +61,18 @@ export default function NewEmployeeForm() {
     data.append("position", formData.position);
     data.append("call_time", formData.callTime);
     data.append("contract_type", formData.contractType);
+    data.append("employment_status", formData.employmentStatus ?? "");
     data.append("date_of_birth", formData.dob);
     data.append("gender", formData.gender);
     data.append("nationality", formData.nationality);
     data.append("address", formData.address);
+    // government numbers (all optional; the server writes them with dashes)
+    data.append("tin", formData.tin ?? "");
+    data.append("sss_number", formData.sssNumber ?? "");
+    data.append("philhealth_number", formData.philhealthNumber ?? "");
+    data.append("pagibig_number", formData.pagibigNumber ?? "");
+    // spouse and children, as a JSON list (shown on the profile only)
+    data.append("family", JSON.stringify(cleanFamily(formData.family)));
 
     data.append("monthly_salary", formData.salary);
     data.append("working_hours_per_day", formData.wrkHrsPD);
@@ -75,9 +86,15 @@ export default function NewEmployeeForm() {
           "ngrok-skip-browser-warning": "true",
         },
       });
-      alert("New Employee Success");
+      notifySuccess("The employee was added.", "Employee added");
     } catch (error) {
       console.error("Failed to create employee:", error);
+      // the server says what is wrong (for example a number that is already used)
+      const errors = error.response?.data?.errors;
+      notifyError(
+        errors ? Object.values(errors)[0][0] : "Could not create the employee.",
+        "Could not add employee",
+      );
     }
   };
 
@@ -220,6 +237,54 @@ export default function NewEmployeeForm() {
             </Field>
           </Section>
 
+          <Section title="Government IDs (optional)">
+            <Field label="TIN">
+              <input
+                className={inputClass}
+                placeholder="000-000-000-000"
+                inputMode="numeric"
+                maxLength={15}
+                onChange={update("tin")}
+              />
+            </Field>
+            <Field label="SSS No.">
+              <input
+                className={inputClass}
+                placeholder="00-0000000-0"
+                inputMode="numeric"
+                maxLength={12}
+                onChange={update("sssNumber")}
+              />
+            </Field>
+            <Field label="PhilHealth No.">
+              <input
+                className={inputClass}
+                placeholder="00-000000000-0"
+                inputMode="numeric"
+                maxLength={14}
+                onChange={update("philhealthNumber")}
+              />
+            </Field>
+            <Field label="Pag-IBIG No.">
+              <input
+                className={inputClass}
+                placeholder="0000-0000-0000"
+                inputMode="numeric"
+                maxLength={14}
+                onChange={update("pagibigNumber")}
+              />
+            </Field>
+          </Section>
+
+          <Section title="Family (optional)">
+            <div className="sm:col-span-2 lg:col-span-4">
+              <FamilyTable
+                value={form.family}
+                onChange={(family) => setForm((f) => ({ ...f, family }))}
+              />
+            </div>
+          </Section>
+
           <Section title="Employment Details">
             <Field label="Department" required>
               <div className="relative">
@@ -249,6 +314,19 @@ export default function NewEmployeeForm() {
                   <option value="">Select</option>
                   <option>Probationary</option>
                   <option>Regular</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </Field>
+            <Field label="Employment Status" required>
+              <div className="relative">
+                <select
+                  className={`${inputClass} appearance-none pr-8`}
+                  onChange={update("employmentStatus")}
+                >
+                  <option value="">Select</option>
+                  <option>Contractual</option>
+                  <option>Permanent</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

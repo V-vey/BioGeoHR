@@ -15,7 +15,7 @@ import {
 import Containers from "@/components/container";
 import StatusBadge from "@/components/Payroll/StatusBadge";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
@@ -48,7 +48,7 @@ function dateFormatYear(date) {
 }
 export default function PayrollOutlet() {
   const [salaries, setSalaries] = useState([]);
-  const [payslips, setPayslips] = useState([]);
+  const [payrollRuns, setPayrollRuns] = useState([]);
   const [loans, setLoans] = useState([]);
   const [frequentLatesCount, setFrequentLatesCount] = useState(0);
   const [paidOffCount, setPaidOffCount] = useState(0);
@@ -81,12 +81,23 @@ export default function PayrollOutlet() {
       try {
         const [salaryRes, payslipRes, loanRes, latesRes] = await Promise.all([
           axios.get(url + "/salary", { headers }),
-          axios.get(url + "/payslips", { headers }),
+          axios.get(url + "/payslips/periods", { headers }),
           axios.get(url + "/loans", { headers }),
           axios.get(url + "/frequentLates", { headers }),
         ]);
         setSalaries(salaryRes.data);
-        setPayslips(payslipRes.data);
+        // one summary row per payroll run, added up by the server (newest first)
+        setPayrollRuns(
+          payslipRes.data.map((p) => ({
+            period_start: p.period_start,
+            period_end: p.period_end,
+            count: p.count,
+            totalNetPay: Number(p.total_net_pay),
+            statutory: Number(p.statutory),
+            incomeTax: Number(p.income_tax),
+            loanDeductions: Number(p.loan_deductions),
+          })),
+        );
         setLoans(loanRes.data);
         setFrequentLatesCount(latesRes.data.count);
       } catch (error) {
@@ -98,33 +109,6 @@ export default function PayrollOutlet() {
 
     fetchData();
   }, []);
-
-  const payrollRuns = useMemo(() => {
-    const groups = {};
-    payslips.forEach((p) => {
-      const key = `${p.period_start}_${p.period_end}`;
-      if (!groups[key]) {
-        groups[key] = {
-          period_start: p.period_start,
-          period_end: p.period_end,
-          count: 0,
-          totalNetPay: 0,
-          statutory: 0,
-          incomeTax: 0,
-          loanDeductions: 0,
-        };
-      }
-      groups[key].count += 1;
-      groups[key].totalNetPay += Number(p.net_pay);
-      groups[key].statutory +=
-        Number(p.sss) + Number(p.philhealth) + Number(p.pagibig);
-      groups[key].incomeTax += Number(p.income_tax);
-      groups[key].loanDeductions += Number(p.loan_deduction);
-    });
-    return Object.values(groups).sort(
-      (a, b) => new Date(b.period_start) - new Date(a.period_start),
-    );
-  }, [payslips]);
 
   const latestRun = payrollRuns[0];
   const activeLoanCount = loans.filter((l) => l.status === "Active").length;

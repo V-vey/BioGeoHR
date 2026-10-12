@@ -5,11 +5,14 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import { format, parse } from "date-fns";
 import Loading from "@/components/Loading";
+import { useDataChanged } from "@/lib/dataChanged";
 
 export default function Leave() {
   const [currentPage, setCurrentPage] = useState(1);
   const [leaveReq, setLeaveReq] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reload, setReload] = useState(0);
+  useDataChanged(["leave"], () => setReload((n) => n + 1)); // a new request appears by itself
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,7 +32,7 @@ export default function Leave() {
       }
     };
     fetchLeave();
-  }, []);
+  }, [reload]);
 
   const [search, setSearch] = useState("");
 
@@ -39,8 +42,9 @@ export default function Leave() {
   };
 
   // what the filter panel last applied
+  // the page opens on Pending only; the other statuses are one click away in the filter
   const [filters, setFilters] = useState({
-    status: "All",
+    status: "Pending",
     type: "All",
     dates: { from: "", to: "" },
   });
@@ -58,7 +62,8 @@ export default function Leave() {
       key: "status",
       label: "Status",
       type: "radio",
-      options: ["All", "Pending", "Approved", "Rejected"],
+      // the first option is what the filter panel starts on, so it matches the state above
+      options: ["Pending", "Approved", "Rejected", "All"],
     },
     {
       key: "type",

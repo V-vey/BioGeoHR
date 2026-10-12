@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Attendance;
 use App\Models\Users;
 use App\Models\Location;
@@ -26,24 +27,103 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    // The rules for the filters that both index() and export() accept.
+    private const LIST_FILTERS = [
+        'search'     => 'sometimes|nullable|string|max:100',
+        'status'     => 'sometimes|nullable|in:On-Time,Late,Absent',
+        'department' => 'sometimes|nullable|string|max:100',
+        'date_from'  => 'sometimes|nullable|date',
+        'date_to'    => 'sometimes|nullable|date',
+    ];
+
+    // Attendance joined with the employee and the place, filtered and newest first.
+    // Joins (not relations) so the name search and the department filter run in the database.
+    private function filteredAttendance(Request $request)
     {
-        $attendances = Attendance::with(['user', 'location'])->get();
-         $formatted = $attendances->map(function ($a) {
+        $query = Attendance::query()
+            ->leftJoin('users', 'users.id', '=', 'attendances.user_id')
+            ->leftJoin('locations', 'locations.id', '=', 'attendances.location_id')
+            ->select(
+                'attendances.date', 'attendances.status', 'attendances.time_in', 'attendances.time_out',
+                'users.name as u_name', 'users.department as u_department',
+                'users.position as u_position', 'users.contract_type as u_contract',
+                'locations.name as l_name'
+            )
+            // hours of the day all sessions added up and how many in/out pairs it has
+            ->selectRaw(Attendance::workedSecondsSql() . ' as worked_secs')
+            ->selectRaw(Attendance::sessionCountSql() . ' as sessions_count');
+
+        if ($term = trim((string) $request->input('search'))) {
+            // % and _ typed by the user must not act as wildcards
+            $query->where('users.name', 'like', '%' . addcslashes($term, '%_\\') . '%');
+        }
+        if ($request->filled('status')) {
+            $query->where('attendances.status', $request->input('status'));
+        }
+        if ($request->filled('department')) {
+            $query->where('users.department', $request->input('department'));
+        }
+        if ($request->filled('date_from')) {
+            $query->where('attendances.date', '>=', Carbon::parse($request->input('date_from'))->toDateString());
+        }
+        if ($request->filled('date_to')) {
+            $query->where('attendances.date', '<=', Carbon::parse($request->input('date_to'))->toDateString());
+        }
+
+        return $query->orderByDesc('attendances.date')->orderByDesc('attendances.id');
+    }
+
+    // one row, in the shape the web pages already use
+    private function attendanceRow($a): array
+    {
         return [
             'date' => $a->date,
-            'location' => $a->location?->name ?? 'Unknown Location',
-            'name' => $a->user?->name,
-            'department' => $a->user?->department,
-            'position' => $a->user?->position,
-            'contractType' => $a->user?->contract_type,
+            'location' => $a->l_name ?? 'Unknown Location',
+            'name' => $a->u_name,
+            'department' => $a->u_department,
+            'position' => $a->u_position,
+            'contractType' => $a->u_contract,
             'status' => $a->status,
             'clockIn' => $a->time_in,
             'clockOut' => $a->time_out,
+            'workedSeconds' => (int) $a->worked_secs,
+            'sessions' => (int) $a->sessions_count,
         ];
-    });
-        return response()->json($formatted);
     }
+
+    public function index(Request $request)
+    {
+        $request->validate(self::LIST_FILTERS + [
+            'page'     => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $page = $this->filteredAttendance($request)->paginate($request->integer('per_page', 16));
+
+        return response()->json([
+            'data'         => $page->getCollection()->map(fn ($a) => $this->attendanceRow($a))->values(),
+            'current_page' => $page->currentPage(),
+            'last_page'    => $page->lastPage(),
+            'per_page'     => $page->perPage(),
+            'total'        => $page->total(),
+            'departments'  => Users::whereNotNull('department')->distinct()->orderBy('department')->pluck('department'),
+        ]);
+    }
+
+
+    public function export(Request $request)
+    {
+        $request->validate(self::LIST_FILTERS);
+
+        $query = $this->filteredAttendance($request);
+        $limit = 20000;
+        if ((clone $query)->toBase()->getCountForPagination() > $limit) {
+            return response()->json(['message' => "More than {$limit} records match. Choose a shorter date range."], 422);
+        }
+
+        return response()->json($query->get()->map(fn ($a) => $this->attendanceRow($a))->values());
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -58,6 +138,9 @@ class AttendanceController extends Controller
 
         if (Carbon::parse($data['date'])->isSunday()) {
             return response()->json(['message' => 'Sunday is a non-working day.'], 422);
+        }
+        if (Carbon::parse($data['date'])->isSaturday()) {
+            return response()->json(['message' => 'Saturday is a non-working day.'], 422);
         }
 
         $absent = $data['status'] === 'Absent';
@@ -78,24 +161,50 @@ class AttendanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show()
+    public function show(Request $request)
     {
         $userId = $this->getUserIdFromToken();
-        $attendance = Attendance::with('location')->where('user_id', $userId)->get();
+        // worked_secs: the day's hours with every session added up (the time between sessions is not counted)
+        $query = Attendance::with('location')->where('user_id', $userId)
+            ->select('attendances.*')
+            ->selectRaw(Attendance::workedSecondsSql() . ' as worked_secs');
 
-        if (!$attendance) {
-            return response()->json(['message' => 'Attendance record not found'], 404);
+        // ?date=2026-10-12 : only that day (the phone's date filter)
+        $request->validate(['date' => 'sometimes|nullable|date_format:Y-m-d']);
+        if ($request->filled('date')) {
+            $query->whereDate('attendances.date', $request->input('date'));
         }
-        $formattedData = $attendance->map(function ($attendance) {
+
+        $row = function ($attendance) {
             return [
                 'location'  => $attendance->location ? $attendance->location->name : 'Unknown Location',
                 'date'      => $attendance->date,
                 'status'    => $attendance->status,
                 'clock_in'  => $attendance->time_in,
-                'clock_out' => $attendance->time_out
+                'clock_out' => $attendance->time_out,
+                'worked_seconds' => (int) $attendance->worked_secs,
             ];
-        });
-        return response()->json($formattedData);
+        };
+
+        // The phone asks for one page at a time (newest first), so a long history is never sent whole.
+        // Without "page" the answer is the whole list, as it always was.
+        if ($request->has('page')) {
+            $request->validate([
+                'page'     => 'integer|min:1',
+                'per_page' => 'sometimes|integer|min:1|max:50',
+            ]);
+            $page = $query->orderByDesc('date')->orderByDesc('id')
+                ->paginate((int) $request->input('per_page', 7));
+
+            return response()->json([
+                'data'         => $page->getCollection()->map($row)->values(),
+                'current_page' => $page->currentPage(),
+                'last_page'    => $page->lastPage(),
+                'total'        => $page->total(),
+            ]);
+        }
+
+        return response()->json($query->get()->map($row));
     }
 
     /**
@@ -200,7 +309,9 @@ class AttendanceController extends Controller
             'date' => $recent->date,
             'status' => $recent->status,
             'clock_in' => $recent->time_in,
-            'clock_out' => $recent->time_out
+            'clock_out' => $recent->time_out,
+            'worked_seconds' => (int) Attendance::whereKey($recent->id)
+                ->selectRaw(Attendance::workedSecondsSql() . ' as secs')->value('secs'),
         ]);
     }
 
@@ -224,10 +335,13 @@ class AttendanceController extends Controller
         }
 
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
-        $attendance->update([
-            'time_out' => $time,
-        ]);
-        return $attendance;
+        DB::transaction(function () use ($attendance, $time) {
+            $attendance->ensureFirstSession();
+            // close the session that is running (the day's clock-out is the latest one)
+            $attendance->sessions()->whereNull('time_out')->latest('id')->first()?->update(['time_out' => $time]);
+            $attendance->update(['time_out' => $time]);
+        });
+        return $attendance->fresh();
     }
 
     /**
@@ -252,17 +366,26 @@ class AttendanceController extends Controller
         $running = $attendance->time_out === null;
         $elapsed = 0;
         if ($running) {
-            // measured here on the server, so a wrong phone clock or timezone cannot skew the timer
-            $started = Carbon::parse($now->toDateString() . ' ' . $attendance->time_in, 'Asia/Manila');
+            // the session that is running now (a day may have several); the day's first clock-in
+            // when it has no sessions. Measured here on the server, so a wrong phone clock or
+            // timezone cannot skew the timer.
+            $open = $attendance->sessions()->whereNull('time_out')->latest('id')->first();
+            $started = Carbon::parse($now->toDateString() . ' ' . ($open?->time_in ?? $attendance->time_in), 'Asia/Manila');
             $elapsed = max(0, $started->diffInSeconds($now, false));
         }
+
+        // everything worked today: the finished sessions plus the one running now
+        $finished = (int) Attendance::whereKey($attendance->id)
+            ->selectRaw(Attendance::workedSecondsSql() . ' as secs')->value('secs');
 
         return response()->json([
             'status'          => $attendance->status,
             'time_in'         => $attendance->time_in,
             'time_out'        => $attendance->time_out,
             'running'         => $running,
-            'elapsed_seconds' => (int) $elapsed,
+            'elapsed_seconds' => (int) $elapsed,      // this session only: what the phone's timer shows
+            'worked_seconds'  => $finished + (int) $elapsed, // the whole day so far
+            'sessions'        => max(1, $attendance->sessions()->count()),
         ]);
     }
 
@@ -290,17 +413,37 @@ class AttendanceController extends Controller
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
         $status = $this->isLate($userCallTime, $time);
         
-        if (Attendance::where('user_id', $userId)->whereDate('date', $date)->exists()) {
-            AuditLog::record('check_in', 'clock_in', 'failed', 'Already clocked in today');
-            return response()->json(['message' => 'You have already clocked in today'], 409);
+        $today = Attendance::where('user_id', $userId)->whereDate('date', $date)->orderBy('id')->first();
+
+        if ($today) {
+            // never clocked (an Absent row, or one HR made without times), or still clocked in
+            if ($today->time_in === null || $today->time_out === null) {
+                AuditLog::record('check_in', 'clock_in', 'failed', 'Already clocked in today');
+                return response()->json(['message' => 'You are already clocked in'], 409);
+            }
+
+            // Clocked out earlier today: this is another session of the same day. The day keeps its
+            // first clock-in and status (Late / On-Time), and the hours of the sessions are added up.
+            DB::transaction(function () use ($today, $time) {
+                $today->ensureFirstSession();
+                $today->sessions()->create(['time_in' => $time]);
+                $today->update(['time_out' => null]); // clocked in again
+            });
+            AuditLog::record('check_in', 'clock_in', 'success', "Clocked in again at {$locationId->name}, {$time}");
+            return response()->json($today->fresh(), 201);
         }
-        $attendance = Attendance::create([
-            'user_id' => $userId,
-            'location_id' => $locationId->id,
-            'status' => $status, 
-            'date' => now('Asia/Manila')->toDateString(),
-            'time_in' => $time,
-        ]);
+
+        $attendance = DB::transaction(function () use ($userId, $locationId, $status, $time) {
+            $attendance = Attendance::create([
+                'user_id' => $userId,
+                'location_id' => $locationId->id,
+                'status' => $status,
+                'date' => now('Asia/Manila')->toDateString(),
+                'time_in' => $time,
+            ]);
+            $attendance->sessions()->create(['time_in' => $time]);
+            return $attendance;
+        });
         AuditLog::record('check_in', 'clock_in', 'success', "{$status} at {$locationId->name}, {$time}");
         return response()->json($attendance, 201);
     }
@@ -367,8 +510,8 @@ class AttendanceController extends Controller
     public function weeklyAttendance()
     {
         $employeesCount = Users::active()->count();
-        $startOfWeek = Carbon::now()->startOfWeek(Carbon::SUNDAY);
-        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         $result = [];
 
         foreach ($days as $i => $dayName) {

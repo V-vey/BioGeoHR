@@ -16,7 +16,7 @@ export default function Location() {
   let zoom = 4.0;
 
   const [center, setCenter] = useState(null);
-  const [radius, setRadius] = useState(100);
+  const [radius, setRadius] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   const geofenceCircle = center

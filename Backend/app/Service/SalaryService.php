@@ -157,6 +157,20 @@ class SalaryService
         return $salary * .025;
     } 
     
+    /**
+     * What one cutoff pays the employee in a month with no late or absent days: the same arithmetic
+     * as paycheck(), without attendance. A loan's monthly deduction comes out of a single cutoff, so
+     * this is the most that deduction can be and still be taken in full.
+     */
+    function cutoffNetPay($salary){
+        $contributions = $this->sssContributionTable($salary)['employee_total']
+            + $this->philHealth($salary)
+            + $this->pagIbig($salary);
+        $semiMonth = ($salary - $contributions) / 2;
+
+        return round($semiMonth - $this->incomeTax($semiMonth), 2);
+    }
+
     function paycheck($salary, $daysPerMonth, $hrsPerDay, $userId, $periodStart = null, $periodEnd = null){
         $dailyWage = $this->dailyWage($salary, $daysPerMonth);
         $hrRate = $this->hourlyRate($dailyWage, $hrsPerDay);

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { url } from "@/resources/api";
 import { useState, useEffect } from "react";
+import { notifySuccess } from "@/lib/dialog";
 
 function Balance(type, item) {
   return (
@@ -38,7 +39,10 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
           fetch();
         }
         onClose();
-        alert(`The leave request has been ${status.toLowerCase()}.`);
+        notifySuccess(
+          `The leave request has been ${status.toLowerCase()}.`,
+          `Leave ${status.toLowerCase()}`,
+        );
       } catch (error) {
         console.error("Failed to update leave application:", error);
         // show why, for example "Insufficient leave balance"

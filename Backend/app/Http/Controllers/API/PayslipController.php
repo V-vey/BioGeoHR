@@ -19,10 +19,72 @@ class PayslipController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    /**
+     * Payslips, never the whole table. Pick them with
+     *   ?period_start=2026-09-16&period_end=2026-09-30     one pay period (all employees)
+     *   ?user_id=5&year=2026                                one employee's year (for the year-to-date)
+     * With no filter at all, only the newest period is returned.
+     */
+    public function index(Request $request)
     {
-        $payslips = Payslip::with('user')->get();
-        return response()->json($payslips);
+        $request->validate([
+            'period_start' => 'required_with:period_end|date',
+            'period_end'   => 'required_with:period_start|date',
+            'user_id'      => 'sometimes|integer',
+            'year'         => 'sometimes|integer|min:2000|max:2100',
+        ]);
+
+        $query = Payslip::with('user');
+
+        if ($request->filled('period_start')) {
+            $query->where('period_start', Carbon::parse($request->period_start)->toDateString())
+                  ->where('period_end', Carbon::parse($request->period_end)->toDateString());
+        }
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->filled('year')) {
+            $query->whereYear('period_end', $request->year);
+        }
+
+        // nothing chosen: the newest period only, so a bare request can never dump every payslip
+        if (!$request->filled('period_start') && !$request->filled('user_id') && !$request->filled('year')) {
+            $latest = Payslip::orderByDesc('period_start')->first(['period_start', 'period_end']);
+            if (!$latest) {
+                return response()->json([]);
+            }
+            $query->where('period_start', $latest->period_start)->where('period_end', $latest->period_end);
+        }
+
+        return response()->json($query->orderBy('period_start')->get());
+    }
+
+    /**
+     * One line per pay period with its totals, newest first: what the pages need to list the
+     * periods and to show the overview, without loading every payslip.
+     */
+    public function periods()
+    {
+        $rows = Payslip::query()
+            ->selectRaw('period_start, period_end, COUNT(*) as count,
+                SUM(net_pay) as total_net_pay,
+                SUM(sss + philhealth + pagibig) as statutory,
+                SUM(income_tax) as income_tax,
+                SUM(loan_deduction) as loan_deductions')
+            ->groupBy('period_start', 'period_end')
+            ->orderByDesc('period_start')
+            ->get()
+            ->map(fn ($r) => [
+                'period_start'    => substr((string) $r->period_start, 0, 10),
+                'period_end'      => substr((string) $r->period_end, 0, 10),
+                'count'           => (int) $r->count,
+                'total_net_pay'   => round((float) $r->total_net_pay, 2),
+                'statutory'       => round((float) $r->statutory, 2),
+                'income_tax'      => round((float) $r->income_tax, 2),
+                'loan_deductions' => round((float) $r->loan_deductions, 2),
+            ]);
+
+        return response()->json($rows);
     }
 
     /**
@@ -161,11 +223,9 @@ class PayslipController extends Controller
             ->groupBy('user_id');
 
         // seconds worked, one query for everybody
+        // each day's hours with its sessions added up (see Attendance::workedSecondsSql)
         $seconds = Attendance::whereBetween('date', [$from, $to])
-            ->whereNotNull('time_in')
-            ->whereNotNull('time_out')
-            ->whereColumn('time_out', '>=', 'time_in')
-            ->selectRaw('user_id, SUM(TIME_TO_SEC(TIMEDIFF(time_out, time_in))) as secs')
+            ->selectRaw('user_id, SUM(' . Attendance::workedSecondsSql() . ') as secs')
             ->groupBy('user_id')
             ->pluck('secs', 'user_id');
 
@@ -208,6 +268,10 @@ class PayslipController extends Controller
                 'hours'             => round(($seconds[$p->user_id] ?? 0) / 3600, 1),
                 'gross'             => round($gross, 2),
                 'government'        => round($gov, 2),
+                // the same half-month amount, shown one contribution at a time
+                'sss'               => round($p->sss / 2, 2),
+                'philhealth'        => round($p->philhealth / 2, 2),
+                'pagibig'           => round($p->pagibig / 2, 2),
                 'tax'               => round($p->income_tax, 2),
                 'late_deduction'    => round($lateDed, 2),
                 'absent_deduction'  => round($absenceDed, 2),

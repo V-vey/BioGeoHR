@@ -5,12 +5,12 @@ import '../Attendance/Items/atttendance_pages.dart';
 import 'leave_detail.dart';
 import 'leave_history_item.dart';
 
-/// The "Leave History" card on the Leave tab: every leave request of the employee,
+/// The "Leave History" card on the Leave tab: the leave requests of the employee,
 /// newest first, a few per page with "Page 1 of N" and < > under the list (like the
-/// Attendance tab), each row with a View button.
+/// Attendance tab), each row with a View button. Only the page on screen is downloaded.
 class LeaveHistory extends StatefulWidget {
   // optional loader so the card can be tested without a server
-  final Future<List<LeaveRequestData>> Function()? loader;
+  final Future<LeavePage> Function(int page)? loader;
   // called after a request was cancelled, so the tab reloads this list
   final VoidCallback? onChanged;
 
@@ -21,13 +21,12 @@ class LeaveHistory extends StatefulWidget {
 }
 
 class _LeaveHistoryState extends State<LeaveHistory> {
-  // loaded once (creating the Future inside build would call the server on every rebuild)
-  late final Future<List<LeaveRequestData>> _leaves =
-      (widget.loader ?? MyLeave().getAll)();
+  // Only one page is ever downloaded; the arrows ask the server for the next one. The Future is
+  // kept here (creating it inside build would call the server on every rebuild).
+  late Future<LeavePage> _leaves = _fetch(1);
 
-  // which page is shown
-  int _currentPage = 1;
-  final int _itemsPerPage = 5;
+  Future<LeavePage> _fetch(int page) =>
+      (widget.loader ?? MyLeave().getPage)(page);
 
   // loading / error / empty: a fixed-height box, so the card does not jump around
   Widget _message(Widget child) => SizedBox(height: 150, child: Center(child: child));
@@ -78,7 +77,7 @@ class _LeaveHistoryState extends State<LeaveHistory> {
             ),
           ),
           Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
-          FutureBuilder<List<LeaveRequestData>>(
+          FutureBuilder<LeavePage>(
             future: _leaves,
             builder: (context, snap) {
               if (snap.connectionState != ConnectionState.done) {
@@ -91,34 +90,45 @@ class _LeaveHistoryState extends State<LeaveHistory> {
                 );
               }
               if (snap.hasError) {
-                return _message(_text('Could not load your leave requests'));
+                return _message(
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _text('Could not load your leave requests'),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _leaves = _fetch(1);
+                        }),
+                        child: const Text('Try again'),
+                      ),
+                    ],
+                  ),
+                );
               }
 
-              final leaves = snap.data ?? <LeaveRequestData>[];
-              if (leaves.isEmpty) return _message(_text('No leave requests yet'));
-
-              // the slice of requests for the current page
-              final int totalPages = (leaves.length / _itemsPerPage).ceil();
-              final int page = _currentPage > totalPages ? totalPages : _currentPage;
-              final int startIndex = (page - 1) * _itemsPerPage;
-              final int endIndex = startIndex + _itemsPerPage > leaves.length
-                  ? leaves.length
-                  : startIndex + _itemsPerPage;
+              // this page's requests, already newest first
+              final data = snap.data!;
+              final leaves = data.records;
+              if (data.total == 0 && leaves.isEmpty) {
+                return _message(_text('No leave requests yet'));
+              }
 
               return Column(
                 spacing: 5,
                 children: [
-                  for (var i = startIndex; i < endIndex; i++)
+                  for (final leave in leaves)
                     LeaveHistoryItem(
-                      leave: leaves[i],
-                      onView: () => _view(leaves[i]),
+                      leave: leave,
+                      onView: () => _view(leave),
                     ),
                   Container(height: 1, width: 350, color: Color(0xFFE0E0E0)),
                   AttendancePages(
-                    pageNum: page,
-                    totalPages: totalPages,
+                    pageNum: data.page,
+                    totalPages: data.lastPage,
                     onPageChanged: (newPage) {
-                      setState(() => _currentPage = newPage);
+                      setState(() {
+                        _leaves = _fetch(newPage);
+                      });
                     },
                   ),
                 ],

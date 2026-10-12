@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
+import { confirmDialog, notifyError } from "@/lib/dialog";
 
 export default function HolidayOutlet() {
   const [holidays, setHolidays] = useState([]);
@@ -38,12 +39,19 @@ export default function HolidayOutlet() {
       setForm({ date: "", name: "" });
       await fetchHolidays();
     } catch (error) {
-      alert(error.response?.data?.message || "Could not add the holiday.");
+      notifyError(
+        error.response?.data?.message || "Could not add the holiday.",
+        "Could not add holiday",
+      );
       setLoading(false);
     }
   };
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this holiday?")) return;
+    const confirmed = await confirmDialog("This cannot be undone.", {
+      title: "Delete this holiday?",
+      confirmLabel: "Delete",
+    });
+    if (!confirmed) return;
     setLoading(true);
     try {
       await axios.delete(`${url}/holidays/${id}`, { headers: headers() });
