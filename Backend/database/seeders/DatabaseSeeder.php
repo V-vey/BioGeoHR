@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin HR',
             'email' => 'hr@biogeohr.test',
             'contact_number' => '09000000000',
-            'password' => 'password123',
+            'password' => 'password123', //pass capital character number lowercase
             'department' => 'Administrative',
             'position' => 'HR Administrator',
             'call_time' => '08:00:00',
