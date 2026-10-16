@@ -17,7 +17,14 @@ import { url } from "@/resources/api";
 import { Link } from "react-router-dom";
 import { useDataChanged } from "@/lib/dataChanged";
 // ICONS
-import { Users, Clock, History, TriangleAlert, DoorOpen } from "lucide-react";
+import {
+  Users,
+  Clock,
+  History,
+  TriangleAlert,
+  DoorOpen,
+  Hourglass,
+} from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
 export default function DashboardOutlet() {
   const [pending, setPending] = useState(5);
@@ -28,7 +35,6 @@ export default function DashboardOutlet() {
   const [leaveTick, setLeaveTick] = useState(0);
   //Calendar
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const months = [
@@ -54,10 +60,6 @@ export default function DashboardOutlet() {
   // 3. Navigation triggers
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  // 4. Capture clicked date
-  const handleDateClick = (day) => {
-    setSelectedDate(new Date(year, month, day));
-  };
   // 5. Build layout cells
   const calendarHeader = (
     // justify-between when there is a button
@@ -87,11 +89,14 @@ export default function DashboardOutlet() {
     countLate: 0,
     countAbsent: 0,
     countLeave: 0,
+    countNotYetIn: 0, // no attendance today and not on leave
+    nonWorkingDay: false, // a weekend or a holiday: nobody is expected
 
     percentageAttendance: 0,
     percentageLate: 0,
     percentageAbsent: 0,
     percentageLeave: 0,
+    percentageNotYetIn: 0,
   });
 
   useEffect(() => {
@@ -117,6 +122,8 @@ export default function DashboardOutlet() {
           countLate: response.data.late,
           countAbsent: response.data.absent,
           countLeave: response.data.leave,
+          countNotYetIn: response.data.not_yet_in ?? 0,
+          nonWorkingDay: response.data.non_working_day === true,
 
           percentageAttendance: pct(
             response.data.on_time,
@@ -125,6 +132,10 @@ export default function DashboardOutlet() {
           percentageLate: pct(response.data.late, response.data.employees),
           percentageAbsent: pct(response.data.absent, response.data.employees),
           percentageLeave: pct(response.data.leave, response.data.employees),
+          percentageNotYetIn: pct(
+            response.data.not_yet_in ?? 0,
+            response.data.employees,
+          ),
         });
       } catch (error) {
         console.error("Something went wrong", error);
@@ -283,7 +294,8 @@ export default function DashboardOutlet() {
   }, []);
 
   //EMPLOYEE
-  // Today's attendance, one page at a time: the server searches, counts and pages it.
+  // Every active employee with what today looks like for them (On-Time, Late, Absent, On Leave,
+  // Not Yet In), one page at a time: the server searches, counts and pages it.
   const EMP_PER_PAGE = 5;
   const [employees, setEmployees] = useState([]); // the records of the current page only
   const [totalEmp, setTotalEmp] = useState(0);
@@ -307,15 +319,9 @@ export default function DashboardOutlet() {
     const token = localStorage.getItem("token");
     const fetchEmployees = async () => {
       try {
-        const today = new Date().toLocaleDateString("en-CA"); // local date, yyyy-mm-dd
-        const params = {
-          date_from: today,
-          date_to: today,
-          page: currentPageEmp,
-          per_page: EMP_PER_PAGE,
-        };
+        const params = { page: currentPageEmp, per_page: EMP_PER_PAGE };
         if (searchEmpSent) params.search = searchEmpSent;
-        const response = await axios.get(url + "/attendance", {
+        const response = await axios.get(url + "/dashboardEmployees", {
           params,
           headers: {
             Authorization: `Bearer ${token}`,
@@ -342,7 +348,7 @@ export default function DashboardOutlet() {
     return () => {
       cancelled = true;
     };
-  }, [currentPageEmp, searchEmpSent, attTick]);
+  }, [currentPageEmp, searchEmpSent, attTick, leaveTick]);
   const employeeHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Employee List</h2>
@@ -398,6 +404,17 @@ export default function DashboardOutlet() {
           />
           <Counts
             className="flex-1"
+            display="Not Yet In"
+            count={metrics.countNotYetIn}
+            percentage={
+              metrics.nonWorkingDay
+                ? "Non-working day"
+                : `${metrics.percentageNotYetIn}% of Employees`
+            }
+            icon={<Hourglass className="text-[#8a90a3] w-10 h-10 text-[10px] " />}
+          />
+          <Counts
+            className="flex-1"
             display="Absent Employees"
             count={metrics.countAbsent}
             percentage={`${metrics.percentageAbsent}% of Employees`}
@@ -407,7 +424,7 @@ export default function DashboardOutlet() {
           />
           <Counts
             className="flex-1"
-            display="Total Leave"
+            display="On Leave"
             count={metrics.countLeave}
             percentage={`${metrics.percentageLeave}% of Employees`}
             icon={
@@ -446,12 +463,7 @@ export default function DashboardOutlet() {
               maxH={400}
               pageShow={false}
             >
-              <Calendar
-                month={month}
-                year={year}
-                selectedDate={selectedDate}
-                onDateClick={handleDateClick}
-              />
+              <Calendar month={month} year={year} />
             </Containers>
           </div>
 

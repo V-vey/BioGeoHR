@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Funnel } from "lucide-react";
 
 function RadioGroup({ label, options, value, onChange }) {
   return (
@@ -85,9 +86,11 @@ export default function FilterDropdown({ config, onApply, arrowSize = 32 }) {
       <button
         onClick={() => setOpen((o) => !o)}
         style={{ width: arrowSize, height: arrowSize }}
+        aria-label="Filter"
+        aria-expanded={open}
         className="border border-[#eef0f5] rounded-[6px] bg-white cursor-pointer flex items-center justify-center text-[#8a90a3] hover:bg-gray-50"
       >
-        ☰
+        <Funnel className="w-4 h-4" />
       </button>
 
       {open && (

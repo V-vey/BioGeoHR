@@ -40,7 +40,8 @@ function LoginPageMain() {
           return;
         }
         if (response.data.authenticated === "Log in Success") {
-          localStorage.setItem("token", response.data.token);
+          localStorage.setItem("token", response.data.token); //cookie
+
           // mark employees with no record on past working days as absent;
           // a failure here must not block the login
           try {
@@ -59,14 +60,23 @@ function LoginPageMain() {
           }
           navigate("/dashboard");
         } else {
-          notifyError("Please try again. Something went wrong.", "Could not log in");
+          notifyError(
+            "Please try again. Something went wrong.",
+            "Could not log in",
+          );
         }
       });
     } catch (error) {
       if (error.response?.status === 300) {
-        notifyError("User not found. Please check your email.", "Could not log in");
+        notifyError(
+          "User not found. Please check your email.",
+          "Could not log in",
+        );
       } else if (error.response?.status === 301) {
-        notifyError("Password is incorrect. Please try again.", "Could not log in");
+        notifyError(
+          "Password is incorrect. Please try again.",
+          "Could not log in",
+        );
       } else {
         console.error("Error during login:", error);
       }

@@ -10,16 +10,8 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    // how many names one kind of event may carry; the rest are only counted
     private const NAMES = 3;
 
-    /**
-     * What is new since the last poll, for the web's pop-up messages.
-     *
-     * The page sends the newest id of each kind it has already seen (leave, attendance, flag).
-     * Without them the answer holds only the current newest ids, which is how the page starts.
-     * Only cheap indexed queries run here, and nothing is ever listed in full.
-     */
     public function poll(Request $request)
     {
         $request->validate([
@@ -76,11 +68,6 @@ class NotificationController extends Controller
         return ['count' => $count, 'items' => $items];
     }
 
-    /**
-     * Polling must not keep a forgotten tab logged in: the 60-minute idle timer counts requests,
-     * so this one puts the token's "last used" time back to what it was before the poll.
-     * (AppServiceProvider saved the earlier value while it checked the token.)
-     */
     private function keepIdleClock(Request $request): void
     {
         $previous = $request->attributes->get('previous_last_used_at');

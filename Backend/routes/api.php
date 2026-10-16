@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('payroll-report', [PayslipController::class, 'report']);
 
         Route::get('attendanceCounts', [AttendanceController::class, 'getCounts']);
+        Route::get('dashboardEmployees', [AttendanceController::class, 'dashboardEmployees']);
         
         Route::get('weeklyAttendance', [AttendanceController::class, 'weeklyAttendance']);
         

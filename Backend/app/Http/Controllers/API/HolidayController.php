@@ -17,10 +17,12 @@ class HolidayController extends Controller
 
     public function store(Request $request)
     {
+        
         $request->validate([
             'date' => 'required|date',
             'name' => 'required|string',
         ]);
+
         $holiday = Holiday::create($request->only(['date', 'name']));
         AuditLog::record('admin', 'holiday_added', 'success', "{$holiday->name} ({$request->date})");
         

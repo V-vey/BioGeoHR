@@ -8,6 +8,7 @@ import AuthImage from "@/components/AuthImage";
 import { notifySuccess, notifyError } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { familyFromServer, cleanFamily } from "@/lib/family";
+import { confirmDialog } from "@/lib/dialog";
 
 function Field({ label, value, onChange, type = "text" }) {
   return (
@@ -132,6 +133,7 @@ export default function EdiPofiletModal({
     setPhotoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -154,6 +156,14 @@ export default function EdiPofiletModal({
     data.append("family", JSON.stringify(cleanFamily(family)));
     if (photoFile) data.append("image", photoFile);
     data.append("_method", "PUT");
+
+    const confirmed = await confirmDialog("Are you sure you want to edit it.", {
+      title: "Edit this User?",
+      confirmLabel: "Edit",
+    });
+    if (!confirmed) return;
+    setLoading(true);
+
     try {
       await axios.post(url + `/users/${emp.id}`, data, { headers });
       if (empData.salary) {

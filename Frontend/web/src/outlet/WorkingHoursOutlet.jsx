@@ -213,6 +213,64 @@ export default function WorkingHoursOutlet() {
           </form>
         </div>
 
+        <div className="bg-white border border-[#b2b2b2] rounded-[10px] w-full">
+          <div className="text-start px-4 py-2">
+            <p className="font-medium">School year</p>
+          </div>
+          <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
+
+          <form onSubmit={handleSave} className="flex flex-col gap-4 px-4 py-4">
+            <div className="flex flex-row gap-5">
+              <div className="flex flex-col items-start gap-1">
+                <label htmlFor="grace" className="font-medium pl-2">
+                  School year starts
+                </label>
+                <input
+                  id="startDate"
+                  type="date"
+                  // value={grace}
+                  // onChange={(e) => setGrace(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col items-start gap-1">
+                <label htmlFor="interval" className="font-medium pl-2">
+                  School year ends
+                </label>
+                <input
+                  id="dateEnd"
+                  type="date"
+                  // value={interval}
+                  // onChange={(e) => setIntervalMinutes(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <p className="text-sm text-[#8a90a3] pl-2 text-start">
+              Loans must be fully paid by the end date. Leave credits are given
+              at the start date. Update these two dates each year.
+            </p>
+
+            <div className="flex items-center gap-4">
+              <button
+                type="submit"
+                disabled={saving || !settings}
+                className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-60 text-white font-medium"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              {message && (
+                <p
+                  role="status"
+                  className={message.ok ? "text-[#2AAF56]" : "text-red-500"}
+                >
+                  {message.text}
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
+
         <div className="bg-white border border-[#b2b2b2] rounded-[10px] w-full overflow-hidden">
           <div className="text-start px-4 py-2">
             <p className="font-medium">Employee schedules</p>

@@ -124,6 +124,7 @@ class AttendanceController extends Controller
         return response()->json($query->get()->map(fn ($a) => $this->attendanceRow($a))->values());
     }
 
+    //manual attendance
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -448,47 +449,107 @@ class AttendanceController extends Controller
         return response()->json($attendance, 201);
     }
 
+    /**
+     * The numbers on the Dashboard's top cards, for today. Everything counts active employees, each
+     * one once, so On-Time + Late + Absent + On Leave + Not Yet In adds up to the total (an employee
+     * who is on approved leave but clocked in anyway is counted in both of their own cards only).
+     */
     public function getCounts(){
-        $attendanceToday = Attendance::whereDate('date', today())
+        $today = today();
+        $activeIds = Users::active()->pluck('id');
+        $employeesCount = $activeIds->count();
+
+        // today's attendance of active employees, one row each
+        $attendanceToday = Attendance::whereDate('date', $today)
+            ->whereIn('user_id', $activeIds)
             ->select('status', 'user_id')
             ->get()
             ->unique('user_id');
-        
-        $employeesCount = Users::active()->count();
-        $onTime = 0;
-        $late = 0;
-        $absent = 0;
-        $leave = 0;
-        
-        $leave = LeaveApplication::where("status", "approved")
-            ->whereDate("start_date", "<=", today())
-            ->whereDate("end_date", ">=", today())
-            ->count();
-        // $leaveData = LeaveApplication::all();
-        //verify avoid dup
-        $usersVer = [];
-        foreach ($attendanceToday as $value) {
-        
-            if($value->status == "On-Time" ){
-                $onTime = $onTime + 1;
-            }
-            elseif($value->status == "Late"){
-                $late = $late + 1;
-            } elseif($value->status == "Absent"){
-                $absent = $absent + 1;
-            }
 
-        }
+        $onTime = $attendanceToday->where('status', 'On-Time')->count();
+        $late = $attendanceToday->where('status', 'Late')->count();
+        $absent = $attendanceToday->where('status', 'Absent')->count();
+
+        // approved leave that covers today, each employee once
+        $leaveIds = LeaveApplication::where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->whereIn('user_id', $activeIds)
+            ->pluck('user_id')
+            ->unique();
+        $leave = $leaveIds->count();
+
+        // "Not Yet In": no attendance today and not on leave. On a weekend or a holiday nobody is
+        // expected, so it is 0 and the page says it is a non-working day.
+        $nonWorkingDay = $today->isWeekend() || Holiday::whereDate('date', $today)->exists();
+        $accounted = $attendanceToday->pluck('user_id')->merge($leaveIds)->unique();
+        $notYetIn = $nonWorkingDay ? 0 : max(0, $employeesCount - $accounted->count());
 
         return response()->json([
             'employees' => $employeesCount,
             'on_time' => $onTime,
             'late' => $late,
-            'absent' => $absent, 
-            'leave' => $leave
+            'absent' => $absent,
+            'leave' => $leave,
+            'not_yet_in' => $notYetIn,
+            'non_working_day' => $nonWorkingDay,
         ]);
-        
     }
+    /**
+     * The Dashboard's Employee List: every active employee, with what today looks like for them.
+     *   ?page=1&per_page=5&search=maria
+     * Status is the attendance of today (On-Time, Late, Absent); otherwise "On Leave" when an approved
+     * leave covers today; otherwise "Non-working day" on a weekend or holiday; otherwise "Not Yet In".
+     * Paged and searched by the database, so it stays small however many employees there are.
+     */
+    public function dashboardEmployees(Request $request)
+    {
+        $request->validate([
+            'search'   => 'sometimes|nullable|string|max:100',
+            'page'     => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:50',
+        ]);
+        $today = today();
+
+        $query = Users::active()->select('id', 'name', 'department', 'position', 'contract_type')->orderBy('name')->orderBy('id');
+        if ($term = trim((string) $request->input('search'))) {
+            // % and _ typed by the user must not act as wildcards
+            $query->where('name', 'like', '%' . addcslashes($term, '%_\\') . '%');
+        }
+        $page = $query->paginate((int) $request->input('per_page', 5));
+        $ids = $page->getCollection()->pluck('id');
+
+        // only the people on this page are looked up
+        $attendance = Attendance::whereDate('date', $today)->whereIn('user_id', $ids)
+            ->orderBy('id')->get(['user_id', 'status'])->unique('user_id')->keyBy('user_id');
+        $onLeave = LeaveApplication::where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)
+            ->whereIn('user_id', $ids)->pluck('user_id')->flip();
+        $nonWorkingDay = $today->isWeekend() || Holiday::whereDate('date', $today)->exists();
+
+        $rows = $page->getCollection()->map(function ($u) use ($attendance, $onLeave, $nonWorkingDay) {
+            $status = $attendance[$u->id]->status
+                ?? ($onLeave->has($u->id) ? 'On Leave' : ($nonWorkingDay ? 'Non-working day' : 'Not Yet In'));
+
+            return [
+                'id'           => $u->id,
+                'name'         => $u->name,
+                'department'   => $u->department,
+                'position'     => $u->position,
+                'contractType' => $u->contract_type,
+                'status'       => $status,
+            ];
+        })->values();
+
+        return response()->json([
+            'data'         => $rows,
+            'current_page' => $page->currentPage(),
+            'last_page'    => $page->lastPage(),
+            'per_page'     => $page->perPage(),
+            'total'        => $page->total(),
+        ]);
+    }
+
     public function flaggedAttendance(Request $request)
 {
     $query = Attendance::whereHas('flaggedAttendances');

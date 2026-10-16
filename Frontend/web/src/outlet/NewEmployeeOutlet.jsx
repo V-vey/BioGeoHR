@@ -3,7 +3,7 @@ import { Calendar, ChevronDown, User } from "lucide-react";
 
 import axios from "axios";
 import { url } from "@/resources/api";
-import { notifySuccess, notifyError } from "@/lib/dialog";
+import { notifySuccess, notifyError, confirmDialog } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
 function Field({ label, required, span = 1, children }) {
@@ -79,6 +79,15 @@ export default function NewEmployeeForm() {
     data.append("working_days_per_month", formData.wrkDPM);
     if (photoFile) data.append("image", photoFile);
 
+    const confirmed = await confirmDialog(
+      "Are the sure the inputs are correct",
+      {
+        title: "Create Employee",
+        confirmLabel: "Create",
+      },
+    );
+    if (!confirmed) return;
+    setLoading(true);
     try {
       await axios.post(url + "/users", data, {
         headers: {
@@ -355,6 +364,8 @@ export default function NewEmployeeForm() {
             <Field label="Working Days Per Month" required>
               <input
                 type="number"
+                min={1}
+                max={31}
                 className={inputClass}
                 onChange={update("wrkDPM")}
               />

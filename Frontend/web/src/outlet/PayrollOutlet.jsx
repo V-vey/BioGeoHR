@@ -143,7 +143,7 @@ export default function PayrollOutlet() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 4;
+  const itemsPerPage = 9;
 
   const totalPages = Math.max(1, Math.ceil(payrollRuns.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;

@@ -1,8 +1,7 @@
 import axios from "axios";
 import { url } from "@/resources/api";
 import { useState, useEffect } from "react";
-import { notifySuccess } from "@/lib/dialog";
-
+import { notifySuccess, confirmDialog } from "@/lib/dialog";
 function Balance(type, item) {
   return (
     <div className="flex flex-1 flex-row justify-between items-center bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px] font-medium ">
@@ -22,6 +21,15 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
   }
   if (buttonRes) {
     handleDecision = async (id, status) => {
+      const confirmed = await confirmDialog(
+        `This cannot be undone are you sure you want to ${status} it.`,
+        {
+          title: "Leave Decision",
+          confirmLabel: "Confirm",
+        },
+      );
+      if (!confirmed) return;
+      setLoading(true);
       try {
         const token = localStorage.getItem("token");
         await axios.put(

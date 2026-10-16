@@ -6,7 +6,7 @@ export default function ListOfEmployee({ emp }) {
   if (emp.length === 0) {
     return (
       <p className="text-sm text-[#8a90a3] text-center py-4">
-        No attendance recorded today.
+        No employees found.
       </p>
     );
   }
@@ -23,7 +23,12 @@ export default function ListOfEmployee({ emp }) {
               ? "bg-[#2AAF56]"
               : emp.status === "Late"
                 ? "bg-[#EACA3A]"
-                : "bg-[#EC6668]"
+                : emp.status === "On Leave"
+                  ? "bg-[#6675EC]"
+                  : emp.status === "Not Yet In" ||
+                      emp.status === "Non-working day"
+                    ? "bg-[#8a90a3]"
+                    : "bg-[#EC6668]" // Absent
           }`}
         />
         <p className="m-0">{emp.status}</p>
