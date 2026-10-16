@@ -9,5 +9,7 @@ class SystemSetting extends Model
     protected $fillable = [
         'geofence_check_interval_minutes',
         'late_grace_period_minutes',
+        'school_year_start',
+        'school_year_end'
     ];
 }

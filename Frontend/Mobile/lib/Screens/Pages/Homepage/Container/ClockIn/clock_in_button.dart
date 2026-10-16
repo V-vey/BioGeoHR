@@ -54,8 +54,8 @@ class Clockinbutton extends StatelessWidget {
   final CountLate late = CountLate();
   final VoidCallback requestBackgroundLocation;
   //Timer call back
-  final VoidCallback timerStart;
-  final VoidCallback timerReset;
+  final Future<void> Function() timerStart;
+  final VoidCallback timerPause; // clock-out: stop ticking, keep the time shown
   //Check if its runnning
   final bool isRunning;
   //status
@@ -70,7 +70,7 @@ class Clockinbutton extends StatelessWidget {
     super.key,
     required this.requestBackgroundLocation,
     required this.timerStart,
-    required this.timerReset,
+    required this.timerPause,
     required this.isRunning,
     required this.statusActive,
     required this.statusInactive,
@@ -114,7 +114,7 @@ class Clockinbutton extends StatelessWidget {
               )) {
                 return;
               }
-              timerReset();
+              timerPause();
               statusInactive();
               clock.clockOut();
               return;
@@ -190,7 +190,7 @@ class Clockinbutton extends StatelessWidget {
                 );
                 return;
               }
-              timerStart();
+              await timerStart();
               statusActive();
               // requestBackgroundLocation();
             }

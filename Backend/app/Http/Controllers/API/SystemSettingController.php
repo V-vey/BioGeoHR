@@ -29,11 +29,13 @@ class SystemSettingController extends Controller
             'late_grace_period_minutes'       => 'sometimes|required|integer|min:0|max:120',
             // Android runs a background task no more often than every 15 minutes
             'geofence_check_interval_minutes' => 'sometimes|required|integer|min:15|max:120',
+            'school_year_start' => 'sometimes|required|date',
+            'school_year_end'   => 'sometimes|required|date|after:school_year_start',
         ]);
 
         $changed = [];
         foreach ($data as $field => $value) {
-            if ((int) $setting->$field !== (int) $value) {
+            if ((string) $setting->$field !== (string) $value) {
                 $changed[] = "{$field}: {$setting->$field} -> {$value}";
             }
         }
@@ -44,7 +46,7 @@ class SystemSettingController extends Controller
         }
 
         return response()->json(['message' => 'Update Successful'] + $setting->only([
-            'late_grace_period_minutes', 'geofence_check_interval_minutes',
+            'late_grace_period_minutes', 'geofence_check_interval_minutes', 'school_year_start', 'school_year_end'
         ]));
     }
 

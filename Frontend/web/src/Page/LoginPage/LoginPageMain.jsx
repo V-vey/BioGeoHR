@@ -24,6 +24,7 @@ function LoginPageMain() {
   const loginForm = {
     email: email,
     password: password,
+    platform: "Web", // the audit log says where the login came from
   };
 
   const handleSubmit = async (e) => {

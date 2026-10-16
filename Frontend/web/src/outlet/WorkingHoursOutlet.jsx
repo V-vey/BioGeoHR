@@ -39,13 +39,19 @@ export default function WorkingHoursOutlet() {
   // the two form fields are text while typing and checked on Save
   const [grace, setGrace] = useState("");
   const [interval, setIntervalMinutes] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null); // { ok: boolean, text: string }
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [savingRule, setSavingRule] = useState(false);
+  const [savingSchoolYear, setSavingSchoolYear] = useState(false);
+  const [messageRule, setMessageRule] = useState(null); // { ok: boolean, text: string }
+  const [messageSchoolYear, setMessageSchoolYear] = useState(null); // { ok: boolean, text: string }
 
   const applySettings = (s) => {
     setSettings(s);
     setGrace(String(s.late_grace_period_minutes));
     setIntervalMinutes(String(s.geofence_check_interval_minutes));
+    setStartDate(s.school_year_start ?? "");
+    setEndDate(s.school_year_end ?? "");
   };
 
   useEffect(() => {
@@ -64,7 +70,7 @@ export default function WorkingHoursOutlet() {
       } catch (error) {
         console.error("Failed to load working hours:", error);
         if (!cancelled)
-          setMessage({ ok: false, text: "Could not load the settings." });
+          setMessageRule({ ok: false, text: "Could not load the settings." });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -75,39 +81,81 @@ export default function WorkingHoursOutlet() {
     };
   }, []);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setMessage(null);
-
-    // check here first, so a simple mistake does not need a round trip
-    const g = Number(grace);
-    const i = Number(interval);
-    if (grace === "" || !Number.isInteger(g) || g < 0 || g > 120) {
-      setMessage({ ok: false, text: "Grace period must be 0 to 120 minutes." });
-      return;
-    }
-    if (interval === "" || !Number.isInteger(i) || i < 15 || i > 120) {
-      setMessage({
-        ok: false,
-        text: "Location check interval must be 15 to 120 minutes.",
-      });
-      return;
-    }
-
-    setSaving(true);
+  const saveRule = async (payload) => {
+    setMessageRule(null);
+    setSavingRule(true);
     try {
       const res = await axios.put(
         `${url}/systemSettings/${settings.id}`,
-        { late_grace_period_minutes: g, geofence_check_interval_minutes: i },
+        payload,
         { headers: headers() },
       );
-      applySettings({ ...settings, ...res.data });
-      setMessage({ ok: true, text: "Saved." });
+      setSettings((cur) => ({ ...cur, ...res.data }));
+      setGrace(String(res.data.late_grace_period_minutes));
+      setIntervalMinutes(String(res.data.geofence_check_interval_minutes));
+      setMessageRule({ ok: true, text: "Saved." });
     } catch (error) {
-      setMessage({ ok: false, text: errorText(error, "Could not save.") });
+      setMessageRule({ ok: false, text: errorText(error, "Could not save.") });
     } finally {
-      setSaving(false);
+      setSavingRule(false);
     }
+  };
+
+  const saveSchoolYear = async (payload) => {
+    setMessageSchoolYear(null);
+    setSavingSchoolYear(true);
+    try {
+      const res = await axios.put(
+        `${url}/systemSettings/${settings.id}`,
+        payload,
+        { headers: headers() },
+      );
+      setSettings((cur) => ({ ...cur, ...res.data }));
+      setStartDate(res.data.school_year_start ?? "");
+      setEndDate(res.data.school_year_end ?? "");
+      setMessageSchoolYear({ ok: true, text: "Saved." });
+    } catch (error) {
+      setMessageSchoolYear({ ok: false, text: errorText(error, "Could not save.") });
+    } finally {
+      setSavingSchoolYear(false);
+    }
+  };
+
+  const handleSaveRules = (e) => {
+    e.preventDefault();
+    setMessageRule(null);
+    const g = Number(grace);
+    const i = Number(interval);
+    if (grace === "" || !Number.isInteger(g) || g < 0 || g > 120)
+      return setMessageRule({
+        ok: false,
+        text: "Grace period must be 0 to 120 minutes.",
+      });
+    if (interval === "" || !Number.isInteger(i) || i < 15 || i > 120)
+      return setMessageRule({
+        ok: false,
+        text: "Location check interval must be 15 to 120 minutes.",
+      });
+    saveRule({
+      late_grace_period_minutes: g,
+      geofence_check_interval_minutes: i,
+    });
+  };
+
+  const handleSaveSchoolYear = (e) => {
+    e.preventDefault();
+    setMessageSchoolYear(null);
+    if (!startDate || !endDate)
+      return setMessageSchoolYear({
+        ok: false,
+        text: "Pick both the start and end date.",
+      });
+    if (endDate <= startDate)
+      return setMessageSchoolYear({
+        ok: false,
+        text: "The end date must be after the start date.",
+      });
+    saveSchoolYear({ school_year_start: startDate, school_year_end: endDate }); // plain "2026-08-01" strings
   };
 
   // one row per active employee: start time (from the profile) + hours a day (from the salary)
@@ -153,7 +201,10 @@ export default function WorkingHoursOutlet() {
           </div>
           <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
 
-          <form onSubmit={handleSave} className="flex flex-col gap-4 px-4 py-4">
+          <form
+            onSubmit={handleSaveRules}
+            className="flex flex-col gap-4 px-4 py-4"
+          >
             <div className="flex flex-col items-start gap-1">
               <label htmlFor="grace" className="font-medium pl-2">
                 Late grace period (minutes)
@@ -196,17 +247,17 @@ export default function WorkingHoursOutlet() {
             <div className="flex items-center gap-4">
               <button
                 type="submit"
-                disabled={saving || !settings}
+                disabled={savingRule || !settings}
                 className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-60 text-white font-medium"
               >
-                {saving ? "Saving..." : "Save"}
+                {savingRule ? "Saving..." : "Save"}
               </button>
-              {message && (
+              {messageRule && (
                 <p
                   role="status"
-                  className={message.ok ? "text-[#2AAF56]" : "text-red-500"}
+                  className={messageRule.ok ? "text-[#2AAF56]" : "text-red-500"}
                 >
-                  {message.text}
+                  {messageRule.text}
                 </p>
               )}
             </div>
@@ -219,29 +270,32 @@ export default function WorkingHoursOutlet() {
           </div>
           <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
 
-          <form onSubmit={handleSave} className="flex flex-col gap-4 px-4 py-4">
+          <form
+            onSubmit={handleSaveSchoolYear}
+            className="flex flex-col gap-4 px-4 py-4"
+          >
             <div className="flex flex-row gap-5">
               <div className="flex flex-col items-start gap-1">
-                <label htmlFor="grace" className="font-medium pl-2">
+                <label htmlFor="startDate" className="font-medium pl-2">
                   School year starts
                 </label>
                 <input
                   id="startDate"
                   type="date"
-                  // value={grace}
-                  // onChange={(e) => setGrace(e.target.value)}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
                   className={inputClass}
                 />
               </div>
               <div className="flex flex-col items-start gap-1">
-                <label htmlFor="interval" className="font-medium pl-2">
+                <label htmlFor="dateEnd" className="font-medium pl-2">
                   School year ends
                 </label>
                 <input
                   id="dateEnd"
                   type="date"
-                  // value={interval}
-                  // onChange={(e) => setIntervalMinutes(e.target.value)}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                   className={inputClass}
                 />
               </div>
@@ -254,17 +308,17 @@ export default function WorkingHoursOutlet() {
             <div className="flex items-center gap-4">
               <button
                 type="submit"
-                disabled={saving || !settings}
+                disabled={savingSchoolYear || !settings}
                 className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-60 text-white font-medium"
               >
-                {saving ? "Saving..." : "Save"}
+                {savingSchoolYear ? "Saving..." : "Save"}
               </button>
-              {message && (
+              {messageSchoolYear && (
                 <p
                   role="status"
-                  className={message.ok ? "text-[#2AAF56]" : "text-red-500"}
+                  className={messageSchoolYear.ok ? "text-[#2AAF56]" : "text-red-500"}
                 >
-                  {message.text}
+                  {messageSchoolYear.text}
                 </p>
               )}
             </div>

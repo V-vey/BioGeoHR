@@ -30,10 +30,9 @@ const formatHours = (timeIn, timeOut) => {
 // A day can have several clock-ins (the employee clocks in again after clocking out). The server
 // adds the sessions up, so the hours are what was really worked, not first in to last out.
 const formatWorked = (att) => {
-  const sessions = att.sessions > 1 ? ` · ${att.sessions} sessions` : "";
   if (att.workedSeconds > 0) {
     const minutes = Math.floor(att.workedSeconds / 60);
-    return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m${sessions}`;
+    return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
   }
   return formatHours(att.clockIn, att.clockOut);
 };
@@ -85,7 +84,8 @@ export default function Attendance() {
         const params = { page: currentPage, per_page: ITEMS_PER_PAGE };
         if (searchSent) params.search = searchSent;
         if (filters.status !== "All") params.status = filters.status;
-        if (filters.department !== "All") params.department = filters.department;
+        if (filters.department !== "All")
+          params.department = filters.department;
         if (filters.dates.from) params.date_from = filters.dates.from;
         if (filters.dates.to) params.date_to = filters.dates.to;
 
@@ -103,7 +103,11 @@ export default function Attendance() {
         setTotalPages(Math.max(1, page.last_page));
         setDepartments(page.departments ?? []);
         // the page we asked for no longer exists (for example after a filter): go to the last one
-        if (page.data.length === 0 && page.total > 0 && currentPage > page.last_page)
+        if (
+          page.data.length === 0 &&
+          page.total > 0 &&
+          currentPage > page.last_page
+        )
           setCurrentPage(page.last_page);
       } catch (error) {
         console.error("Failed to load attendance:", error);
@@ -166,6 +170,7 @@ export default function Attendance() {
               clockIn={formatTime(att.clockIn)}
               clockOut={formatTime(att.clockOut)}
               hours={formatWorked(att)}
+              session={att.sessions}
             />
           ))}
         </Containers>

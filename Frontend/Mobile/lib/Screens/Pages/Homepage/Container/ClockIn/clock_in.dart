@@ -89,6 +89,8 @@ class _ClockInState extends State<ClockIn> {
   }
 
   /// Ask the server whether the employee is clocked in today, and make the timer match.
+  /// The timer shows everything worked today (all sessions added up), so after a clock-out it
+  /// stays at that number, paused, and carries on from it when the employee clocks in again.
   /// This is what brings the clock back after the app was closed, restarted or logged
   /// out and in again. Returns true when they are clocked in and not clocked out.
   Future<bool> resync() async {
@@ -96,24 +98,49 @@ class _ClockInState extends State<ClockIn> {
       final today = await GetTodayAttendance().get();
       if (!mounted) return false;
 
-      if (today != null && today.running) {
+      if (today == null) {
+        // nothing clocked today: a new day starts from zero
+        if (isRunning) reset();
         setState(() {
-          duration = Duration(
-            seconds: today.elapsedSeconds,
-          ); // the server's count
+          duration = Duration();
+          status = 'Inactive';
+        });
+        return false;
+      }
+
+      final total = Duration(seconds: today.workedSeconds); // the server's count
+      if (today.running) {
+        setState(() {
+          duration = total;
           status = 'Active';
         });
         start(askLocation: false); // no-op if the timer is already running
         return true;
       }
-      if (isRunning) {
-        reset(); // clocked out somewhere else (or never clocked in)
-        setStatusInactive();
-      }
+      // clocked out today: paused, showing what was worked so far
+      if (isRunning) pause();
+      setState(() {
+        duration = total;
+        status = 'Inactive';
+      });
       return false;
     } catch (e) {
       return false; // no connection: leave the clock as it is
     }
+  }
+
+  /// Clock-in succeeded: take the day's total from the server first (so a second clock-in
+  /// carries on from the earlier sessions, and a new day starts from zero), then tick.
+  Future<void> startAfterClockIn() async {
+    try {
+      final today = await GetTodayAttendance().get();
+      if (mounted && today != null) {
+        setState(() => duration = Duration(seconds: today.workedSeconds));
+      }
+    } catch (e) {
+      // no connection: carry on from the number on screen
+    }
+    if (mounted) start();
   }
 
   void start({bool askLocation = true}) {
@@ -139,6 +166,17 @@ class _ClockInState extends State<ClockIn> {
     });
   }
 
+  /// Stop the clock and the location checks but keep the time on screen (clock-out).
+  void pause() {
+    Workmanager().cancelByUniqueName("geofence-check");
+    setState(() {
+      isRunning = false;
+      timer?.cancel();
+      geofenceTimer?.cancel();
+    });
+  }
+
+  /// Stop the clock and go back to zero (a new day, or nothing clocked in).
   void reset() {
     Workmanager().cancelByUniqueName("geofence-check");
     setState(() {
@@ -251,9 +289,9 @@ class _ClockInState extends State<ClockIn> {
               Time(timerText: timerText()),
               Spacer(),
               Clockinbutton(
-                timerStart: start,
+                timerStart: startAfterClockIn,
                 requestBackgroundLocation: requestBackgroundLocation,
-                timerReset: reset,
+                timerPause: pause,
                 isRunning: isRunning,
                 statusActive: setStatusActive,
                 statusInactive: setStatusInactive,

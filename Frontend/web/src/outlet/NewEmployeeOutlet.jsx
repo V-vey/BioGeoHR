@@ -6,6 +6,7 @@ import { url } from "@/resources/api";
 import { notifySuccess, notifyError, confirmDialog } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
+import Loading from "@/components/Loading";
 function Field({ label, required, span = 1, children }) {
   return (
     <div
@@ -39,6 +40,7 @@ export default function NewEmployeeForm() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [passwordError, setPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const handlePhotoChange = (e) => {
@@ -89,13 +91,23 @@ export default function NewEmployeeForm() {
     if (!confirmed) return;
     setLoading(true);
     try {
-      await axios.post(url + "/users", data, {
+      const res = await axios.post(url + "/users", data, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
-      notifySuccess("The employee was added.", "Employee added");
+      if (res.data.email_sent === false) {
+        notifyError(
+          "The employee was added, but the email with their login could not be sent. Please give them their password yourself.",
+          "Employee added, email not sent",
+        );
+      } else {
+        notifySuccess(
+          "The employee was added and their login was emailed.",
+          "Employee added",
+        );
+      }
     } catch (error) {
       console.error("Failed to create employee:", error);
       // the server says what is wrong (for example a number that is already used)
@@ -104,6 +116,8 @@ export default function NewEmployeeForm() {
         errors ? Object.values(errors)[0][0] : "Could not create the employee.",
         "Could not add employee",
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,6 +126,7 @@ export default function NewEmployeeForm() {
   const onCancel = () => {};
   return (
     <>
+      {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
         <h2 className="text-[#6675EC] font-bold justify-end">Location</h2>
       </div>

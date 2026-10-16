@@ -13,6 +13,7 @@ use App\Models\Attendance;
 use App\Models\LeaveApplication;
 use App\Models\AuditLog;
 use App\Models\FamilyMember;
+use App\Service\SendEmail;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -173,7 +174,7 @@ class UsersController extends Controller
         }
 
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('avatars', 'public') : null;
-        
+
         $users = Users::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -192,13 +193,13 @@ class UsersController extends Controller
             'philhealth_number' => $request->philhealth_number,
             'pagibig_number' => $request->pagibig_number,
             'address' => $request->address,
-            'image_path' => $imagePath
+            'image_path' => $imagePath,
         ]);
 
         if ($family) {
             $this->saveFamily($users, $family);
         }
-
+        
         Salary::create([
             'user_id' => $users->id,
             'salary_basis' => $request->monthly_salary,
@@ -231,9 +232,11 @@ class UsersController extends Controller
             ]);
         }
        
-
+        
+        $emailSent = (new SendEmail())->send($users, $request->password);
         AuditLog::record('admin', 'employee_created', 'success', $users->name);
-        return response()->json($users, 201);
+        return response()->json($users->toArray() + ['email_sent' => $emailSent], 201);
+        
     }
 
     /**

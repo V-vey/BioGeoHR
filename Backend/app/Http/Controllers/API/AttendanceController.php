@@ -325,7 +325,7 @@ class AttendanceController extends Controller
 
         //find the attendance
         $attendance = Attendance::where("user_id", $userId)->latest()->first();
-        
+
         $date = now('Asia/Manila')->toDateString();
 
         if (!$attendance || $attendance->date != $date) {
@@ -334,7 +334,7 @@ class AttendanceController extends Controller
         if ($attendance->time_out !== null) {
             return response()->json(['message' => 'You have already clocked out'], 409);
         }
-
+        
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
         DB::transaction(function () use ($attendance, $time) {
             $attendance->ensureFirstSession();
@@ -342,6 +342,7 @@ class AttendanceController extends Controller
             $attendance->sessions()->whereNull('time_out')->latest('id')->first()?->update(['time_out' => $time]);
             $attendance->update(['time_out' => $time]);
         });
+        AuditLog::record('check_in', 'clock_out', 'success', "Clocked out at {$time}");
         return $attendance->fresh();
     }
 
@@ -445,6 +446,7 @@ class AttendanceController extends Controller
             $attendance->sessions()->create(['time_in' => $time]);
             return $attendance;
         });
+        
         AuditLog::record('check_in', 'clock_in', 'success', "{$status} at {$locationId->name}, {$time}");
         return response()->json($attendance, 201);
     }

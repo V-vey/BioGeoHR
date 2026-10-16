@@ -10,6 +10,7 @@ export default function ItemContainer({
   clockIn,
   clockOut,
   hours,
+  session,
 }) {
   let statusColor;
   if (status == "On-Time") {
@@ -68,6 +69,12 @@ export default function ItemContainer({
           <div className="flex-1">
             <p className="m-0 leading-none font-semibold text-[16px]">Hours</p>
             <p className="m-0 leading-none  text-[16px]">{hours}</p>
+          </div>
+          <div className="flex-1">
+            <p className="m-0 leading-none font-semibold text-[16px]">
+              Session
+            </p>
+            <p className="m-0 leading-none  text-[16px]">{session}</p>
           </div>
         </div>
       </div>

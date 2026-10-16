@@ -34,7 +34,11 @@ class Logintext {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: jsonEncode({"email": email, "password": password}),
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+        "platform": "Mobile", // the audit log says where the login came from
+      }),
     );
 
     //response status success
