@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Containers from "../components/container.jsx";
 import Item from "@/components/Attendance/item-container.jsx";
 import { Download } from "lucide-react";
@@ -49,7 +49,9 @@ export default function Attendance() {
   const [totalPages, setTotalPages] = useState(1);
   const [departments, setDepartments] = useState([]); // for the filter panel
   const [loading, setLoading] = useState(true); // the first load
+  const [pageLoading, setPageLoading] = useState(false); // a new page, search or filter is on its way
   const [reload, setReload] = useState(0); // bump it to ask the server again
+  const lastReload = useRef(0); // tells a page change from a refresh
   useDataChanged(["attendance"], () => setReload((n) => n + 1)); // new clock-ins appear by themselves
   const [showDownload, setShowDownload] = useState(false);
   const [showCreateAttendance, setShowCreateAttendnace] = useState(false);
@@ -79,6 +81,11 @@ export default function Attendance() {
 
   useEffect(() => {
     let cancelled = false;
+    // a refresh (new clock-ins, a saved record) stays quiet; going to another page, searching or
+    // filtering dims the list and says "Loading..." until the new records arrive
+    const isRefresh = lastReload.current !== reload;
+    lastReload.current = reload;
+    if (!isRefresh) setPageLoading(true);
     const fetchPage = async () => {
       try {
         const params = { page: currentPage, per_page: ITEMS_PER_PAGE };
@@ -112,7 +119,10 @@ export default function Attendance() {
       } catch (error) {
         console.error("Failed to load attendance:", error);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setPageLoading(false);
+        }
       }
     };
     fetchPage();
@@ -158,21 +168,39 @@ export default function Attendance() {
           search={search}
           setSearch={setSearch}
         >
-          {rows.map((att, i) => (
-            <Item
-              key={i}
-              date={format(new Date(att.date), "MMMM d, yyyy")}
-              location={att.location}
-              name={att.name}
-              department={att.department}
-              position={att.position}
-              status={att.status}
-              clockIn={formatTime(att.clockIn)}
-              clockOut={formatTime(att.clockOut)}
-              hours={formatWorked(att)}
-              session={att.sessions}
-            />
-          ))}
+          <div
+            className={`relative w-full ${pageLoading && !loading ? "min-h-[120px]" : ""}`}
+          >
+            <div
+              className={`flex flex-wrap gap-4 content-start justify-center w-full transition-opacity ${
+                pageLoading && !loading ? "opacity-40 pointer-events-none" : ""
+              }`}
+            >
+              {rows.map((att, i) => (
+                <Item
+                  key={i}
+                  date={format(new Date(att.date), "MMMM d, yyyy")}
+                  location={att.location}
+                  name={att.name}
+                  department={att.department}
+                  position={att.position}
+                  status={att.status}
+                  clockIn={formatTime(att.clockIn)}
+                  clockOut={formatTime(att.clockOut)}
+                  hours={formatWorked(att)}
+                  session={att.sessions}
+                />
+              ))}
+            </div>
+            {pageLoading && !loading && (
+              // in the middle of the visible screen, so it shows even when the pager at the bottom was clicked
+              <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
+                <p className="px-4 py-1 rounded-full bg-white border border-[#b2b2b2] shadow font-medium animate-pulse">
+                  Loading...
+                </p>
+              </div>
+            )}
+          </div>
         </Containers>
         <div className="flex flex-row gap-2 justify-end">
           <button

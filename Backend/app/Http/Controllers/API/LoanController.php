@@ -46,10 +46,11 @@ class LoanController extends Controller
     $request->validate([
         'user_id'           => 'required|exists:users,id',
         'loan_type'         => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
-        'total_amount'      => 'required|numeric|gt:0',
+        'total_amount'      => 'required|numeric|gt:0|max:10000',
         'monthly_deduction' => 'required|numeric|gt:0|lte:total_amount',   // never more than the loan
         'start_date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->toDateString(),
     ], [
+        'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
         'monthly_deduction.lte' => 'The monthly deduction cannot be more than the loan amount.',
     ]);
 
@@ -96,9 +97,11 @@ class LoanController extends Controller
 
         $data = $request->validate([
             'loan_type'         => 'sometimes|in:SSS,Pag-IBIG,Company,Cash Advance',
-            'total_amount'      => 'sometimes|numeric|gt:0',
+            'total_amount'      => 'sometimes|numeric|gt:0|max:10000',
             'monthly_deduction' => 'sometimes|numeric|gt:0',
             'start_date'        => 'sometimes|date|after_or_equal:2020-01-01|before_or_equal:' . now()->addYear()->toDateString(),
+        ], [
+            'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
         ]);
 
 

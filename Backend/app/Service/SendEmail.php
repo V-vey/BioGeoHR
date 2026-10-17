@@ -14,7 +14,13 @@ class SendEmail
         . "Your BioGeo HR account has been created.\n\n"
         . "Email: {$user->email}\n"
         . "Password: {$plainPassword}\n\n"
-        . "Please change your password after your first login.";
+        . "Please change your password after your first login.\n\n"
+        . "To change your password follow the following step:.\n"
+        . " Step 1: First login your account\n"
+        . " Step 2: Go to Profile section\n"
+        . " Step 3: Click Change Password\n"
+        . " Step 4: Enter the given password and enter you new password\n"
+        ;
 
         if ($link = config('app.download_url')) {
             $body .= "\n\nDownload the app: <{$link}>";

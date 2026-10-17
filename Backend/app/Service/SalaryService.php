@@ -46,35 +46,40 @@ class SalaryService
     }
     
     // overtime Comment
-    /*
+    
     // DOLE multipliers (Table 7 in the paper)
     const OT_RATES = [
         'regular'                 => 1.25,
-        'rest_day'                => 1.30,
-        'special_day_rest_day'    => 1.50,
-        'regular_holiday'         => 2.00,
-        'regular_holiday_rest_day'=> 2.30,
+        'rest_day'                => 1.69,
+        'special_day'             => 1.69,
+        'special_day_rest_day'    => 1.95,
+        'regular_holiday'         => 2.6,
+        'regular_holiday_rest_day'=> 3.38,
     ];
-
+    const REGULAR_RATES =[
+        'regular'                 => 1,
+        'rest_day'                => 1.3,
+        'special_day'             => 1.3,
+        'special_day_rest_day'    => 1.5,
+        'regular_holiday'         => 2,
+        'regular_holiday_rest_day'=> 2.6,
+    ];
+    
     function overtimePay($hourlyRate, $overtimeHours, $dayType = 'regular'){
         $multiplier = self::OT_RATES[$dayType] ?? self::OT_RATES['regular'];
         return round($hourlyRate * $multiplier * $overtimeHours, 2);
     }
 
     function overtimeHours($userId, $workingHoursPerDay, $periodStart, $periodEnd){
-        $records = Attendance::where('user_id', $userId)
+        $seconds = Attendance::where('user_id', $userId)
             ->whereBetween('date', [$periodStart, $periodEnd])
-            ->whereNotNull('time_out')
-            ->get();
+            ->selectRaw('COALESCE(SUM(GREATEST(0, (' . Attendance::workedSecondsSql() . ') - ?)), 0) as ot',
+                        [$workingHoursPerDay * 3600])
+            ->value('ot');
 
-        $hours = 0;
-        foreach ($records as $a) {
-            $worked = Carbon::parse($a->time_in)->diffInMinutes(Carbon::parse($a->time_out)) / 60;
-            $hours += max(0, $worked - $workingHoursPerDay);
-        }
-        return round($hours, 2);
+        return round($seconds / 3600, 2);
     }
-    */
+    
     // overtime Comment
 
     //Employees' Compensation
@@ -180,15 +185,12 @@ class SalaryService
         }
  
         // overtime Comment
-        /*
+        
         $overtimePay = 0;
-        if ($periodStart && $periodEnd) {
-            $otHours = $this->overtimeHours($userId, $hrsPerDay, $periodStart, $periodEnd);
-            $overtimePay = $this->overtimePay($hrRate, $otHours, 'regular');
-        }
-        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay - absenceDeduction;
-        */
-   
+        // if ($periodStart && $periodEnd) {
+        //     $otHours = $this->overtimeHours($userId, $hrsPerDay, $periodStart, $periodEnd);
+        //     $overtimePay = $this->overtimePay($hrRate, $otHours, 'regular');
+        // }
         $absenceDeduction = 0;
         $absentDays = 0;
         if ($periodStart && $periodEnd) {
@@ -196,15 +198,24 @@ class SalaryService
                 ->where('status', 'Absent')
                 ->whereBetween('date', [$periodStart, $periodEnd])
                 ->count();
+
+            $additionalPay = Attendance::where('user_id', $userId)
+                ->where('status', ['On-Time', 'Late'])
+                ->whereRaw('DAYOFWEEK(date) = 7')  
+                ->whereBetween('date', [$periodStart, $periodEnd]) 
+                ->count();
+
+            $overtimePay = $additionalPay * $dailyWage;
             $absenceDeduction = $absentDays * $dailyWage;
         }
-        $taxableIncome = (($salary - $contributions) / 2) - $absenceDeduction;
+        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay - $absenceDeduction;
+        // $taxableIncome = (($salary - $contributions) / 2) - $absenceDeduction;
         $semiMonth = ($paycheck / 2) - $absenceDeduction;
 
         $incomeTax = $this->incomeTax($taxableIncome);
         // overtime Comment
-        // $netPay = $semiMonth + $overtimePay - $incomeTax;
-        $netPay = $semiMonth - $incomeTax;
+        $netPay = $semiMonth + $overtimePay - $incomeTax;
+        // $netPay = $semiMonth - $incomeTax;
         return [
             'sss' => $sss,
             'philhealth' => $philHealth,
@@ -218,7 +229,7 @@ class SalaryService
             'paycheck' => $paycheck,
             'taxable_income' => $taxableIncome,
             // overtime Comment
-            // 'overtime_pay' => $overtimePay,
+            'overtime_pay' => $overtimePay,
         ];
     }
     function incomeTax($taxableIncome)

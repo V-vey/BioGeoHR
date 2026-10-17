@@ -132,9 +132,6 @@ class PayslipController extends Controller
                 $employee->id,
                 $request->period_start,
                 $request->period_end,
-                // overtime Comment
-                // $request->period_start,
-                // $request->period_end,
             );
 
             $loanDeduction = 0;
@@ -180,7 +177,8 @@ class PayslipController extends Controller
                 'net_pay' => $netPay,
                 'income_tax' => $result['income_tax'],
                 // overtime Comment
-                // 'overtime_pay' => $result['overtime_pay'],
+                'overtime_pay' => $result['overtime_pay'],
+              
             ]);
 
             $created[] = $payslip;
@@ -323,10 +321,7 @@ class PayslipController extends Controller
                 $employee->id,
                 $request->period_start,
                 $request->period_end,
-             
-                // overtime Comment
-                // $request->period_start,
-                // $request->period_end,
+            
             );
 
             $loanDeduction = 0;
@@ -360,7 +355,7 @@ class PayslipController extends Controller
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
                 // overtime Comment
-                // 'overtime_pay' => $result['overtime_pay'],
+                'overtime_pay' => $result['overtime_pay'],
             ];
         }
 

@@ -7,6 +7,7 @@ import Fallback from "@/assets/user.svg";
 import AuthImage from "@/components/AuthImage";
 import { notifySuccess, notifyError } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
+import WorkingDaysField from "@/components/WorkingDaysField";
 import { familyFromServer, cleanFamily } from "@/lib/family";
 import { confirmDialog } from "@/lib/dialog";
 
@@ -372,12 +373,16 @@ export default function EdiPofiletModal({
                   onChange={update("working_hours_per_day")}
                   type="number"
                 />
-                <Field
-                  label={"Working Days Per Month"}
-                  value={form.working_days_per_month}
-                  onChange={update("working_days_per_month")}
-                  type="number"
-                />
+                <div className="flex flex-col flex-1 items-start">
+                  <p className="font-medium pl-2">Working Days Per Month</p>
+                  <WorkingDaysField
+                    value={form.working_days_per_month}
+                    onChange={(v) =>
+                      setForm((f) => ({ ...f, working_days_per_month: v }))
+                    }
+                    className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
+                  />
+                </div>
               </SectionInside>
             </Section>
             <div className="flex flex-row gap-2 justify-end">

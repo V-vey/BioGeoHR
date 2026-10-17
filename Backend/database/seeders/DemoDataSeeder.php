@@ -271,7 +271,7 @@ class DemoDataSeeder extends Seeder
         $rows = [
             // email, type, total, monthly, start date
             ['mark.bautista@biogeohr.test', 'Company', 6000, 1000, '2026-09-10'],
-            ['nestor.pascual@biogeohr.test', 'SSS', 12000, 1500, '2026-08-20'],
+            ['nestor.pascual@biogeohr.test', 'SSS', 10000, 1500, '2026-08-20'],
             ['rosa.torres@biogeohr.test', 'Cash Advance', 1500, 1500, '2026-09-20'],
             ['maria.santos@biogeohr.test', 'Pag-IBIG', 9000, 1500, '2026-10-05'],
         ];

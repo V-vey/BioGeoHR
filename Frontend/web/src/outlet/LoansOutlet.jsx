@@ -124,6 +124,7 @@ function NewLoanModal({ employees, onClose, onSaved }) {
             required
             type="number"
             min="0"
+            max={10000}
             step="0.01"
             value={form.total_amount}
             onChange={update("total_amount")}

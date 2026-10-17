@@ -12,7 +12,10 @@ const company = {
 };
 
 const money = (n) =>
-  Number(n || 0).toLocaleString("en-PH", { style: "currency", currency: "PHP" });
+  Number(n || 0).toLocaleString("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  });
 
 const fmtDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -126,7 +129,9 @@ export default function PayslipsOutlet() {
 
   // year-to-date needs that employee's payslips of the year, not everyone's
   const currentUserId = current?.user_id;
-  const currentYear = current ? new Date(current.period_end).getFullYear() : null;
+  const currentYear = current
+    ? new Date(current.period_end).getFullYear()
+    : null;
   useEffect(() => {
     if (!currentUserId || !currentYear) return;
     let cancelled = false;
@@ -287,12 +292,14 @@ export default function PayslipsOutlet() {
                       {money(slip.gross)}
                     </td>
                   </tr>
-                  {/* overtime Comment
+                  {/* overtime Comment */}
                   <tr className="border-t border-[#eef0f5]">
                     <td className="py-2.5 text-sm">Overtime pay</td>
-                    <td className="py-2.5 text-sm text-right">{money(current.overtime_pay)}</td>
+                    <td className="py-2.5 text-sm text-right">
+                      {money(current.overtime_pay)}
+                    </td>
                   </tr>
-                  */}
+
                   <tr className="border-t border-[#eef0f5] font-bold">
                     <td className="py-2.5 text-sm">Total earnings</td>
                     <td className="py-2.5 text-sm text-right">

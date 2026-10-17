@@ -574,7 +574,9 @@ class AttendanceController extends Controller
     {
         $employeesCount = Users::active()->count();
         $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
+
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
         $result = [];
 
         foreach ($days as $i => $dayName) {

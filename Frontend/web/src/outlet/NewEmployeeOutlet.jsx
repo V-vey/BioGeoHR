@@ -7,6 +7,7 @@ import { notifySuccess, notifyError, confirmDialog } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
 import Loading from "@/components/Loading";
+import WorkingDaysField from "@/components/WorkingDaysField";
 function Field({ label, required, span = 1, children }) {
   return (
     <div
@@ -376,15 +377,13 @@ export default function NewEmployeeForm() {
                 onChange={update("wrkHrsPD")}
               />
             </Field>
-            <Field label="Working Days Per Month" required>
-              <input
-                type="number"
-                min={1}
-                max={31}
+            {/* <Field label="Working Days Per Month" required>
+              <WorkingDaysField
+                value={form.wrkDPM}
+                onChange={(v) => setForm((f) => ({ ...f, wrkDPM: v }))}
                 className={inputClass}
-                onChange={update("wrkDPM")}
               />
-            </Field>
+            </Field> */}
           </Section>
 
           <div className="flex justify-end gap-3 pt-6">

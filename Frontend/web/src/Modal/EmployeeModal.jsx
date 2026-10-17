@@ -362,7 +362,7 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                           : "—"
                       }
                     />
-                    {/* overtime Comment
+                    {/* overtime Comment */}
                     <SalaryRow
                       icon={Hourglass}
                       iconColor="#8a6d10"
@@ -370,7 +370,7 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                       label="Overtime this month"
                       value={`${empData.overtime_hours ?? 0} hrs · ₱${Number(empData.overtime_pay ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`}
                     />
-                    */}
+
                     <SalaryRow
                       icon={Wallet}
                       iconColor="#2AAF56"
@@ -482,7 +482,10 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                 </h3>
                 <div className="flex flex-row items-center gap-2 ">
                   <ProfInf label={"TIN: "} data={emp.tin || "Not set"} />
-                  <ProfInf label={"SSS No.: "} data={emp.sss_number || "Not set"} />
+                  <ProfInf
+                    label={"SSS No.: "}
+                    data={emp.sss_number || "Not set"}
+                  />
                   <ProfInf
                     label={"PhilHealth No.: "}
                     data={emp.philhealth_number || "Not set"}

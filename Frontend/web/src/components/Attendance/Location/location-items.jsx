@@ -31,7 +31,7 @@ export default function Items({
   // a page change or an edit (View > save > refresh) the map kept looking at the old place
   // and the circle was drawn off-screen. The cards are not draggable, so nothing needs saving.
   const viewport = useMemo(
-    () => ({ center: [centerLng, centerLat], zoom: 15.5 }),
+    () => ({ center: [centerLng, centerLat], zoom: 17.0 }),
     [centerLng, centerLat],
   );
 

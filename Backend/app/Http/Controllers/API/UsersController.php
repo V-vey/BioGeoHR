@@ -164,7 +164,7 @@ class UsersController extends Controller
 
             'monthly_salary' => 'required',
             'working_hours_per_day' => 'required',
-            'working_days_per_month' => 'required'
+            // 'working_days_per_month' => 'required|numeric|min:1|max:31'
         ] + $govRules, $govMessages);
 
         // spouse and children (shown on the profile only); checked before anything is saved
@@ -204,7 +204,7 @@ class UsersController extends Controller
             'user_id' => $users->id,
             'salary_basis' => $request->monthly_salary,
             'working_hours_per_day' => $request->working_hours_per_day,
-            'working_days_per_month' => $request->working_days_per_month
+            'working_days_per_month' => 26
         ]);
         //Create a Balance
         if($users->contract_type == "Regular"){
@@ -449,7 +449,7 @@ class UsersController extends Controller
         $users->late = $lateCount;
 
         // overtime Comment
-        /*
+        
         $service = new \App\Service\SalaryService();
         $salary = $users->salary;
         $users->overtime_hours = 0;
@@ -468,7 +468,7 @@ class UsersController extends Controller
             $users->overtime_hours = $hrs;
             $users->overtime_pay = $service->overtimePay($hourly, $hrs, 'regular');
         }
-        */
+        
 
         return response()->json($users);
     }

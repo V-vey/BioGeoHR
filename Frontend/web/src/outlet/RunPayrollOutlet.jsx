@@ -97,7 +97,10 @@ export default function RunPayrollOutlet() {
       notifySuccess(res.data.message, "Payroll run");
       navigate(`/payroll/payslips?start=${periodStart}&end=${periodEnd}`);
     } catch (error) {
-      notifyError("Something went wrong while running payroll.", "Payroll not run");
+      notifyError(
+        "Something went wrong while running payroll.",
+        "Payroll not run",
+      );
     }
   };
 
@@ -113,6 +116,7 @@ export default function RunPayrollOutlet() {
       absent: 0,
       loan: 0,
       net: 0,
+      overtime: 0,
     };
     rows
       .filter((r) => !excluded.includes(r.user_id))
@@ -126,7 +130,7 @@ export default function RunPayrollOutlet() {
         t.loan += Number(r.loan_deduction);
         t.net += Number(r.net_pay);
         // overtime Comment
-        // t.overtime += Number(r.overtime_pay);
+        t.overtime += Number(r.overtime_pay);
       });
     return t;
   }, [rows, excluded]);
@@ -211,8 +215,7 @@ export default function RunPayrollOutlet() {
           Late deduction: 1 day's pay after 3 lates this month. Absence
           deduction: 1 day's pay for each day marked Absent (approved leave and
           holidays are not counted). SSS, PhilHealth, Pag-IBIG and BIR income
-          tax are withheld. Loan installments are deducted on the second
-          cutoff.
+          tax are withheld. Loan installments are deducted on the second cutoff.
         </span>
       </div>
 
@@ -240,9 +243,8 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Late</th>
                   <th className="py-2 px-2 font-semibold">Absent</th>
                   <th className="py-2 px-2 font-semibold">Loan</th>
-                  {/* overtime Comment
-                  <th className="py-2 px-2 font-semibold">Overtime</th>
-                  */}
+                  {/* overtime Comment */}
+                  <th className="py-2 px-2 font-semibold">Additional Pay</th>
 
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
@@ -318,11 +320,10 @@ export default function RunPayrollOutlet() {
                         <td className="py-3 px-2 text-sm">
                           {money(r.loan_deduction)}
                         </td>
-                        {/* overtime Comment
+                        {/* overtime Comment */}
                         <td className="py-3 px-2 text-sm">
                           {money(r.overtime_pay)}
                         </td>
-                        */}
 
                         <td className="py-3 pr-4 pl-2 text-sm font-semibold">
                           {money(r.net_pay)}
@@ -379,12 +380,11 @@ export default function RunPayrollOutlet() {
               </span>
             </div>
 
-            {/* overtime Comment
+            {/* overtime Comment */}
             <div className="flex justify-between">
               <span className="text-[#8a90a3]">Overtime</span>
               <span className="font-semibold">{money(totals.overtime)}</span>
             </div>
-            */}
           </div>
           <div className="h-px bg-[#eef0f5] my-3.5" />
           <div className="flex justify-between items-baseline">

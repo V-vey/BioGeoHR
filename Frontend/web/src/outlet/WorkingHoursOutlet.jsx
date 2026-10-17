@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
+import Containers from "@/components/container";
 
 const headers = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -32,9 +33,17 @@ const errorText = (error, fallback) => {
 
 export default function WorkingHoursOutlet() {
   const [settings, setSettings] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [salaries, setSalaries] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // the Employee schedules table: one page at a time, searched and counted by the server
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [searchSent, setSearchSent] = useState("");
+  const [rowsLoading, setRowsLoading] = useState(true);
+  const [rowsError, setRowsError] = useState(false);
 
   // the two form fields are text while typing and checked on Save
   const [grace, setGrace] = useState("");
@@ -58,15 +67,11 @@ export default function WorkingHoursOutlet() {
     let cancelled = false;
     const load = async () => {
       try {
-        const [settingsRes, usersRes, salaryRes] = await Promise.all([
-          axios.get(url + "/systemSettings", { headers: headers() }),
-          axios.get(url + "/users", { headers: headers() }),
-          axios.get(url + "/salary", { headers: headers() }),
-        ]);
+        const settingsRes = await axios.get(url + "/systemSettings", {
+          headers: headers(),
+        });
         if (cancelled) return;
         applySettings(settingsRes.data);
-        setUsers(usersRes.data);
-        setSalaries(salaryRes.data);
       } catch (error) {
         console.error("Failed to load working hours:", error);
         if (!cancelled)
@@ -80,6 +85,44 @@ export default function WorkingHoursOutlet() {
       cancelled = true;
     };
   }, []);
+
+  // wait a moment after typing before asking the server, and go back to page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchSent(search.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadRows = async () => {
+      setRowsLoading(true);
+      try {
+        const params = { page, per_page: 10 };
+        if (searchSent) params.search = searchSent;
+        const res = await axios.get(url + "/systemSettings/schedules", {
+          params,
+          headers: headers(),
+        });
+        if (cancelled) return;
+        setRows(res.data.data);
+        setLastPage(res.data.last_page);
+        setTotal(res.data.total);
+        setRowsError(false);
+      } catch (error) {
+        console.error("Failed to load employee schedules:", error);
+        if (!cancelled) setRowsError(true);
+      } finally {
+        if (!cancelled) setRowsLoading(false);
+      }
+    };
+    loadRows();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, searchSent]);
 
   const saveRule = async (payload) => {
     setMessageRule(null);
@@ -115,7 +158,10 @@ export default function WorkingHoursOutlet() {
       setEndDate(res.data.school_year_end ?? "");
       setMessageSchoolYear({ ok: true, text: "Saved." });
     } catch (error) {
-      setMessageSchoolYear({ ok: false, text: errorText(error, "Could not save.") });
+      setMessageSchoolYear({
+        ok: false,
+        text: errorText(error, "Could not save."),
+      });
     } finally {
       setSavingSchoolYear(false);
     }
@@ -158,29 +204,25 @@ export default function WorkingHoursOutlet() {
     saveSchoolYear({ school_year_start: startDate, school_year_end: endDate }); // plain "2026-08-01" strings
   };
 
-  // one row per active employee: start time (from the profile) + hours a day (from the salary)
-  const schedule = useMemo(() => {
-    const hoursByUser = new Map(
-      salaries.map((s) => [s.user_id, Number(s.working_hours_per_day)]),
-    );
-    return users
-      .filter((u) => u.is_active !== 0 && u.is_active !== false)
-      .map((u) => {
-        const start = toMinutes(u.call_time);
-        const hours = hoursByUser.get(u.id);
-        const end =
-          start != null && Number.isFinite(hours) ? start + hours * 60 : null;
-        return {
-          id: u.id,
-          name: u.name,
-          department: u.department,
-          start: toClock(start),
-          hours: Number.isFinite(hours) ? hours : null,
-          end: toClock(end),
-        };
-      })
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  }, [users, salaries]);
+  // the rows of this page: start time (from the profile) + hours a day (from the salary)
+  const schedule = rows.map((u) => {
+    const start = toMinutes(u.call_time);
+    const hours = Number(u.working_hours_per_day);
+    const hasHours = u.working_hours_per_day != null && Number.isFinite(hours);
+    return {
+      id: u.id,
+      name: u.name,
+      department: u.department,
+      start: toClock(start),
+      hours: hasHours ? hours : null,
+      end: toClock(start != null && hasHours ? start + hours * 60 : null),
+    };
+  });
+
+  const goToPage = (next) => {
+    if (next < 1 || next > lastPage || next === page) return;
+    setPage(next);
+  };
 
   const inputClass =
     "w-40 border border-[#b2b2b2] rounded-[10px] p-2 text-center";
@@ -301,8 +343,9 @@ export default function WorkingHoursOutlet() {
               </div>
             </div>
             <p className="text-sm text-[#8a90a3] pl-2 text-start">
-              Loans must be fully paid by the end date. Leave credits are given
-              at the start date. Update these two dates each year.
+              The first and last day of the school year. Leave credits are given
+              at the start date, and loans must be fully paid by the end date.
+              Update these dates each year.
             </p>
 
             <div className="flex items-center gap-4">
@@ -316,7 +359,9 @@ export default function WorkingHoursOutlet() {
               {messageSchoolYear && (
                 <p
                   role="status"
-                  className={messageSchoolYear.ok ? "text-[#2AAF56]" : "text-red-500"}
+                  className={
+                    messageSchoolYear.ok ? "text-[#2AAF56]" : "text-red-500"
+                  }
                 >
                   {messageSchoolYear.text}
                 </p>
@@ -325,16 +370,24 @@ export default function WorkingHoursOutlet() {
           </form>
         </div>
 
-        <div className="bg-white border border-[#b2b2b2] rounded-[10px] w-full overflow-hidden">
-          <div className="text-start px-4 py-2">
-            <p className="font-medium">Employee schedules</p>
-            <p className="text-sm text-[#8a90a3]">
+        <Containers
+          name="Employee schedules"
+          search={search}
+          setSearch={setSearch}
+          header={
+            <p className="text-sm text-[#8a90a3] text-start">
               The start time is set in each employee&apos;s profile. The end
               time is the start time plus their working hours per day.
             </p>
-          </div>
-          <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
-          <div className="max-h-[420px] overflow-auto">
+          }
+          currentPage={page}
+          setCurrentPage={goToPage}
+          totalPages={lastPage}
+          total={total}
+          arrowSize={32}
+          spacing={false}
+        >
+          <div className="w-full overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[#b2b2b2] text-sm text-[#8a90a3]">
@@ -346,32 +399,56 @@ export default function WorkingHoursOutlet() {
                 </tr>
               </thead>
               <tbody>
-                {schedule.length === 0 && !loading && (
+                {rowsLoading && (
                   <tr>
                     <td
                       colSpan={5}
                       className="px-4 py-6 text-center text-[#8a90a3]"
                     >
-                      No employees yet.
+                      Loading...
                     </td>
                   </tr>
                 )}
-                {schedule.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-t border-[#b2b2b2] first:border-t-0"
-                  >
-                    <td className="px-4 py-2">{r.name}</td>
-                    <td className="px-4 py-2">{r.department}</td>
-                    <td className="px-4 py-2">{r.start}</td>
-                    <td className="px-4 py-2">{r.hours ?? "--"}</td>
-                    <td className="px-4 py-2">{r.end}</td>
+                {!rowsLoading && rowsError && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-red-500"
+                    >
+                      Could not load the employee schedules.
+                    </td>
                   </tr>
-                ))}
+                )}
+                {!rowsLoading && !rowsError && schedule.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-[#8a90a3]"
+                    >
+                      {searchSent
+                        ? "No employee matches that name."
+                        : "No employees yet."}
+                    </td>
+                  </tr>
+                )}
+                {!rowsLoading &&
+                  !rowsError &&
+                  schedule.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-t border-[#b2b2b2] first:border-t-0"
+                    >
+                      <td className="px-4 py-2">{r.name}</td>
+                      <td className="px-4 py-2">{r.department}</td>
+                      <td className="px-4 py-2">{r.start}</td>
+                      <td className="px-4 py-2">{r.hours ?? "--"}</td>
+                      <td className="px-4 py-2">{r.end}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </Containers>
       </div>
     </>
   );

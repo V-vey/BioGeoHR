@@ -113,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('flaggedAttendance', [AttendanceController::class, 'flaggedAttendance']);
 
         // Route::get('systemSettings', [SystemSettingController::class, 'index']);
+        Route::get('systemSettings/schedules', [SystemSettingController::class, 'schedules']);
         Route::put('systemSettings/{id}', [SystemSettingController::class, 'update']);
         Route::apiResource('holidays', HolidayController::class)->only(['index', 'store', 'destroy']);
         

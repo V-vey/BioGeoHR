@@ -30,7 +30,7 @@ export default function PendingLeave({ item, fetch }) {
               src={imageSrc}
               fallback={fallbackImage}
               alt={`${item.user?.name || "User"}'s Profile`}
-              className="object-cover scale-110"
+              className="w-full h-full object-cover"
             />
           </div>
 

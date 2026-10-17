@@ -30,7 +30,7 @@ class SalaryController extends Controller
             'user_id' => 'required',
             'salary_basis' => 'required',
             'working_hours_per_day' => 'required',
-            'working_days_per_month' => 'required',
+            'working_days_per_month' => 'required|numeric|min:1|max:31',
         ]);
 
         $salary = Salary::create([
@@ -66,6 +66,10 @@ class SalaryController extends Controller
         if (!$salary) {
             return response()->json(['message' => 'Salary record not found'], 404);
         }else{
+            // the daily wage is salary / this number, so a wrong value would make every payslip wrong
+            $request->validate([
+                'working_days_per_month' => 'sometimes|required|numeric|min:1|max:31',
+            ]);
             AuditLog::record('admin', 'salary_updated', 'success', "Salary record #{$id}");
             $salary->update($request->all());
             return response()->json($salary);

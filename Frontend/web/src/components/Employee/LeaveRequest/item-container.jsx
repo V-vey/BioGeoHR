@@ -63,7 +63,7 @@ export default function ItemContainer({ fetch }) {
                 src={imageSrc}
                 fallback={fallbackImage}
                 alt={`${fetch.user?.name || "User"}'s Profile`}
-                className="object-cover scale-110"
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col items-start">
