@@ -2,6 +2,7 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import { useState, useEffect } from "react";
 import { notifySuccess, confirmDialog } from "@/lib/dialog";
+import Loading from "@/components/Loading";
 function Balance(type, item) {
   return (
     <div className="flex flex-1 flex-row justify-between items-center bg-white w-full px-4 py-3 border border-[#b2b2b2] rounded-[10px] font-medium ">
@@ -13,6 +14,7 @@ function Balance(type, item) {
 
 export default function LeaveRequestModal({ leave, onClose, fetch }) {
   const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false); // true while the decision is being sent
   const [remarks, setRemarks] = useState(leave.remarks ?? "");
   let handleDecision;
   let buttonRes = true;
@@ -53,6 +55,8 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
         console.error("Failed to update leave application:", error);
         // show why, for example "Insufficient leave balance"
         setErrorMsg(error.response?.data?.message || "Something went wrong.");
+      } finally {
+        setLoading(false);
       }
     };
   }
@@ -70,6 +74,7 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {loading && <Loading />}
       <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] min-h-[80%]  ">
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
