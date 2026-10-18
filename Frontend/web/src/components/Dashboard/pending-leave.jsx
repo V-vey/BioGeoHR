@@ -49,7 +49,7 @@ export default function PendingLeave({ item, fetch }) {
         <div className="flex-1 flex justify-end">
           <button
             onClick={onView}
-            className="text-s text-[#f2f2f2] bg-[#2AAF56] px-4 hover:bg-[#6675EC] rounded-[10px]"
+            className="text-s text-[#f2f2f2] bg-[#2AAF56] px-4 hover:bg-[#2AAF56]/80 rounded-[10px]"
           >
             View
           </button>

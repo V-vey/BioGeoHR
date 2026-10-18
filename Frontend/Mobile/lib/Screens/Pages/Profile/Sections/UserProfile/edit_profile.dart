@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../Controller/Profile/update_profile.dart';
+import '../../../../../Service/dialogs.dart';
 import '../../profile_picture.dart';
 
 /// The employee edits their own contact number, address and photo.
@@ -109,20 +110,19 @@ class _EditProfile extends State<EditProfile> {
 
   Future<void> _save() async {
     // take these BEFORE the await: after it, `context` may no longer be valid
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    void say(String text) =>
-        messenger.showSnackBar(SnackBar(content: Text(text)));
+    Future<void> say(String text) =>
+        showError(text, title: 'Check your details');
 
     // 1) check on the phone first, so a simple mistake does not need a round trip
     final contact = _contact.text.trim();
     final address = _address.text.trim();
     if (!_phone.hasMatch(contact)) {
-      say('Enter a valid phone number');
+      await say('Enter a valid phone number');
       return;
     }
     if (address.isEmpty) {
-      say('Enter your address');
+      await say('Enter your address');
       return;
     }
 
@@ -138,9 +138,12 @@ class _EditProfile extends State<EditProfile> {
     setState(() => _saving = false);
 
     // 3) tell them what happened (the server's own words)
-    say(result.message);
-
-    // 4) success: go back to the profile; `true` tells it to reload
-    if (result.ok) navigator.pop(true);
+    if (result.ok) {
+      await showSuccess(result.message, title: 'Profile saved');
+      // 4) success: go back to the profile; `true` tells it to reload
+      navigator.pop(true);
+    } else {
+      await showError(result.message, title: "Couldn't save changes");
+    }
   }
 }

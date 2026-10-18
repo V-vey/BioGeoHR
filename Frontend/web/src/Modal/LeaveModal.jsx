@@ -31,13 +31,11 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
       if (!confirmed) return;
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
         await axios.put(
           `${url}/leave/${id}`,
           { status, remarks },
           {
             headers: {
-              Authorization: `Bearer ${token}`,
               "ngrok-skip-browser-warning": "true",
             },
           },
@@ -76,7 +74,7 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
         <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
           <button
             onClick={onClose}
-            className="text-white bg-[#2AAF56] text-[20px] items-center rounded-[10px]  px-4 py-1 hover:bg-[#6675EC]"
+            className="text-white bg-[#2AAF56] text-[20px] items-center rounded-[10px]  px-4 py-1 hover:bg-[#2AAF56]/80"
           >
             ← Back
           </button>
@@ -145,13 +143,13 @@ export default function LeaveRequestModal({ leave, onClose, fetch }) {
           <div className="flex flex-row justify-end gap-2 text-[19px] text-white font-bold">
             <button
               onClick={() => handleDecision(leave.id, "Rejected")}
-              className="bg-[#EC6668] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
+              className="bg-[#EC6668] px-3 py-1 rounded-[10px] hover:bg-[#EC6668]/80"
             >
               Reject
             </button>
             <button
               onClick={() => handleDecision(leave.id, "Approved")}
-              className="bg-[#2AAF56] px-3 py-1 rounded-[10px] hover:bg-[#6675EC]"
+              className="bg-[#2AAF56] px-3 py-1 rounded-[10px] hover:bg-[#2AAF56]/80"
             >
               Approve
             </button>

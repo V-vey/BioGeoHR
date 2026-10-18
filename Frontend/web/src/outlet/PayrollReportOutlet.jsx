@@ -14,7 +14,6 @@ const money = (n) =>
   });
 
 const headers = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
   "ngrok-skip-browser-warning": "true",
 });
 
@@ -116,8 +115,6 @@ export default function PayrollReportOutlet() {
       ? "--"
       : `${filteredRows.length} employee${filteredRows.length === 1 ? "" : "s"}`;
   // ---- downloads: the rows matching the search, for the chosen period ----
-  const hasOther = filteredRows.some((r) => Number(r.other_adjustments) !== 0);
-
   const reportHead = [
     "Employee",
     "Department",
@@ -128,6 +125,8 @@ export default function PayrollReportOutlet() {
     "Leave",
     "Hours",
     "Gross",
+    "Additional pay",
+    "Holiday pay",
     "SSS",
     "PhilHealth",
     "Pag-IBIG",
@@ -135,7 +134,6 @@ export default function PayrollReportOutlet() {
     "Late ded.",
     "Absent ded.",
     "Loan",
-    ...(hasOther ? ["Other"] : []),
     "Net pay",
   ];
   // fmt formats the money columns (plain 2-decimals for CSV, 1,234.56 for PDF)
@@ -150,6 +148,8 @@ export default function PayrollReportOutlet() {
       r.leave_days,
       r.hours,
       fmt(r.gross),
+      fmt(r.additional_pay),
+      fmt(r.holiday_pay),
       fmt(r.sss),
       fmt(r.philhealth),
       fmt(r.pagibig),
@@ -157,7 +157,6 @@ export default function PayrollReportOutlet() {
       fmt(r.late_deduction),
       fmt(r.absent_deduction),
       fmt(r.loan),
-      ...(hasOther ? [fmt(r.other_adjustments)] : []),
       fmt(r.net),
     ]);
   const reportTotals = (fmt) => [
@@ -170,6 +169,8 @@ export default function PayrollReportOutlet() {
     total("leave_days"),
     total("hours").toFixed(1),
     fmt(total("gross")),
+    fmt(total("additional_pay")),
+    fmt(total("holiday_pay")),
     fmt(total("sss")),
     fmt(total("philhealth")),
     fmt(total("pagibig")),
@@ -177,7 +178,6 @@ export default function PayrollReportOutlet() {
     fmt(total("late_deduction")),
     fmt(total("absent_deduction")),
     fmt(total("loan")),
-    ...(hasOther ? [fmt(total("other_adjustments"))] : []),
     fmt(total("net")),
   ];
   const fileStem = `payroll-report_${start}_to_${end}`;
@@ -312,6 +312,12 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Leave</th>
                 <th className="px-3 py-2 text-right font-medium">Hours</th>
                 <th className="px-3 py-2 text-right font-medium">Gross</th>
+                <th className="px-3 py-2 text-right font-medium">
+                  Additional Pay
+                </th>
+                <th className="px-3 py-2 text-right font-medium">
+                  Holiday Pay
+                </th>
                 <th className="px-3 py-2 text-right font-medium">SSS</th>
                 <th className="px-3 py-2 text-right font-medium">PhilHealth</th>
                 <th className="px-3 py-2 text-right font-medium">Pag-IBIG</th>
@@ -332,6 +338,12 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{r.leave_days}</td>
                   <td className="px-3 py-2 text-right">{r.hours}</td>
                   <td className="px-3 py-2 text-right">{money(r.gross)}</td>
+                  <td className="px-3 py-2 text-right">
+                    {money(r.additional_pay)}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {money(r.holiday_pay)}
+                  </td>
                   <td className="px-3 py-2 text-right">{money(r.sss)}</td>
                   <td className="px-3 py-2 text-right">
                     {money(r.philhealth)}

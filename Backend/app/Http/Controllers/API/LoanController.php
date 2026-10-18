@@ -9,6 +9,8 @@ use App\Models\Users;
 use App\Models\AuditLog;
 use App\Models\Salary;
 use App\Service\SalaryService;
+use App\Models\SystemSetting;
+use Carbon\Carbon;
 
 class LoanController extends Controller
 {
@@ -35,10 +37,82 @@ class LoanController extends Controller
         return null;
     }
 
-    public function index()
+    private const MAX_DEDUCTIONS = 36;   // the most monthly deductions any loan may take
+
+    /** A loan, of any type, may not drag on for years: at most MAX_DEDUCTIONS deductions. */
+    private function tooLong(float $amount, float $monthly): ?string
     {
-        $loans = Loan::with('user:id,name,department,position,image_path')->get();
-        return response()->json($loans);
+        if ($monthly <= 0) return null;
+        $needed = (int) ceil(round($amount / $monthly, 6));
+        if ($needed <= self::MAX_DEDUCTIONS) return null;
+
+        $min = number_format(ceil($amount / self::MAX_DEDUCTIONS * 100) / 100, 2);
+        return "This loan needs {$needed} deductions, but the most allowed is " . self::MAX_DEDUCTIONS
+            . ". Raise the monthly deduction to ₱{$min} or more.";
+    }
+
+    private function pastSchoolYear(string $type, float $total, float $monthly, string $startDate): ?string
+    {
+        if (!in_array($type, ['Company', 'Cash Advance'], true)) return null;
+
+        $end = SystemSetting::first()?->school_year_end;
+        if (!$end) return null;                                  // no school year set: no check
+        $end = Carbon::parse($end)->endOfDay();
+
+        $start = Carbon::parse($startDate);
+        // the first deduction is in the 1st-15th cutoff that ends on or after the start date
+        $firstMonth = ($start->day <= 15 ? $start->copy() : $start->copy()->addMonthNoOverflow())->startOfMonth();
+
+        $available = $firstMonth->gt($end) ? 0
+            : (int) $firstMonth->diffInMonths($end->copy()->startOfMonth()) + 1;   // deductions that fit before it ends
+        $needed = (int) ceil(round($total / $monthly, 6));
+
+        if ($needed <= $available) return null;
+
+        $endText = $end->format('M j, Y');
+        if ($available === 0) {
+            return "The first deduction would fall after the school year ends ({$endText}), so this loan cannot be repaid in the school year.";
+        }
+        $min = number_format(ceil($total / $available * 100) / 100, 2);
+        return "At ₱" . number_format($monthly, 2) . " a month this loan needs {$needed} deductions, but only {$available} fit before the school year ends ({$endText}). "
+            . "Raise the monthly deduction to ₱{$min} or more.";
+    }
+
+    /**
+     * The Loans page, one page at a time:   ?page=1&per_page=10&search=maria
+     * Active loans come first, then the newest. `stats` counts ALL loans (not just this page or search),
+     * for the cards at the top of the Loans and Payroll pages.
+     */
+    public function index(Request $request)
+    {
+        $request->validate([
+            'search'   => 'sometimes|nullable|string|max:100',
+            'page'     => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:50',
+        ]);
+
+        $query = Loan::with('user:id,name,department,position,image_path')
+            ->orderByRaw("status = 'Active' desc")
+            ->orderByDesc('id');
+        if ($term = trim((string) $request->input('search'))) {
+            // % and _ typed by the user must not act as wildcards
+            $like = '%' . addcslashes($term, '%_\\') . '%';
+            $query->whereHas('user', fn ($q) => $q->where('name', 'like', $like));
+        }
+        $page = $query->paginate((int) $request->input('per_page', 10));
+
+        return response()->json([
+            'data'         => $page->items(),
+            'current_page' => $page->currentPage(),
+            'last_page'    => $page->lastPage(),
+            'per_page'     => $page->perPage(),
+            'total'        => $page->total(),
+            'stats'        => [
+                'active'      => Loan::where('status', 'Active')->count(),
+                'paid'        => Loan::where('status', 'Paid')->count(),
+                'outstanding' => (float) Loan::where('status', 'Active')->sum('remaining_balance'),
+            ],
+        ]);
     }
     public function store(Request $request)
     {
@@ -63,6 +137,12 @@ class LoanController extends Controller
         }
 
         if ($problem = $this->unaffordable($request->user_id, (float) $request->monthly_deduction)) {
+            return response()->json(['message' => $problem], 422);
+        }
+        if ($problem = $this->pastSchoolYear($request->loan_type, (float) $request->total_amount, (float) $request->monthly_deduction, $request->start_date)) {
+            return response()->json(['message' => $problem], 422);
+        }
+        if ($problem = $this->tooLong((float) $request->total_amount, (float) $request->monthly_deduction)) {
             return response()->json(['message' => $problem], 422);
         }
 
@@ -118,6 +198,27 @@ class LoanController extends Controller
 
         if (isset($data['total_amount'])) {
             $data['remaining_balance'] = max(0, $loan->remaining_balance + ($data['total_amount'] - $loan->total_amount));
+        }
+
+        // an edit that changes the repayment plan must still finish within the school year. A loan already
+        // running is judged on what is left to pay, counted from today (or its start date, if later).
+        if (isset($data['total_amount']) || isset($data['monthly_deduction']) || isset($data['start_date']) || isset($data['loan_type'])) {
+            $startsOn = Carbon::parse($data['start_date'] ?? $loan->start_date);
+            if ($startsOn->lt(today())) $startsOn = today();
+            if ($problem = $this->pastSchoolYear(
+                $data['loan_type'] ?? $loan->loan_type,
+                (float) ($data['remaining_balance'] ?? $loan->remaining_balance),
+                (float) ($data['monthly_deduction'] ?? $loan->monthly_deduction),
+                $startsOn->toDateString(),
+            )) {
+                return response()->json(['message' => $problem], 422);
+            }
+            if ($problem = $this->tooLong(
+                (float) ($data['remaining_balance'] ?? $loan->remaining_balance),
+                (float) ($data['monthly_deduction'] ?? $loan->monthly_deduction),
+            )) {
+                return response()->json(['message' => $problem], 422);
+            }
         }
 
         $loan->update($data);

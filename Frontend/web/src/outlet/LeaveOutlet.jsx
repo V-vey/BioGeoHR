@@ -15,12 +15,10 @@ export default function Leave() {
   useDataChanged(["leave"], () => setReload((n) => n + 1)); // a new request appears by itself
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const fetchLeave = async () => {
       try {
         const response = await axios.get(url + "/leave", {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         });

@@ -49,7 +49,7 @@ function dateFormatYear(date) {
 export default function PayrollOutlet() {
   const [salaries, setSalaries] = useState([]);
   const [payrollRuns, setPayrollRuns] = useState([]);
-  const [loans, setLoans] = useState([]);
+  const [loanStats, setLoanStats] = useState({ active: 0, outstanding: 0 }); // totals of all loans, from the server
   const [frequentLatesCount, setFrequentLatesCount] = useState(0);
   const [paidOffCount, setPaidOffCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function PayrollOutlet() {
       <h2 className="flex items-start ">Past Payroll Runs</h2>
       <Link
         to="run"
-        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 py-1 hover:bg-[#2AAF56] self-end rounded-[10px]"
+        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 py-1 hover:bg-[#6675EC]/80 self-end rounded-[10px]"
       >
         Run Payroll
       </Link>
@@ -71,9 +71,7 @@ export default function PayrollOutlet() {
     });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const headers = {
-      Authorization: `Bearer ${token}`,
       "ngrok-skip-browser-warning": "true",
     };
 
@@ -82,7 +80,7 @@ export default function PayrollOutlet() {
         const [salaryRes, payslipRes, loanRes, latesRes] = await Promise.all([
           axios.get(url + "/salary", { headers }),
           axios.get(url + "/payslips/periods", { headers }),
-          axios.get(url + "/loans", { headers }),
+          axios.get(url + "/loans", { headers, params: { per_page: 1 } }), // only the totals are used here
           axios.get(url + "/frequentLates", { headers }),
         ]);
         setSalaries(salaryRes.data);
@@ -98,7 +96,7 @@ export default function PayrollOutlet() {
             loanDeductions: Number(p.loan_deductions),
           })),
         );
-        setLoans(loanRes.data);
+        setLoanStats(loanRes.data.stats);
         setFrequentLatesCount(latesRes.data.count);
       } catch (error) {
         console.error("Failed to load payroll overview data:", error);
@@ -111,18 +109,14 @@ export default function PayrollOutlet() {
   }, []);
 
   const latestRun = payrollRuns[0];
-  const activeLoanCount = loans.filter((l) => l.status === "Active").length;
-  const outstandingBalance = loans
-    .filter((l) => l.status === "Active")
-    .reduce((sum, l) => sum + Number(l.remaining_balance), 0);
+  const activeLoanCount = loanStats.active;
+  const outstandingBalance = Number(loanStats.outstanding);
 
   useEffect(() => {
     if (!latestRun) return;
-    const token = localStorage.getItem("token");
     axios
       .get(url + "/loans/paidOffThisPeriod", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
         params: {

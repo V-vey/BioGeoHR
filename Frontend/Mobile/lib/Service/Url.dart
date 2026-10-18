@@ -91,9 +91,24 @@ class Url {
     return "$api/systemSettings";
   }
 
+  //api to tell the server a clock-in was tried with the phone's GPS off (for the audit log)
+  String clockInGpsOff() {
+    return "$api/clockIn/gpsOff";
+  }
+
+  //api to tell the server the fingerprint/face check failed before a clock-in (for the audit log)
+  String clockInBiometricFailed() {
+    return "$api/clockIn/biometricFailed";
+  }
+
   //api for the latest payslip
   String getMyPayslip() {
     return "$api/myPayslip";
+  }
+
+  //api for the employee's own loans
+  String getMyLoans() {
+    return "$api/myLoans";
   }
 
   //api for the employee to edit their own contact, address and photo

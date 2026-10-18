@@ -19,6 +19,10 @@ class PaycheckData {
   final double loan;
   final double other;
 
+  // pay added on top of the salary: Sunday (rest day) work and holidays worked
+  final double additional;
+  final double holiday;
+
   PaycheckData({
     required this.periodStart,
     required this.periodEnd,
@@ -32,6 +36,8 @@ class PaycheckData {
     this.late = 0,
     this.loan = 0,
     this.other = 0,
+    this.additional = 0,
+    this.holiday = 0,
   });
 
   // the server sends whole numbers as ints (10640), so read them as `num` and convert
@@ -48,6 +54,8 @@ class PaycheckData {
     late: (j['late'] as num? ?? 0).toDouble(),
     loan: (j['loan'] as num? ?? 0).toDouble(),
     other: (j['other'] as num? ?? 0).toDouble(),
+    additional: (j['additional'] as num? ?? 0).toDouble(),
+    holiday: (j['holiday'] as num? ?? 0).toDouble(),
   );
 }
 

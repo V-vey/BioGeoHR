@@ -20,7 +20,7 @@ import Loading from "@/components/Loading";
 import Fallback from "@/assets/user.svg";
 import AuthImage from "@/components/AuthImage";
 import EditProfile from "@/Modal/EditProfileModal";
-import { confirmDialog } from "@/lib/dialog";
+import { confirmDialog, notifySuccess, notifyError } from "@/lib/dialog";
 import { FamilyView } from "@/components/FamilyTable";
 
 function ProfInf({ label, data }) {
@@ -144,18 +144,14 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
   const onCancel = () => {};
-  const token = localStorage.getItem("token");
   const headers = {
-    Authorization: `Bearer ${token}`,
     "ngrok-skip-browser-warning": "true",
   };
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.get(url + `/user/${emp.id}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
@@ -210,13 +206,11 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
     );
     if (!confirmed) return;
     try {
-      const token = localStorage.getItem("token");
       await axios.patch(
         url + `/users/${emp.id}/active`, // was /user/
         { is_active: !emp.is_active },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         },
@@ -226,6 +220,39 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
     } catch (err) {
       console.error("Failed to update employee status:", err);
       setError(true);
+    }
+  };
+  // HR resets a forgotten password: the server makes a new one and emails it to the employee
+  const handleResetPassword = async () => {
+    const confirmed = await confirmDialog(
+      "A new password will be emailed to them and the old one will stop working. They will be logged out everywhere.",
+      { title: `Reset password for ${emp.name}?`, confirmLabel: "Reset password" },
+    );
+    if (!confirmed) return;
+    try {
+      const res = await axios.post(
+        url + `/users/${emp.id}/resetPassword`,
+        {},
+        { headers: { "ngrok-skip-browser-warning": "true" } },
+      );
+      if (res.data.email_sent === false) {
+        // shown only now, once: the email did not go out, so HR has to pass the password on
+        notifyError(
+          `The password was reset, but the email could not be sent. Give them this temporary password yourself: ${res.data.temporary_password}`,
+          "Password reset, email not sent",
+        );
+      } else {
+        notifySuccess(
+          "A new password was emailed to the employee.",
+          "Password reset",
+        );
+      }
+    } catch (err) {
+      console.error("Failed to reset the password:", err);
+      notifyError(
+        err.response?.data?.message ?? "Could not reset the password.",
+        "Could not reset password",
+      );
     }
   };
   return (
@@ -513,6 +540,13 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                 </div>
               </div>
               <div className="flex flex-row gap-2 justify-end">
+                <button
+                  onClick={handleResetPassword}
+                  type="button"
+                  className="px-4 py-2 bg-[#6675EC] hover:bg-[#6675EC]/80 rounded-full text-white py-0.5"
+                >
+                  Reset password
+                </button>
                 <button
                   onClick={handleRemove}
                   type="button"

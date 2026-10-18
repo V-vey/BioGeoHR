@@ -9,6 +9,7 @@ import { Map, MapControls } from "@/components/ui/map";
 import { url } from "@/resources/api";
 import axios from "axios";
 import Loading from "@/components/Loading";
+import { notifyError } from "@/lib/dialog";
 
 export default function Location() {
   let centerLng = 124.66181861;
@@ -30,19 +31,18 @@ export default function Location() {
 
   const [location, setLocation] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("token");
 
   const fetchLocations = async () => {
     try {
       const response = await axios.get(url + "/location", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
       setLocation(response.data);
     } catch (error) {
       console.error("Failed to Load Locations:", error);
+      notifyError("The locations could not be loaded. Please try again.", "Could not load locations");
     } finally {
       setLoading(false);
     }
@@ -99,6 +99,7 @@ export default function Location() {
             centerLng={center?.[0]?.toFixed(8)}
             setRadius={setRadius}
             radius={radius}
+            refresh={fetchLocations}
           />
         </div>
       </div>

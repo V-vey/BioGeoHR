@@ -4,6 +4,7 @@ namespace App\Service;
 //Just for Testing
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use App\Models\Holiday;
 use Carbon\Carbon;
 class SalaryService
 {
@@ -193,28 +194,47 @@ class SalaryService
         // }
         $absenceDeduction = 0;
         $absentDays = 0;
+        $holidayPay = 0;
         if ($periodStart && $periodEnd) {
             $absentDays = Attendance::where('user_id', $userId)
                 ->where('status', 'Absent')
                 ->whereBetween('date', [$periodStart, $periodEnd])
+                ->whereNotIn('date', Holiday::select('date'))   // no one is absent on a holiday
                 ->count();
 
             $additionalPay = Attendance::where('user_id', $userId)
-                ->where('status', ['On-Time', 'Late'])
-                ->whereRaw('DAYOFWEEK(date) = 7')  
-                ->whereBetween('date', [$periodStart, $periodEnd]) 
-                ->count();
-
+                ->whereIn('status', ['On-Time', 'Late'])
+                ->whereRaw('DAYOFWEEK(date) = 1')
+                ->whereBetween('date', [$periodStart, $periodEnd])
+                ->whereNotIn('date', Holiday::select('date'))   // a Sunday holiday is paid as a holiday, not twice
+                ->count(); //restday
+            
             $overtimePay = $additionalPay * $dailyWage;
             $absenceDeduction = $absentDays * $dailyWage;
+           
+            $holidaysWorked = Attendance::where('user_id', $userId)
+                ->whereBetween('date', [$periodStart, $periodEnd])
+                ->whereIn('status', ['On-Time', 'Late'])
+                ->whereIn('date', Holiday::whereBetween('date', [$periodStart, $periodEnd])->select('date'))
+                ->count(); // holiday
+            // if (Attendance::where('user_id', $userId))
+            // $holidaysWorked = Attendance::where('user_id', $userId)
+            //     ->whereBetween('date', [$periodStart, $periodEnd])
+            //     ->whereIn('status', ['On-Time', 'Late'])
+            //     ->whereRaw('DAYOFWEEK(date) = 1')
+            //     ->whereIn('date', Holiday::whereBetween('date', [$periodStart, $periodEnd])->select('date'))
+            //     ->count(); //holiday + rest day
+
+            // a holiday that was worked is paid at the full DOLE rate (200% of the daily wage), added on top of the salary
+            $holidayPay = $holidaysWorked * $dailyWage * (self::REGULAR_RATES['regular_holiday'] - 1 );
         }
-        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay - $absenceDeduction;
+        $taxableIncome = ($salary - $contributions) / 2 + $overtimePay + $holidayPay - $absenceDeduction;
         // $taxableIncome = (($salary - $contributions) / 2) - $absenceDeduction;
         $semiMonth = ($paycheck / 2) - $absenceDeduction;
 
         $incomeTax = $this->incomeTax($taxableIncome);
         // overtime Comment
-        $netPay = $semiMonth + $overtimePay - $incomeTax;
+        $netPay = $semiMonth + $overtimePay + $holidayPay - $incomeTax;
         // $netPay = $semiMonth - $incomeTax;
         return [
             'sss' => $sss,
@@ -230,6 +250,7 @@ class SalaryService
             'taxable_income' => $taxableIncome,
             // overtime Comment
             'overtime_pay' => $overtimePay,
+            'holiday_pay' => $holidayPay,
         ];
     }
     function incomeTax($taxableIncome)

@@ -29,6 +29,7 @@ class Payslip extends Model
         'income_tax',
         // overtime Comment
         'overtime_pay',
+        'holiday_pay',
         // 'additional_pay',
         'absence_deduction'
 

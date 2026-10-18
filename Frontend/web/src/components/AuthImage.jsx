@@ -13,7 +13,6 @@ export default function AuthImage({ src, fallback, alt, className }) {
         responseType: "blob",
         headers: {
           "ngrok-skip-browser-warning": "true",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
       .then((res) => {

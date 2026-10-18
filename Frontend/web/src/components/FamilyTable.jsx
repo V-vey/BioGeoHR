@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from "lucide-react";
 import { formatBirthday } from "@/lib/family";
+import DateInput from "@/components/DateInput";
 
 // An employee's spouse and children: a name and a birthday each. It is only shown on the
 // profile; no pay or tax calculation uses it.
@@ -39,9 +40,9 @@ export default function FamilyTable({ value, onChange }) {
             value={row.name}
             onChange={(e) => setRow(i, { name: e.target.value })}
           />
-          <input
-            type="date"
-            className={`${inputClass} max-w-[170px]`}
+          <DateInput
+            className={inputClass}
+            wrapperClassName="max-w-[170px]"
             max={today}
             value={row.birthday}
             onChange={(e) => setRow(i, { birthday: e.target.value })}

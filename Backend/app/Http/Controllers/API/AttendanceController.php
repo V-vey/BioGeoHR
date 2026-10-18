@@ -394,8 +394,9 @@ class AttendanceController extends Controller
     private function isLate($userCallTime, $timeIn){
         $graceMinutes = SystemSetting::first()->late_grace_period_minutes;
         $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
+        $today = now('Asia/Manila');
 
-        if ($timeIn <= $graceDeadline) {
+        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::whereDate('date', $today->toDateString())->exists()) {
             return "On-Time";
         }
         return "Late";
@@ -449,6 +450,38 @@ class AttendanceController extends Controller
         
         AuditLog::record('check_in', 'clock_in', 'success', "{$status} at {$locationId->name}, {$time}");
         return response()->json($attendance, 201);
+    }
+
+    /**
+     * The phone app calls this when Clock In was pressed with the phone's GPS/Location off. The app
+     * cannot reach createAttendance then (it needs the position first), so this is the only way the
+     * attempt gets into the audit log. The server writes the message itself, nothing the app sends is stored.
+     */
+    public function gpsOff()
+    {
+        AuditLog::record('check_in', 'clock_in', 'failed', 'GPS/Location is off (Mobile)');
+        return response()->noContent();
+    }
+
+    /**
+     * The phone app calls this when the fingerprint/face check before Clock In did not pass. Like
+     * gpsOff, the request never reaches createAttendance. The app sends only a reason code from this
+     * list; the sentence in the audit log is written here, so no free text from the app is stored.
+     */
+    private const BIOMETRIC_FAILURES = [
+        'failed'        => 'Biometric check failed',
+        'cancelled'     => 'Biometric check cancelled',
+        'not_available' => 'Biometric not available on this phone',
+        'locked_out'    => 'Biometric locked after too many attempts',
+        'error'         => 'Biometric check error',
+    ];
+
+    public function biometricFailed(Request $request)
+    {
+        $data = $request->validate(['reason' => 'required|in:' . implode(',', array_keys(self::BIOMETRIC_FAILURES))]);
+
+        AuditLog::record('check_in', 'clock_in', 'failed', self::BIOMETRIC_FAILURES[$data['reason']] . ' (Mobile)');
+        return response()->noContent();
     }
 
     /**

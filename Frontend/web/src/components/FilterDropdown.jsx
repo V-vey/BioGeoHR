@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Funnel } from "lucide-react";
+import DateInput from "@/components/DateInput";
 
 function RadioGroup({ label, options, value, onChange }) {
   return (
@@ -32,15 +33,13 @@ function DateRangeGroup({ label, value, onChange }) {
     <div className="mb-4">
       <div className="text-sm font-medium text-center mb-2">{label}</div>
       <div className="flex items-center justify-center gap-2">
-        <input
-          type="date"
+        <DateInput
           value={from}
           onChange={(e) => onChange({ from: e.target.value, to })}
           className="border border-[#eef0f5] rounded-lg px-2 py-1 text-sm text-[#8a90a3]"
         />
         <span className="text-[#8a90a3]">—</span>
-        <input
-          type="date"
+        <DateInput
           value={to}
           onChange={(e) => onChange({ from, to: e.target.value })}
           className="border border-[#eef0f5] rounded-lg px-2 py-1 text-sm text-[#8a90a3]"

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="BioGeoHR" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Geo-fence test points, school (radius 50 m)</name></metadata>
+  <wpt lat="15.4720327" lon="120.6030806"><name>School center</name></wpt>
+  <wpt lat="15.4722575" lon="120.6030806"><name>FT-01 25 m inside</name></wpt>
+  <wpt lat="15.4724823" lon="120.6030806"><name>FT-02 49.99 m boundary</name></wpt>
+  <wpt lat="15.4727072" lon="120.6030806"><name>FT-03 75 m outside</name></wpt>
+  <trk>
+    <name>FT-01 to FT-03 (10 minutes at each point)</name>
+    <trkseg>
+      <trkpt lat="15.4722575" lon="120.6030806"><time>2026-10-19T08:00:00Z</time></trkpt>
+      <trkpt lat="15.4722575" lon="120.6030806"><time>2026-10-19T08:10:00Z</time></trkpt>
+      <trkpt lat="15.4724823" lon="120.6030806"><time>2026-10-19T08:10:10Z</time></trkpt>
+      <trkpt lat="15.4724823" lon="120.6030806"><time>2026-10-19T08:20:00Z</time></trkpt>
+      <trkpt lat="15.4727072" lon="120.6030806"><time>2026-10-19T08:20:10Z</time></trkpt>
+      <trkpt lat="15.4727072" lon="120.6030806"><time>2026-10-19T08:30:00Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

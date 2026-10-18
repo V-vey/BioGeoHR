@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../Controller/Login/login.dart';
 import '../homepage.dart';
 import '../Service/auth_storage.dart';
+import '../Service/dialogs.dart';
 
 class TestingButton extends StatelessWidget {
   final Logintext logintext = Logintext();
@@ -34,17 +35,17 @@ class TestingButton extends StatelessWidget {
           if (!context.mounted) return;
 
           if (isSuccessful["authenticated"] == "User Not Found") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login failed. Please check your email')),
+            await showError(
+              'Please check your email and try again.',
+              title: 'Login failed',
             );
             return;
           }
 
           if (isSuccessful["authenticated"] == "Password Incorrect") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Login failed. Please check your password'),
-              ),
+            await showError(
+              'Please check your password and try again.',
+              title: 'Login failed',
             );
             return;
           }

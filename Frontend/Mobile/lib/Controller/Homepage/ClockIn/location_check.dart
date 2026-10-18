@@ -59,23 +59,27 @@ Future<bool> verifyUserCoordinates() async {
     String? locationName = prefs.getString("temp");
 
     final url = Uri.parse(_api.getGeofence());
-    final response = await http.post(
-      url,
-      headers: {
-        "Authorization": "Bearer $token",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "userLong": position.longitude,
-        "userLat": position.latitude,
-        "locationName": locationName,
-      }),
-    );
+    final response = await http
+        .post(
+          url,
+          headers: {
+            "Authorization": "Bearer $token",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode({
+            "userLong": position.longitude,
+            "userLat": position.latitude,
+            "locationName": locationName,
+          }),
+        )
+        .timeout(const Duration(seconds: 15)); // a weak connection must not hang the button
     // print(response.body);
     return _checkPosition(response.statusCode);
   } catch (e) {
     print('Error getting location: $e');
-    return false;
+    // not "false": that would call a dead connection or a GPS problem "outside the work area".
+    // The clock-in button reads the error and tells the employee what really happened.
+    rethrow;
   }
 }

@@ -6,8 +6,8 @@ import { Printer, ChevronDown } from "lucide-react";
 import Loading from "@/components/Loading";
 
 const company = {
-  name: "Academia de Santiago of Tarlac, Inc.",
-  address: "Brgy. San Vicente",
+  name: "BioGeoHR",
+  address: "Brgy. San Isidro",
   cityState: "Tarlac City, Tarlac",
 };
 
@@ -33,9 +33,13 @@ const halfGross = (p) => Number(p.gross_salary) / 2;
 // SSS, PhilHealth, Pag-IBIG and the late deduction are monthly amounts, and each
 // semi-monthly payslip carries half of them.
 const half = (n) => Number(n) / 2;
+// pay added on top of the salary: the Sunday (rest day) pay, kept in overtime_pay, and the holiday pay
+const extraPay = (p) =>
+  Number(p.overtime_pay || 0) + Number(p.holiday_pay || 0);
 
 function buildSlip(p) {
   const gross = halfGross(p);
+  const extra = extraPay(p);
   const lines = [
     { label: "SSS Contribution", amount: half(p.sss) },
     { label: "PhilHealth Contribution", amount: half(p.philhealth) },
@@ -46,13 +50,14 @@ function buildSlip(p) {
   ].filter((l) => l.amount > 0);
 
   const net = Number(p.net_pay);
-  const totalDeductions = Math.max(0, gross - net);
+  // the earnings are the salary plus any extra pay, so the deductions are what is taken from all of it
+  const totalDeductions = Math.max(0, gross + extra - net);
   const listed = lines.reduce((s, l) => s + l.amount, 0);
   const other = totalDeductions - listed;
   if (Math.abs(other) > 0.01) {
     lines.push({ label: "Other adjustments", amount: other });
   }
-  return { gross, lines, totalDeductions, net };
+  return { gross, extra, earnings: gross + extra, lines, totalDeductions, net };
 }
 
 export default function PayslipsOutlet() {
@@ -64,7 +69,6 @@ export default function PayslipsOutlet() {
   const [employeeId, setEmployeeId] = useState(null);
 
   const authHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
     "ngrok-skip-browser-warning": "true",
   });
 
@@ -160,7 +164,7 @@ export default function PayslipsOutlet() {
         new Date(p.period_end).getFullYear() === currentYear &&
         new Date(p.period_end) <= new Date(current.period_end),
     );
-    const gross = mine.reduce((s, p) => s + halfGross(p), 0);
+    const gross = mine.reduce((s, p) => s + halfGross(p) + extraPay(p), 0);
     const net = mine.reduce((s, p) => s + Number(p.net_pay), 0);
     return { gross, deductions: Math.max(0, gross - net), net };
   }, [yearPayslips, current, currentYear]);
@@ -294,16 +298,22 @@ export default function PayslipsOutlet() {
                   </tr>
                   {/* overtime Comment */}
                   <tr className="border-t border-[#eef0f5]">
-                    <td className="py-2.5 text-sm">Overtime pay</td>
+                    <td className="py-2.5 text-sm">Additional Pay</td>
                     <td className="py-2.5 text-sm text-right">
                       {money(current.overtime_pay)}
+                    </td>
+                  </tr>
+                  <tr className="border-t border-[#eef0f5]">
+                    <td className="py-2.5 text-sm">Holiday Pay</td>
+                    <td className="py-2.5 text-sm text-right">
+                      {money(current.holiday_pay)}
                     </td>
                   </tr>
 
                   <tr className="border-t border-[#eef0f5] font-bold">
                     <td className="py-2.5 text-sm">Total earnings</td>
                     <td className="py-2.5 text-sm text-right">
-                      {money(slip.gross)}
+                      {money(slip.earnings)}
                     </td>
                   </tr>
                 </tbody>

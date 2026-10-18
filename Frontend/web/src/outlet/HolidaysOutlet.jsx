@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import { confirmDialog, notifyError } from "@/lib/dialog";
+import DateInput from "@/components/DateInput";
 
 export default function HolidayOutlet() {
   const [holidays, setHolidays] = useState([]);
@@ -12,7 +13,6 @@ export default function HolidayOutlet() {
   const [loading, setLoading] = useState(true);
 
   const headers = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
     "ngrok-skip-browser-warning": "true",
   });
 
@@ -83,8 +83,7 @@ export default function HolidayOutlet() {
           >
             <div className="flex flex-col flex-1 items-start">
               <p className="font-medium pl-2">Date</p>
-              <input
-                type={"date"}
+              <DateInput
                 onChange={update("date")}
                 className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
               />
@@ -99,7 +98,7 @@ export default function HolidayOutlet() {
             </div>
             <button
               type="submit"
-              className="px-6 py-2 mt-6 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] text-white font-medium"
+              className="px-6 py-2 mt-6 rounded-full bg-[#2AAF56] hover:bg-[#2AAF56]/80 text-white font-medium"
             >
               Create
             </button>
@@ -142,7 +141,7 @@ export default function HolidayOutlet() {
                     <button
                       type="button"
                       onClick={() => handleDelete(h.id)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-[#EC6668] hover:text-[#EC6668]/80"
                       aria-label="Delete holiday"
                     >
                       <Trash2 className="w-4 h-4" />

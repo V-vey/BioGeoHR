@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../homepage.dart';
+import '../../Service/dialogs.dart';
 
 // screens get data
 // import 'text_box_email.dart';
@@ -41,28 +42,25 @@ class Loginbutton extends StatelessWidget {
           if (!context.mounted) return;
 
           if (isSuccessful["authenticated"] == "User Not Found") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login failed. Please check your email')),
+            await showError(
+              'Invalid credential please try again.',
+              title: 'Login failed',
             );
             return;
           }
 
           if (isSuccessful["authenticated"] == "Password Incorrect") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Login failed. Please check your password'),
-              ),
+            await showError(
+              'Invalid credential please try again.',
+              title: 'Login failed',
             );
             return;
           }
 
           if (isSuccessful["authenticated"] == "Account Deactivated") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Your account has been deactivated. Please contact HR.',
-                ),
-              ),
+            await showError(
+              'Your account has been deactivated. Please contact HR.',
+              title: 'Account deactivated',
             );
             return;
           }

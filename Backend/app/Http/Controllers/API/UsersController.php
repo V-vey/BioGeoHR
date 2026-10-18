@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Rules\StrongPassword;
 
 class UsersController extends Controller
 {
@@ -138,6 +139,15 @@ class UsersController extends Controller
         });
     }
 
+    private const BIRTH_DATE_MESSAGE = ['date_of_birth.before_or_equal' => 'Employee must be at least 18 years old.'];
+
+    /** The latest date of birth an employee may have: today minus 18 years, worked out on every request (Asia/Manila). */
+    private function latestBirthDate(): string
+    {
+        // no overflow: 29 Feb minus 18 years is 28 Feb, never 1 Mar, so nobody a day short of 18 gets in
+        return now()->subYearsNoOverflow(18)->toDateString();
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -150,13 +160,12 @@ class UsersController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'contact_number' => 'required',
-            'password' => 'required',
             'department' => 'required',
             'position' => 'required',
             'call_time' => 'required',
             'contract_type' => 'required|in:Probationary,Regular',
             'employment_status' => 'required|in:Contractual,Permanent',
-            'date_of_birth' => 'required|date',
+            'date_of_birth' => ['required', 'date', 'before_or_equal:' . $this->latestBirthDate()],
             'gender' => 'required',
             'nationality' => 'required',
             'address' => 'required',
@@ -165,7 +174,7 @@ class UsersController extends Controller
             'monthly_salary' => 'required',
             'working_hours_per_day' => 'required',
             // 'working_days_per_month' => 'required|numeric|min:1|max:31'
-        ] + $govRules, $govMessages);
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE);
 
         // spouse and children (shown on the profile only); checked before anything is saved
         [$family, $familyError] = $this->parseFamily($request);
@@ -175,11 +184,14 @@ class UsersController extends Controller
 
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('avatars', 'public') : null;
 
+        // HR does not choose the password: a random one is made here and emailed to the employee
+        $password = StrongPassword::generate();
+
         $users = Users::create([
             'name' => $request->name,
             'email' => $request->email,
             'contact_number' => $request->contact_number,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($password),
             'department' => $request->department,
             'position' => $request->position,
             'call_time' => $request->call_time,
@@ -203,7 +215,7 @@ class UsersController extends Controller
         Salary::create([
             'user_id' => $users->id,
             'salary_basis' => $request->monthly_salary,
-            'working_hours_per_day' => $request->working_hours_per_day,
+            'working_hours_per_day' => 8,
             'working_days_per_month' => 26
         ]);
         //Create a Balance
@@ -233,9 +245,14 @@ class UsersController extends Controller
         }
        
         
-        $emailSent = (new SendEmail())->send($users, $request->password);
+        $emailSent = (new SendEmail())->send($users, $password);
         AuditLog::record('admin', 'employee_created', 'success', $users->name);
-        return response()->json($users->toArray() + ['email_sent' => $emailSent], 201);
+        // the password goes to the employee by email; only when that fails is it shown to HR (once),
+        // so the employee is not locked out
+        return response()->json($users->toArray() + [
+            'email_sent' => $emailSent,
+            'temporary_password' => $emailSent ? null : $password,
+        ], 201);
         
     }
 
@@ -272,7 +289,9 @@ class UsersController extends Controller
             'image' => 'nullable|image|max:2048',
             // the edit form sends it every time; older accounts may still have none
             'employment_status' => 'sometimes|nullable|in:Contractual,Permanent',
-        ] + $govRules, $govMessages);
+            // the edit form sends it every time; an employee must be at least 18
+            'date_of_birth' => ['sometimes', 'required', 'date', 'before_or_equal:' . $this->latestBirthDate()],
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE);
 
         // the whole family list is replaced when the form sends one; left alone when it does not
         [$family, $familyError] = $this->parseFamily($request);
@@ -418,7 +437,7 @@ class UsersController extends Controller
         $absentDays = 0;
 
         foreach ($startOfMonth->daysUntil($today) as $date) {
-            if ($date->dayOfWeek === Carbon::SATURDAY) continue;
+            if ($date->isWeekend()) continue;   // Saturday and Sunday are not workdays, so nobody is absent on them
 
             $isHoliday = Holiday::where('date', $date->toDateString())->exists();
             if ($isHoliday) continue;
@@ -499,5 +518,34 @@ class UsersController extends Controller
 
         AuditLog::record('admin', $user->is_active ? 'employee_reactivated' : 'employee_deactivated', 'success', $user->name);
         return response()->json($user);
+    }
+
+    /**
+     * HR resets an employee's forgotten password: a new random password is made, the old one stops
+     * working at once (every phone and browser is logged out), and the new one is emailed to the employee.
+     * Only when the email fails is the password shown to HR (once), so the employee is not locked out.
+     */
+    public function resetPassword(Request $request, string $id)
+    {
+        $user = Users::find($id);
+        if (!$user) return response()->json(['message' => 'User not found'], 404);
+
+        if ($user->id === auth()->id()) {
+            return response()->json(['message' => 'You cannot reset your own password here.'], 422);
+        }
+
+        $password = StrongPassword::generate();
+        $user->password = $password;   // the model hashes it
+        $user->save();
+        $user->tokens()->delete();     // log them out everywhere: the old password and any open session are finished
+
+        AuditLog::record('admin', 'password_reset', 'success', $user->name);
+        $emailSent = (new SendEmail())->sendReset($user, $password);
+
+        return response()->json([
+            'message' => $emailSent ? 'The new password was emailed to the employee.' : 'The password was reset, but the email could not be sent.',
+            'email_sent' => $emailSent,
+            'temporary_password' => $emailSent ? null : $password,
+        ]);
     }
 }

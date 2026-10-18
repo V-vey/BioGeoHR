@@ -70,7 +70,6 @@ export default function Notifier() {
         const response = await axios.get(url + "/notifications/poll", {
           params: seen.current ?? undefined,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
             "ngrok-skip-browser-warning": "true",
           },
         });

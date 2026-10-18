@@ -8,12 +8,10 @@ export default function AllEmployee({}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("token");
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(url + "/users", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });

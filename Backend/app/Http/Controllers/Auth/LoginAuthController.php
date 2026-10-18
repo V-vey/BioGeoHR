@@ -22,13 +22,26 @@ class LoginAuthController extends Controller{
 
             $token = $this->user->createToken($this->platform ?? 'Mobile')->plainTextToken;
             AuditLog::record('login', 'login', 'success', $this->platform ? "Logged in via {$this->platform}" : null, $this->user->id, $this->user->email);
-            return response()->json([
+
+            // the website keeps the login in an HttpOnly cookie and never sees the token; the phone gets it in the body
+            $isWebHR = $this->platform === 'Web' && $this->user->isHR();   // the website only lets HR in
+            $response = response()->json([
                 'authenticated' => "Log in Success",
                 'user' => $this->user->isHR() ? 'HR' : 'Employee',
-                'token' => $token
-            ], 201);
+            ] + ($isWebHR ? [] : ['token' => $token]), 201);
+
+            if ($isWebHR) {
+                // name, value, minutes, path, domain, secure, httpOnly, raw, sameSite
+                // SameSite=None because the website and the API are on different domains (the site on
+                // localhost or a dev tunnel, the API on ngrok): with Lax the browser never sends the cookie
+                // back and every request after the login is a 401. None needs Secure. The CSRF check
+                // (X-Requested-With + CORS) is what protects the cookie.
+                $response->cookie('token', $token, 60 * 8, '/', null, true, true, false, 'none');
+            }
+
+            return $response;
         }
-        AuditLog::record('login', 'login', 'failed', $this->label('Wrong password'), $this->user->id, $this->user->email);
+        AuditLog::record('login', 'login', 'failed', $this->label('Wrong Credential'), $this->user->id, $this->user->email);
         //Wrong password
         return response()->json(['authenticated' => 'Password Incorrect'], 301);
     }
@@ -60,7 +73,7 @@ class LoginAuthController extends Controller{
         $this->user = Users::where("email", $request->email)->first();
         
         if (!$this->user){ 
-            AuditLog::record('login', 'login', 'failed', $this->label('Unknown email'), null, $request->email);
+            AuditLog::record('login', 'login', 'failed', $this->label('Wrong Credential'), null, $request->email);
             return response()->json([
                 'authenticated' => 'User Not Found'
             ], 300);
@@ -82,6 +95,6 @@ class LoginAuthController extends Controller{
 
         return response()->json([
             'message' => 'Logged out'
-        ]);
+        ])->cookie('token', '', -2628000, '/', null, true, true, false, 'none');   // expired, with the same SameSite=None as the login, or a cross-site browser ignores it
     }
 }

@@ -11,14 +11,16 @@ export default function ListOfEmployee({ emp }) {
     );
   }
 
+  // gap-3 keeps a long cell (e.g. "Grade School Teacher") off the next column; items-start puts the
+  // status on the first line, level with the name, when a long name wraps to two lines
   return (
-    <div className="flex flex-row px-4 w-full">
+    <div className="flex flex-row items-start gap-3 px-4 w-full">
       <p className="flex-1 text-start font-regular">{emp.name}</p>
       <p className="flex-1 text-start">{emp.department}</p>
       <p className="flex-1 text-start">{emp.position}</p>
-      <div className="flex-1 flex items-center justify-start gap-1.5 ">
+      <div className="flex-1 flex items-start justify-start gap-1.5 ">
         <span
-          className={`w-3 h-3 rounded-full ${
+          className={`w-3 h-3 mt-1.5 shrink-0 rounded-full ${
             emp.status === "On-Time"
               ? "bg-[#2AAF56]"
               : emp.status === "Late"

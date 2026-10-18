@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Calendar, ChevronDown, User } from "lucide-react";
+import { ChevronDown, User } from "lucide-react";
 
 import axios from "axios";
 import { url } from "@/resources/api";
@@ -8,6 +8,8 @@ import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
 import Loading from "@/components/Loading";
 import WorkingDaysField from "@/components/WorkingDaysField";
+import DateInput from "@/components/DateInput";
+import { latestBirthDate } from "@/lib/birthDate";
 function Field({ label, required, span = 1, children }) {
   return (
     <div
@@ -40,10 +42,9 @@ export default function NewEmployeeForm() {
   const [form, setForm] = useState({});
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-
+  const [formKey, setFormKey] = useState(0);
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -59,7 +60,6 @@ export default function NewEmployeeForm() {
     );
     data.append("email", formData.email);
     data.append("contact_number", formData.contactNumber);
-    data.append("password", formData.password);
     data.append("department", formData.department);
     data.append("position", formData.position);
     data.append("call_time", formData.callTime);
@@ -94,13 +94,13 @@ export default function NewEmployeeForm() {
     try {
       const res = await axios.post(url + "/users", data, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
       if (res.data.email_sent === false) {
+        // shown only now, once: the email did not go out, so HR has to pass the password on
         notifyError(
-          "The employee was added, but the email with their login could not be sent. Please give them their password yourself.",
+          `The employee was added, but the email with their login could not be sent. Give them this temporary password yourself: ${res.data.temporary_password}`,
           "Employee added, email not sent",
         );
       } else {
@@ -124,12 +124,28 @@ export default function NewEmployeeForm() {
 
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
-  const onCancel = () => {};
+  const onCancel = async () => {
+    const confirmed = await confirmDialog(
+      "Are the sure you want to reset the inputs",
+      {
+        title: "Reset Inputs",
+        confirmLabel: "Reset",
+      },
+    );
+    if (!confirmed) return;
+    setForm({});
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setFormKey((k) => k + 1);
+  };
   return (
     <>
       {loading && <Loading />}
       <div className=" flex justify-end mb-4 p-4 md:p-[16px_20px] bg-white border border-[#b2b2b2] rounded-[14px]">
-        <h2 className="text-[#6675EC] font-bold justify-end">Location</h2>
+        <h2 className="text-[#6675EC] font-bold justify-end">
+          Create Employee Account
+        </h2>
       </div>
 
       <div className="bg-white border border-[#b2b2b2] rounded-[14px] p-6 md:p-8">
@@ -143,13 +159,9 @@ export default function NewEmployeeForm() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (form.password !== form.confirmPassword) {
-              setPasswordError("Passwords do not match");
-              return;
-            }
-            setPasswordError("");
             onSubmit?.(form);
           }}
+          key={formKey}
         >
           <div className="flex items-center gap-4 py-6 border-b border-[#eef0f5]">
             <div className="w-16 h-16 rounded-full bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden">
@@ -182,33 +194,6 @@ export default function NewEmployeeForm() {
             </div>
           </div>
 
-          <Section title="Account Credentials">
-            <Field label="Email" required>
-              <input
-                type="email"
-                className={inputClass}
-                onChange={update("email")}
-              />
-            </Field>
-            <Field label="Password" required>
-              <input
-                type="password"
-                className={inputClass}
-                onChange={update("password")}
-              />
-            </Field>
-            <Field label="Confirm Password" required>
-              <input
-                type="password"
-                className={inputClass}
-                onChange={update("confirmPassword")}
-              />
-              {passwordError && (
-                <div className="text-xs text-[#EC6668]">{passwordError}</div>
-              )}
-            </Field>
-          </Section>
-
           <Section title="Personal Information">
             <Field label="Last name" required>
               <input className={inputClass} onChange={update("lastName")} />
@@ -235,14 +220,11 @@ export default function NewEmployeeForm() {
             </Field>
 
             <Field label="Date of Birth" required>
-              <div className="relative">
-                <input
-                  type="date"
-                  className={`${inputClass} pr-9`}
-                  onChange={update("dob")}
-                />
-                <Calendar className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <DateInput
+                className={inputClass}
+                max={latestBirthDate()}
+                onChange={update("dob")}
+              />
             </Field>
             <Field label="Birth place">
               <input className={inputClass} onChange={update("birthPlace")} />
@@ -259,6 +241,15 @@ export default function NewEmployeeForm() {
             </Field>
             <Field label="Address" required span={2}>
               <input className={inputClass} onChange={update("address")} />
+            </Field>
+            {/* the login is sent here: a random password is made and emailed to this address */}
+            <Field label="Email" required span={2}>
+              <input
+                type="email"
+                className={inputClass}
+                placeholder="Their login and temporary password are sent here"
+                onChange={update("email")}
+              />
             </Field>
           </Section>
 
@@ -370,13 +361,13 @@ export default function NewEmployeeForm() {
                 onChange={update("callTime")}
               />
             </Field>
-            <Field label="Working Hours Per Day" required>
+            {/* <Field label="Working Hours Per Day" required>
               <input
                 type="number"
                 className={inputClass}
                 onChange={update("wrkHrsPD")}
               />
-            </Field>
+            </Field> */}
             {/* <Field label="Working Days Per Month" required>
               <WorkingDaysField
                 value={form.wrkDPM}
@@ -390,13 +381,13 @@ export default function NewEmployeeForm() {
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-2 rounded-full border border-[#eef0f5] text-gray-600 hover:bg-gray-50"
+              className="px-6 py-2 rounded-full bg-[#EC6668] hover:bg-[#EC6668]/80 text-white font-medium"
             >
-              Cancel
+              Reset
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#249c4c] text-white font-medium"
+              className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#2AAF56]/80 text-white font-medium"
             >
               Create
             </button>

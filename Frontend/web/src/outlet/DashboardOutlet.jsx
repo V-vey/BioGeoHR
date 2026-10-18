@@ -100,12 +100,10 @@ export default function DashboardOutlet() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const fetchData = async () => {
       try {
         const response = await axios.get(url + "/attendanceCounts", {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
           "ngrok-skip-browser-warning": "true",
@@ -156,21 +154,19 @@ export default function DashboardOutlet() {
       </div>
       <Link
         to="/attendance/flagged"
-        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
+        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#6675EC]/80 self-end rounded-[10px]"
       >
         View All
       </Link>
     </div>
   );
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const fetchFlagged = async () => {
       try {
         const response = await axios.get(
           url + "/flaggedAttendance?today=true",
           {
             headers: {
-              Authorization: `Bearer ${token}`,
               "ngrok-skip-browser-warning": "true",
             },
           },
@@ -211,9 +207,7 @@ export default function DashboardOutlet() {
 
   const fetchPending = async () => {
     try {
-      const token = localStorage.getItem("token");
       const headers = {
-        Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
       };
       const response = await axios.get(url + "/leave", { headers });
@@ -240,7 +234,7 @@ export default function DashboardOutlet() {
       <h2 className="flex items-start ">Pending Leave</h2>
       <Link
         to="/employee/leave-request"
-        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
+        className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#6675EC]/80 self-end rounded-[10px]"
       >
         View All
       </Link>
@@ -274,12 +268,10 @@ export default function DashboardOutlet() {
   );
   const [weeklyData, setWeeklyData] = useState([]);
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const fetchWeekly = async () => {
       try {
         const response = await axios.get(url + "/weeklyAttendance", {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         });
@@ -304,6 +296,9 @@ export default function DashboardOutlet() {
   const [searchEmp, setSearchEmp] = useState("");
   const [searchEmpSent, setSearchEmpSent] = useState("");
   const empLoaded = useRef(false);
+  // true while a new page or a new search is on its way (the first load has the full-screen box)
+  const [empLoading, setEmpLoading] = useState(false);
+  const empKey = useRef("");
 
   // wait for a pause in typing before asking the server, and start again at page 1
   useEffect(() => {
@@ -316,7 +311,12 @@ export default function DashboardOutlet() {
 
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem("token");
+    // show the loading text for a page or search the employee asked for, not for the quiet refresh
+    // that runs when a clock-in or leave changes
+    const key = `${currentPageEmp}|${searchEmpSent}`;
+    if (empLoaded.current && key !== empKey.current) setEmpLoading(true);
+    empKey.current = key;
+
     const fetchEmployees = async () => {
       try {
         const params = { page: currentPageEmp, per_page: EMP_PER_PAGE };
@@ -324,7 +324,6 @@ export default function DashboardOutlet() {
         const response = await axios.get(url + "/dashboardEmployees", {
           params,
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         });
@@ -333,11 +332,16 @@ export default function DashboardOutlet() {
         setEmployees(page.data);
         setTotalEmp(page.total);
         setTotalPagesEmp(Math.max(1, page.last_page));
-        if (page.data.length === 0 && page.total > 0 && currentPageEmp > page.last_page)
+        if (
+          page.data.length === 0 &&
+          page.total > 0 &&
+          currentPageEmp > page.last_page
+        )
           setCurrentPageEmp(page.last_page);
       } catch (error) {
         console.error("Failed to load employee list:", error);
       } finally {
+        if (!cancelled) setEmpLoading(false); // a newer request has taken over otherwise
         if (!empLoaded.current) {
           empLoaded.current = true;
           done();
@@ -365,7 +369,7 @@ export default function DashboardOutlet() {
         />
         <Link
           to="/employee"
-          className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#2AAF56] self-end rounded-[10px]"
+          className="text-s text-[#f2f2f2] bg-[#6675EC] px-4 hover:bg-[#6675EC]/80 self-end rounded-[10px]"
         >
           View All
         </Link>
@@ -411,7 +415,9 @@ export default function DashboardOutlet() {
                 ? "Non-working day"
                 : `${metrics.percentageNotYetIn}% of Employees`
             }
-            icon={<Hourglass className="text-[#8a90a3] w-10 h-10 text-[10px] " />}
+            icon={
+              <Hourglass className="text-[#8a90a3] w-10 h-10 text-[10px] " />
+            }
           />
           <Counts
             className="flex-1"
@@ -503,8 +509,8 @@ export default function DashboardOutlet() {
               total={totalEmp}
               spacing={false}
             >
-              <div className="w-full justify-start">
-                <div className="flex flex-row items-center border-b border-[#b2b2b2] px-4 py-1">
+              <div className="relative w-full justify-start">
+                <div className="flex flex-row items-center gap-3 border-b border-[#b2b2b2] px-4 py-1">
                   <p className="flex-1 text-start font-medium">Name</p>
                   <p className="flex-1 text-start font-medium">Department</p>
                   <p className="flex-1 text-start font-medium">Position</p>
@@ -512,11 +518,20 @@ export default function DashboardOutlet() {
                   <p className="flex-1 text-start font-medium">Contract Type</p>
                 </div>
                 <div className="h-2" />
-                <div className="flex flex-col gap-2">
+                <div
+                  className={`flex flex-col gap-2 transition-opacity ${empLoading ? "opacity-40 pointer-events-none" : ""}`}
+                >
                   {employees.map((emp, i) => (
                     <EmployeeList emp={emp} key={i} />
                   ))}
                 </div>
+                {empLoading && (
+                  <div className="absolute inset-x-0 top-1/2 flex justify-center pointer-events-none">
+                    <span className="px-3 py-1 rounded-full bg-white border border-[#b2b2b2] text-sm font-medium animate-pulse">
+                      Loading...
+                    </span>
+                  </div>
+                )}
               </div>
             </Containers>
           </div>

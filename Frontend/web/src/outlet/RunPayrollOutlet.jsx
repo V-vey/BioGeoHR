@@ -10,6 +10,7 @@ import {
   TriangleAlert,
   Info,
 } from "lucide-react";
+import DateInput from "@/components/DateInput";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("en-PH", {
@@ -44,9 +45,7 @@ export default function RunPayrollOutlet() {
   const [excluded, setExcluded] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
   const headers = {
-    Authorization: `Bearer ${token}`,
     "ngrok-skip-browser-warning": "true",
   };
 
@@ -117,6 +116,7 @@ export default function RunPayrollOutlet() {
       loan: 0,
       net: 0,
       overtime: 0,
+      holiday: 0,
     };
     rows
       .filter((r) => !excluded.includes(r.user_id))
@@ -131,6 +131,7 @@ export default function RunPayrollOutlet() {
         t.net += Number(r.net_pay);
         // overtime Comment
         t.overtime += Number(r.overtime_pay);
+        t.holiday += Number(r.holiday_pay);
       });
     return t;
   }, [rows, excluded]);
@@ -149,15 +150,13 @@ export default function RunPayrollOutlet() {
           <h2 className="m-0 text-lg font-bold text-[#3A3A3A]">Run Payroll</h2>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <input
-            type="date"
+          <DateInput
             value={periodStart}
             onChange={(e) => setPeriodStart(e.target.value)}
             className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
           />
           <span className="text-[#8a90a3]">to</span>
-          <input
-            type="date"
+          <DateInput
             value={periodEnd}
             onChange={(e) => setPeriodEnd(e.target.value)}
             className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
@@ -215,7 +214,7 @@ export default function RunPayrollOutlet() {
           Late deduction: 1 day's pay after 3 lates this month. Absence
           deduction: 1 day's pay for each day marked Absent (approved leave and
           holidays are not counted). SSS, PhilHealth, Pag-IBIG and BIR income
-          tax are withheld. Loan installments are deducted on the second cutoff.
+          tax are withheld. Loan installments are deducted on the first cutoff.
         </span>
       </div>
 
@@ -245,7 +244,7 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Loan</th>
                   {/* overtime Comment */}
                   <th className="py-2 px-2 font-semibold">Additional Pay</th>
-
+                  <th className="py-2 px-2 font-semibold">Holiday Pay</th>
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
               </thead>
@@ -324,6 +323,9 @@ export default function RunPayrollOutlet() {
                         <td className="py-3 px-2 text-sm">
                           {money(r.overtime_pay)}
                         </td>
+                        <td className="py-3 px-2 text-sm">
+                          {money(r.holiday_pay)}
+                        </td>
 
                         <td className="py-3 pr-4 pl-2 text-sm font-semibold">
                           {money(r.net_pay)}
@@ -382,8 +384,13 @@ export default function RunPayrollOutlet() {
 
             {/* overtime Comment */}
             <div className="flex justify-between">
-              <span className="text-[#8a90a3]">Overtime</span>
+              <span className="text-[#8a90a3]">Additional Pay</span>
               <span className="font-semibold">{money(totals.overtime)}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Holiday Pay</span>
+              <span className="font-semibold">{money(totals.holiday)}</span>
             </div>
           </div>
           <div className="h-px bg-[#eef0f5] my-3.5" />

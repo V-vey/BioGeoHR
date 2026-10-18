@@ -10,17 +10,31 @@ import FamilyTable from "@/components/FamilyTable";
 import WorkingDaysField from "@/components/WorkingDaysField";
 import { familyFromServer, cleanFamily } from "@/lib/family";
 import { confirmDialog } from "@/lib/dialog";
+import Loading from "@/components/Loading";
+import DateInput from "@/components/DateInput";
+import { latestBirthDate } from "@/lib/birthDate";
 
-function Field({ label, value, onChange, type = "text" }) {
+function Field({ label, value, onChange, type = "text", max }) {
+  const className = "w-full border border-[#b2b2b2] rounded-[10px] p-2";
   return (
     <div className="flex flex-col flex-1 items-start">
       <p className="font-medium pl-2">{label}</p>
-      <input
-        type={type}
-        value={value ?? ""}
-        onChange={onChange}
-        className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
-      />
+      {type === "date" ? (
+        // a date keeps its year to 4 digits
+        <DateInput
+          value={value ?? ""}
+          onChange={onChange}
+          max={max}
+          className={className}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value ?? ""}
+          onChange={onChange}
+          className={className}
+        />
+      )}
     </div>
   );
 }
@@ -65,6 +79,7 @@ export default function EdiPofiletModal({
   onSaved,
   onSavedAllEmployee,
 }) {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(() => ({
     image: empData.image_path,
     name: empData.name,
@@ -137,9 +152,7 @@ export default function EdiPofiletModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     const headers = {
-      Authorization: `Bearer ${token}`,
       "ngrok-skip-browser-warning": "true",
     };
 
@@ -185,224 +198,230 @@ export default function EdiPofiletModal({
         errors ? Object.values(errors)[0][0] : "Could not save changes.",
         "Could not save",
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-[90%] overflow-y-auto  [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
-          <button
-            onClick={onClose}
-            className="text-white bg-[#2AAF56] text-[20px] items-center rounded-[10px]  px-4 py-1 hover:bg-[#6675EC]"
-          >
-            ← Back
-          </button>
-          <h2 className="font-bold">Edit Profile</h2>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-2">
-            {/* <div className="flex flex-row bg-white w-full border border-[#b2b2b2] rounded-[10px] p-4"> */}
-            <Section label={"Personal Information"}>
-              <SectionInside>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative group w-20 h-20 rounded-[10px] border border-[#b2b2b2] bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
-                >
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt={`${emp.name || "User"}'s Profile`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <AuthImage
-                      src={imageSrc}
-                      fallback={fallbackImage}
-                      alt={`${emp.name || "User"}'s Profile`}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black/40 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    Change
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png"
-                    ref={fileInputRef}
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                </div>
-                <Field
-                  label={"Name"}
-                  value={form.name}
-                  onChange={update("name")}
-                  type="text"
-                />
-                <Field
-                  label={"Email"}
-                  value={form.email}
-                  onChange={update("email")}
-                  type="email"
-                />
-                <Field
-                  label={"Contact Number"}
-                  value={form.contact_number}
-                  onChange={update("contact_number")}
-                  type="tel"
-                />
-              </SectionInside>
-              <SectionInside>
-                <Field
-                  label={"Date of Birth"}
-                  value={form.date_of_birth}
-                  onChange={update("date_of_birth")}
-                  type="date"
-                />
-                <Field
-                  label={"Nationality"}
-                  value={form.nationality}
-                  onChange={update("nationality")}
-                  type="text"
-                />
-
-                <Select
-                  label="Gender"
-                  value={form.gender}
-                  onChange={update("gender")}
-                  options={["Male", "Female"]}
-                />
-              </SectionInside>
-              <Field
-                label={"Address"}
-                value={form.address}
-                onChange={update("address")}
-                type="text"
-              />
-            </Section>
-            <Section label={"Government IDs"}>
-              <SectionInside>
-                <Field
-                  label={"TIN"}
-                  value={form.tin}
-                  onChange={update("tin")}
-                  type="text"
-                />
-                <Field
-                  label={"SSS No."}
-                  value={form.sss_number}
-                  onChange={update("sss_number")}
-                  type="text"
-                />
-              </SectionInside>
-              <SectionInside>
-                <Field
-                  label={"PhilHealth No."}
-                  value={form.philhealth_number}
-                  onChange={update("philhealth_number")}
-                  type="text"
-                />
-                <Field
-                  label={"Pag-IBIG No."}
-                  value={form.pagibig_number}
-                  onChange={update("pagibig_number")}
-                  type="text"
-                />
-              </SectionInside>
-            </Section>
-            <Section label={"Family (spouse and children)"}>
-              <FamilyTable
-                value={form.family}
-                onChange={(family) => setForm((f) => ({ ...f, family }))}
-              />
-            </Section>
-            {/* </div> */}
-            <Section label={"Employee Details"}>
-              <SectionInside>
-                <Select
-                  label="Department"
-                  value={form.department}
-                  onChange={update("department")}
-                  options={[
-                    "Administrative",
-                    "Basic Education",
-                    "Special Need Education",
-                    "Preschool",
-                    "Mainstreaming",
-                  ]}
-                />
-
-                <Field
-                  label={"Position"}
-                  value={form.position}
-                  onChange={update("position")}
-                  type="text"
-                />
-                <Select
-                  label="Contract Type"
-                  value={form.contract_type}
-                  onChange={update("contract_type")}
-                  options={["Probationary", "Regular"]}
-                />
-                <Select
-                  label="Employment Status"
-                  value={form.employment_status}
-                  onChange={update("employment_status")}
-                  options={["Contractual", "Permanent"]}
-                  placeholder="Not set"
-                />
-                <Field
-                  label={"Salary Basis"}
-                  value={form.salary_basis}
-                  onChange={update("salary_basis")}
-                  type="number"
-                />
-              </SectionInside>
-              <SectionInside>
-                <Field
-                  label={"Call Time"}
-                  value={form.call_time}
-                  onChange={update("call_time")}
-                  type="time"
-                />
-                <Field
-                  label={"Working Hours Per Day"}
-                  value={form.working_hours_per_day}
-                  onChange={update("working_hours_per_day")}
-                  type="number"
-                />
-                <div className="flex flex-col flex-1 items-start">
-                  <p className="font-medium pl-2">Working Days Per Month</p>
-                  <WorkingDaysField
-                    value={form.working_days_per_month}
-                    onChange={(v) =>
-                      setForm((f) => ({ ...f, working_days_per_month: v }))
-                    }
-                    className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
-                  />
-                </div>
-              </SectionInside>
-            </Section>
-            <div className="flex flex-row gap-2 justify-end">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-4 py-1 rounded-full text-white bg-[#EC6668] hover:bg-[#EC6668]/80"
-              >
-                Reset
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80"
-              >
-                Save
-              </button>
-            </div>
+    <>
+      {loading && <Loading />}
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="flex flex-col gap-2 bg-[#f2f2f2] rounded-xl p-6 min-w-[70%] max-w-[60%] max-h-[90%] overflow-y-auto  [&::-webkit-scrollbar]:hidden">
+          <div className="flex flex-row justify-between bg-white items-center px-4 py-3 rounded-[10px] border border-[#b2b2b2]">
+            <button
+              onClick={onClose}
+              className="text-white bg-[#2AAF56] text-[20px] items-center rounded-[10px]  px-4 py-1 hover:bg-[#6675EC]"
+            >
+              ← Back
+            </button>
+            <h2 className="font-bold">Edit Profile</h2>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-2">
+              {/* <div className="flex flex-row bg-white w-full border border-[#b2b2b2] rounded-[10px] p-4"> */}
+              <Section label={"Personal Information"}>
+                <SectionInside>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative group w-20 h-20 rounded-[10px] border border-[#b2b2b2] bg-[#6675EC]/10 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer"
+                  >
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt={`${emp.name || "User"}'s Profile`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <AuthImage
+                        src={imageSrc}
+                        fallback={fallbackImage}
+                        alt={`${emp.name || "User"}'s Profile`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      Change
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      ref={fileInputRef}
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <Field
+                    label={"Name"}
+                    value={form.name}
+                    onChange={update("name")}
+                    type="text"
+                  />
+                  <Field
+                    label={"Email"}
+                    value={form.email}
+                    onChange={update("email")}
+                    type="email"
+                  />
+                  <Field
+                    label={"Contact Number"}
+                    value={form.contact_number}
+                    onChange={update("contact_number")}
+                    type="tel"
+                  />
+                </SectionInside>
+                <SectionInside>
+                  <Field
+                    label={"Date of Birth"}
+                    value={form.date_of_birth}
+                    onChange={update("date_of_birth")}
+                    type="date"
+                    max={latestBirthDate()}
+                  />
+                  <Field
+                    label={"Nationality"}
+                    value={form.nationality}
+                    onChange={update("nationality")}
+                    type="text"
+                  />
+
+                  <Select
+                    label="Gender"
+                    value={form.gender}
+                    onChange={update("gender")}
+                    options={["Male", "Female"]}
+                  />
+                </SectionInside>
+                <Field
+                  label={"Address"}
+                  value={form.address}
+                  onChange={update("address")}
+                  type="text"
+                />
+              </Section>
+              <Section label={"Government IDs"}>
+                <SectionInside>
+                  <Field
+                    label={"TIN"}
+                    value={form.tin}
+                    onChange={update("tin")}
+                    type="text"
+                  />
+                  <Field
+                    label={"SSS No."}
+                    value={form.sss_number}
+                    onChange={update("sss_number")}
+                    type="text"
+                  />
+                </SectionInside>
+                <SectionInside>
+                  <Field
+                    label={"PhilHealth No."}
+                    value={form.philhealth_number}
+                    onChange={update("philhealth_number")}
+                    type="text"
+                  />
+                  <Field
+                    label={"Pag-IBIG No."}
+                    value={form.pagibig_number}
+                    onChange={update("pagibig_number")}
+                    type="text"
+                  />
+                </SectionInside>
+              </Section>
+              <Section label={"Family (spouse and children)"}>
+                <FamilyTable
+                  value={form.family}
+                  onChange={(family) => setForm((f) => ({ ...f, family }))}
+                />
+              </Section>
+              {/* </div> */}
+              <Section label={"Employee Details"}>
+                <SectionInside>
+                  <Select
+                    label="Department"
+                    value={form.department}
+                    onChange={update("department")}
+                    options={[
+                      "Administrative",
+                      "Basic Education",
+                      "Special Need Education",
+                      "Preschool",
+                      "Mainstreaming",
+                    ]}
+                  />
+
+                  <Field
+                    label={"Position"}
+                    value={form.position}
+                    onChange={update("position")}
+                    type="text"
+                  />
+                  <Select
+                    label="Contract Type"
+                    value={form.contract_type}
+                    onChange={update("contract_type")}
+                    options={["Probationary", "Regular"]}
+                  />
+                  <Select
+                    label="Employment Status"
+                    value={form.employment_status}
+                    onChange={update("employment_status")}
+                    options={["Contractual", "Permanent"]}
+                    placeholder="Not set"
+                  />
+                  <Field
+                    label={"Salary Basis"}
+                    value={form.salary_basis}
+                    onChange={update("salary_basis")}
+                    type="number"
+                  />
+                </SectionInside>
+                <SectionInside>
+                  <Field
+                    label={"Call Time"}
+                    value={form.call_time}
+                    onChange={update("call_time")}
+                    type="time"
+                  />
+                  <Field
+                    label={"Working Hours Per Day"}
+                    value={form.working_hours_per_day}
+                    onChange={update("working_hours_per_day")}
+                    type="number"
+                  />
+                  <div className="flex flex-col flex-1 items-start">
+                    <p className="font-medium pl-2">Working Days Per Month</p>
+                    <WorkingDaysField
+                      value={form.working_days_per_month}
+                      onChange={(v) =>
+                        setForm((f) => ({ ...f, working_days_per_month: v }))
+                      }
+                      className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
+                    />
+                  </div>
+                </SectionInside>
+              </Section>
+              <div className="flex flex-row gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="px-4 py-1 rounded-full text-white bg-[#EC6668] hover:bg-[#EC6668]/80"
+                >
+                  Reset
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

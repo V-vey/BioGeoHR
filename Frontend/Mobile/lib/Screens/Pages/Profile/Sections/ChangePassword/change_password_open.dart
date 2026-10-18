@@ -30,6 +30,8 @@ class ChangePasswordOpen extends StatelessWidget {
           controller: newPassword,
           decoration: InputDecoration(
             labelText: 'New Password',
+            helperText: 'At least 8 characters, with an uppercase letter, a lowercase letter and a number',
+            helperMaxLines: 2,
             border: OutlineInputBorder(),
           ),
         ),

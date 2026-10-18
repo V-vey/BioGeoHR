@@ -3,10 +3,10 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import { notifyError } from "@/lib/dialog";
+import DateInput from "@/components/DateInput";
 
 const fieldClass = "w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white";
 const headers = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
   "ngrok-skip-browser-warning": "true",
 });
 
@@ -95,8 +95,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
         <div className="flex flex-row gap-2">
           <label className="flex-1 text-left text-sm font-medium">
             Date
-            <input
-              type="date"
+            <DateInput
               required
               value={form.date}
               onChange={update("date")}
@@ -180,13 +179,13 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1 rounded-full border border-[#b2b2b2]"
+            className="px-4 py-1 rounded-full text-white bg-[#EC6668] hover:bg-[#EC6668]/80"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#6675EC]"
+            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80"
           >
             Save attendance
           </button>

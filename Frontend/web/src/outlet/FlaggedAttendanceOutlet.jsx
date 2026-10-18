@@ -15,12 +15,10 @@ export default function FlaggedAttendanceOutlet() {
   useDataChanged(["flag"], () => setReload((n) => n + 1)); // a new flag appears by itself
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const fetchFlagged = async () => {
       try {
         const response = await axios.get(url + "/flaggedAttendance", {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         });
@@ -74,26 +72,29 @@ export default function FlaggedAttendanceOutlet() {
         search={search}
         setSearch={handleSearch}
       >
-        {pageItems.map((record) => (
-          <FlaggedItem
-            key={record.id}
-            name={record.user?.name}
-            department={record.user?.department}
-            position={record.user?.position}
-            location={record.location?.name}
-            date={format(new Date(record.date), "MMMM d, yyyy")}
-            flagCount={record.flagged_attendances_count}
-            excursions={record.flagged_attendances}
-            flaggedAt={
-              record.flagged_attendances?.[0]?.out_at
-                ? format(
-                    new Date(record.flagged_attendances[0].out_at),
-                    "MMM d, yyyy h:mm a",
-                  )
-                : "--"
-            }
-          />
-        ))}
+        {/* equal-width cards in a grid, as many per row as fit; items-start so opening one card's flags does not stretch the others */}
+        <div className="grid w-full items-start gap-4 px-4 grid-cols-[repeat(auto-fill,minmax(360px,1fr))]">
+          {pageItems.map((record) => (
+            <FlaggedItem
+              key={record.id}
+              name={record.user?.name}
+              department={record.user?.department}
+              position={record.user?.position}
+              location={record.location?.name}
+              date={format(new Date(record.date), "MMMM d, yyyy")}
+              flagCount={record.flagged_attendances_count}
+              excursions={record.flagged_attendances}
+              flaggedAt={
+                record.flagged_attendances?.[0]?.out_at
+                  ? format(
+                      new Date(record.flagged_attendances[0].out_at),
+                      "MMM d, yyyy h:mm a",
+                    )
+                  : "--"
+              }
+            />
+          ))}
+        </div>
       </Containers>
     </>
   );

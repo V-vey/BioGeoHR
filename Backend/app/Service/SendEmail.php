@@ -36,4 +36,29 @@ class SendEmail
             return false;
         }
     }
+
+    /** The email an employee gets when HR resets their password. */
+    public function sendReset(Users $user, string $plainPassword): bool
+    {
+        $body = "Hello {$user->name},\n\n"
+        . "HR has reset your BioGeo HR password.\n\n"
+        . "Email: {$user->email}\n"
+        . "New password: {$plainPassword}\n\n"
+        . "Your old password no longer works. Please change this password after you log in:\n"
+        . " Step 1: Log in with the password above\n"
+        . " Step 2: Go to Profile section\n"
+        . " Step 3: Click Change Password\n"
+        . " Step 4: Enter the password above, then your new password\n"
+        ;
+
+        try {
+            Mail::raw($body, fn ($m) => $m->to($user->email)->subject('Your BioGeo HR password was reset'));
+            AuditLog::record('admin', 'password_reset_email', 'success', "Password reset email sent to {$user->email}");
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+            AuditLog::record('admin', 'password_reset_email', 'failed', "Password reset email to {$user->email} failed");
+            return false;
+        }
+    }
 }

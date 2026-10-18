@@ -5,8 +5,19 @@ import { notifySuccess, notifyError } from "@/lib/dialog";
 import { Plus, CircleOff, Landmark, Wallet, Info } from "lucide-react";
 import StatusBadge from "@/components/Payroll/StatusBadge";
 import Loading from "@/components/Loading";
+import Containers from "@/components/container";
 import AuthImage from "@/components/AuthImage";
 import Fallback from "@/assets/user.svg";
+import {
+  predictLoanEnd,
+  predictRunningLoanEnd,
+  cutoffLabel,
+  monthLabel,
+  dateLabel,
+  SCHOOL_YEAR_TYPES,
+  MAX_DEDUCTIONS,
+} from "@/lib/loanEnd";
+import DateInput from "@/components/DateInput";
 
 const LOAN_TYPES = ["SSS", "Pag-IBIG", "Company", "Cash Advance"];
 
@@ -36,7 +47,55 @@ const emptyForm = {
   start_date: "",
 };
 
-function NewLoanModal({ employees, onClose, onSaved }) {
+// The line under the form: how many deductions, when the last one is, and whether it fits the school year.
+function LoanEndNote({ form, schoolYearEnd }) {
+  const p = predictLoanEnd({
+    amount: form.total_amount,
+    monthly: form.monthly_deduction,
+    startDate: form.start_date,
+    type: form.loan_type,
+    schoolYearEnd,
+  });
+  if (!p) return null;
+
+  const endText = schoolYearEnd ? dateLabel(schoolYearEnd) : "";
+  let tone = "bg-[#6675EC]/10 text-[#3A3A3A]";
+  let verdict = null;
+  // the same order as the backend: the school-year message first, then the length limit
+  if (p.checked && p.available === 0) {
+    tone = "bg-[#EC6668]/10 text-[#3A3A3A]";
+    verdict = `The first deduction would be after the school year ends (${endText}).`;
+  } else if (p.checked && !p.fits) {
+    tone = "bg-[#EC6668]/10 text-[#3A3A3A]";
+    verdict = `Only ${p.available} deduction${p.available === 1 ? "" : "s"} fit before the school year ends (${endText}). Raise the monthly deduction to ₱${p.minMonthly.toLocaleString("en-PH", { minimumFractionDigits: 2 })} or more.`;
+  } else if (p.tooLong) {
+    tone = "bg-[#EC6668]/10 text-[#3A3A3A]";
+    verdict = `The most allowed is ${MAX_DEDUCTIONS} deductions. Raise the monthly deduction to ₱${p.minForLimit.toLocaleString("en-PH", { minimumFractionDigits: 2 })} or more.`;
+  } else if (p.checked) {
+    tone = "bg-[#2AAF56]/10 text-[#3A3A3A]";
+    verdict = `Within the school year (ends ${endText}).`;
+  } else if (!SCHOOL_YEAR_TYPES.includes(form.loan_type)) {
+    verdict =
+      "SSS and Pag-IBIG loans follow the agency's schedule, so the school-year limit does not apply.";
+  }
+
+  return (
+    <div
+      className={`text-left text-xs rounded-[10px] px-3 py-2 leading-relaxed ${tone}`}
+    >
+      <div>
+        <span className="font-semibold">
+          {p.needed} deduction{p.needed === 1 ? "" : "s"}
+        </span>
+        . Expected last deduction:{" "}
+        <span className="font-semibold">{cutoffLabel(p.last)}</span>.
+      </div>
+      {verdict && <div>{verdict}</div>}
+    </div>
+  );
+}
+
+function NewLoanModal({ employees, schoolYearEnd, onClose, onSaved }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const update = (key) => (e) =>
@@ -44,12 +103,10 @@ function NewLoanModal({ employees, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     try {
       setSaving(true);
       await axios.post(url + "/loans", form, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
@@ -148,9 +205,8 @@ function NewLoanModal({ employees, onClose, onSaved }) {
 
         <label className="text-left text-sm font-medium">
           Start date
-          <input
+          <DateInput
             required
-            type="date"
             min={today}
             max={maxStartDate}
             value={form.start_date}
@@ -159,18 +215,20 @@ function NewLoanModal({ employees, onClose, onSaved }) {
           />
         </label>
 
+        <LoanEndNote form={form} schoolYearEnd={schoolYearEnd} />
+
         <div className="flex flex-row gap-2 justify-end mt-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1 rounded-full border border-[#b2b2b2]"
+            className="px-4 py-1 rounded-full text-white bg-[#EC6668] hover:bg-[#EC6668]/80 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-50"
+            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save"}
           </button>
@@ -181,47 +239,97 @@ function NewLoanModal({ employees, onClose, onSaved }) {
 }
 
 export default function LoansOutlet() {
+  // the loans of the current page only; searching, counting and paging are done by the server
   const [rows, setRows] = useState([]);
+  const [stats, setStats] = useState({ active: 0, paid: 0, outstanding: 0 }); // all loans, for the cards
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [searchSent, setSearchSent] = useState("");
+  const [reload, setReload] = useState(0); // bump it to ask the server again
+  const [rowsLoading, setRowsLoading] = useState(false);
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [schoolYearEnd, setSchoolYearEnd] = useState("");
+  const [loading, setLoading] = useState(true); // the first load
   const [showNew, setShowNew] = useState(false);
 
-  const fetchLoans = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await axios.get(url + "/loans", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      setRows(response.data);
-    } catch (error) {
-      console.error("Failed to load loans:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // wait for a pause in typing before asking the server, and start again at page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchSent(search.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
-    fetchLoans();
-    const token = localStorage.getItem("token");
+    let cancelled = false;
+    const loadLoans = async () => {
+      setRowsLoading(true);
+      try {
+        const params = { page, per_page: 10 };
+        if (searchSent) params.search = searchSent;
+        const response = await axios.get(url + "/loans", {
+          params,
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        if (cancelled) return; // a newer request has replaced this one
+        const data = response.data;
+        setRows(data.data);
+        setStats(data.stats);
+        setTotal(data.total);
+        setLastPage(Math.max(1, data.last_page));
+        // the page we asked for no longer exists (for example after a search): go to the last one
+        if (data.data.length === 0 && data.total > 0 && page > data.last_page)
+          setPage(data.last_page);
+      } catch (error) {
+        console.error("Failed to load loans:", error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setRowsLoading(false);
+        }
+      }
+    };
+    loadLoans();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, searchSent, reload]);
+
+  useEffect(() => {
     axios
       .get(url + "/users", {
         headers: {
-          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       })
       .then((res) => setEmployees(res.data))
       .catch((error) => console.error("Failed to load employees:", error));
+    // the school year end, to say whether a loan will be paid before it
+    axios
+      .get(url + "/systemSettings", {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      })
+      .then((res) => setSchoolYearEnd(res.data?.school_year_end ?? ""))
+      .catch((error) => console.error("Failed to load school year:", error));
   }, []);
 
-  const activeCount = rows.filter((l) => l.status === "Active").length;
-  const paidCount = rows.filter((l) => l.status === "Paid").length;
-  const totalOutstanding = rows
-    .filter((l) => l.status === "Active")
-    .reduce((s, l) => s + Number(l.remaining_balance), 0);
+  const today = new Date().toLocaleDateString("en-CA");
+
+  const activeCount = stats.active;
+  const paidCount = stats.paid;
+  const totalOutstanding = Number(stats.outstanding);
+
+  const goToPage = (next) => {
+    if (next < 1 || next > lastPage || next === page) return;
+    setPage(next);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -267,7 +375,7 @@ export default function LoansOutlet() {
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
           Loans are interest-free with a fixed monthly deduction, taken once a
-          month on the second cutoff (the 16th onward). An employee may hold
+          month on the first cutoff (the 1st to the 15th). An employee may hold
           only one active loan or cash advance at a time — a new one can't be
           issued until the existing balance is fully paid off. If net pay can't
           cover the deduction, a partial amount is taken. When a balance reaches
@@ -276,28 +384,50 @@ export default function LoansOutlet() {
       </div>
 
       {/* Loans table */}
-      <div className="bg-white border border-[#b2b2b2] rounded-[10px] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#eef0f5]">
-          <div className="text-left">
-            <h2 className="m-0 text-base font-bold text-[#3A3A3A]">
-              Loans &amp; Cash Advances
-            </h2>
-            <div className="text-xs text-[#8a90a3] mt-0.5">
-              SSS, Pag-IBIG, company loans, and cash advances — all tracked the
-              same way
+      <Containers
+        headerDefault={false}
+        header={
+          // the title on the left; the search box and the New loan button side by side on the right,
+          // the same height, so they line up
+          <div className="flex flex-row justify-between items-center gap-3">
+            <div className="text-left">
+              <h2 className="m-0">Loans &amp; Cash Advances</h2>
+              <div className="text-xs text-[#8a90a3] mt-0.5">
+                SSS, Pag-IBIG, company loans, and cash advances — all tracked
+                the same way
+              </div>
+            </div>
+            <div className="flex flex-row items-center gap-2 shrink-0">
+              <input
+                type="search"
+                name="search"
+                id="search"
+                placeholder="Search Name"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-9 border-[#8E8E8E] border-1 rounded-2xl w-100 px-3"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(true)}
+                className="flex items-center justify-center gap-1.5 h-9 bg-[#6675EC] hover:bg-[#5563d6] text-white text-sm font-semibold rounded-2xl px-4 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                New loan
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowNew(true)}
-            className="flex items-center gap-1.5 bg-[#6675EC] hover:bg-[#5563d6] text-white text-sm font-semibold rounded-[8px] px-3.5 py-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New loan
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
+        }
+        currentPage={page}
+        setCurrentPage={goToPage}
+        totalPages={lastPage}
+        total={total}
+        arrowSize={32}
+        spacing={false}
+      >
+        <div
+          className={`w-full overflow-x-auto transition-opacity ${rowsLoading && !loading ? "opacity-50" : ""}`}
+        >
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-[#8a90a3]">
@@ -307,6 +437,9 @@ export default function LoansOutlet() {
                 <th className="py-2 px-3 font-semibold">Monthly deduction</th>
                 <th className="py-2 px-3 font-semibold">Balance</th>
                 <th className="py-2 px-3 font-semibold">Started</th>
+                <th className="py-2 px-3 font-semibold">
+                  Last deduction (est.)
+                </th>
                 <th className="py-2 px-3 font-semibold">Status</th>
               </tr>
             </thead>
@@ -314,10 +447,12 @@ export default function LoansOutlet() {
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="py-6 text-center text-sm text-[#8a90a3]"
                   >
-                    No loans yet.
+                    {searchSent
+                      ? "No loan matches that name."
+                      : "No loans yet."}
                   </td>
                 </tr>
               ) : (
@@ -354,6 +489,34 @@ export default function LoansOutlet() {
                     <td className="py-3 px-3 text-sm text-[#8a90a3]">
                       {loan.start_date}
                     </td>
+                    <td className="py-3 px-3 text-sm">
+                      {(() => {
+                        // a paid loan has no next deduction; a running one is counted from what is left
+                        const p = predictRunningLoanEnd(
+                          loan,
+                          today,
+                          schoolYearEnd,
+                        );
+                        if (!p)
+                          return <span className="text-[#8a90a3]">—</span>;
+                        return (
+                          <>
+                            {monthLabel(p.last)}
+                            {p.checked && !p.fits ? (
+                              <div className="text-[11px] text-[#EC6668]">
+                                after the school year
+                              </div>
+                            ) : (
+                              p.tooLong && (
+                                <div className="text-[11px] text-[#EC6668]">
+                                  over {MAX_DEDUCTIONS} deductions
+                                </div>
+                              )
+                            )}
+                          </>
+                        );
+                      })()}
+                    </td>
                     <td className="py-3 px-3">
                       {loan.status === "Active" ? (
                         <StatusBadge tone="success">Active</StatusBadge>
@@ -367,13 +530,17 @@ export default function LoansOutlet() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Containers>
 
       {showNew && (
         <NewLoanModal
           employees={employees}
+          schoolYearEnd={schoolYearEnd}
           onClose={() => setShowNew(false)}
-          onSaved={fetchLoans}
+          onSaved={() => {
+            setPage(1); // the new loan is at the top
+            setReload((n) => n + 1);
+          }}
         />
       )}
     </div>

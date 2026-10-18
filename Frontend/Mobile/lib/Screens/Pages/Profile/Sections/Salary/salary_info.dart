@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../Controller/Profile/my_salary.dart';
+import 'loan_page.dart';
 import 'payslip_page.dart';
 import 'salary_info_open.dart';
 
@@ -92,13 +93,25 @@ class _SalaryInfoState extends State<SalaryInfo> {
                 ),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PayslipPage()),
-                    ),
-                    icon: Icon(Icons.receipt_long),
-                    label: Text("View Payslip"),
+                  child: Wrap(
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoanPage()),
+                        ),
+                        icon: Icon(Icons.account_balance_wallet),
+                        label: Text("View Loans"),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PayslipPage()),
+                        ),
+                        icon: Icon(Icons.receipt_long),
+                        label: Text("View Payslip"),
+                      ),
+                    ],
                   ),
                 ),
               ],

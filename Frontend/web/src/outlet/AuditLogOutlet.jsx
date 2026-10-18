@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import Containers from "@/components/container.jsx";
+import DateInput from "@/components/DateInput";
 
 const CATEGORIES = {
   login: "Login",
@@ -38,7 +39,6 @@ export default function AuditLogOutlet() {
         const res = await axios.get(url + "/audit-logs", {
           params,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
             "ngrok-skip-browser-warning": "true",
           },
         });
@@ -118,8 +118,7 @@ export default function AuditLogOutlet() {
         </label>
         <label className="flex flex-col flex-1 min-w-[140px] items-start text-sm font-medium">
           From
-          <input
-            type="date"
+          <DateInput
             value={filters.from}
             onChange={update("from")}
             className={fieldClass}
@@ -127,8 +126,7 @@ export default function AuditLogOutlet() {
         </label>
         <label className="flex flex-col flex-1 min-w-[140px] items-start text-sm font-medium">
           To
-          <input
-            type="date"
+          <DateInput
             value={filters.to}
             onChange={update("to")}
             className={fieldClass}
@@ -137,17 +135,17 @@ export default function AuditLogOutlet() {
       </div>
       <div className="flex flex-row gap-2 justify-end items-center w-full">
         <button
-          type="submit"
-          className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] text-white font-medium"
-        >
-          Apply
-        </button>
-        <button
           type="button"
           onClick={handleReset}
-          className="px-4 py-2 rounded-full border border-[#b2b2b2]"
+          className="px-6 py-2 rounded-full bg-[#EC6668] hover:bg-[#EC6668]/80 text-white font-medium"
         >
           Reset
+        </button>
+        <button
+          type="submit"
+          className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#2AAF56]/80 text-white font-medium"
+        >
+          Apply
         </button>
       </div>
     </form>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="BioGeoHR" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>FT-01 school 25 m (inside)</name></metadata>
+  <wpt lat="15.4722575" lon="120.6030806"><name>FT-01 school 25 m (inside)</name></wpt>
+  <trk>
+    <name>FT-01 school 25 m (inside)</name>
+    <trkseg>
+      <trkpt lat="15.4722575" lon="120.6030806"><time>2026-10-19T08:00:00Z</time></trkpt>
+      <trkpt lat="15.4722575" lon="120.6030806"><time>2026-10-19T08:10:00Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

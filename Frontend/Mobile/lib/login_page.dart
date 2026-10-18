@@ -38,7 +38,7 @@ class Loginpage extends StatelessWidget {
               passwordController: _passwordController,
               logintext: logintext,
             ),
-            TestingButton(),
+            // TestingButton(),
           ],
         ),
       ),

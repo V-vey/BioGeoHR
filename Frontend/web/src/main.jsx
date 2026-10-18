@@ -12,6 +12,11 @@ import DialogHost from "./components/DialogHost.jsx";
 // scale the page down on laptop-size screens so every screen shows the same layout
 installFitScreen();
 
+// the login is an HttpOnly cookie the server sets: the browser sends it with every request, JavaScript
+// never sees it. X-Requested-With is the proof that the request comes from this page (CSRF check).
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+
 axios.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -19,7 +24,6 @@ axios.interceptors.response.use(
       error.response?.status === 401 &&
       window.location.pathname !== "/login"
     ) {
-      localStorage.removeItem("token");
       window.location.href = "/login";
     }
     return Promise.reject(error);

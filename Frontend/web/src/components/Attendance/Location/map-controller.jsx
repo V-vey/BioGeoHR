@@ -14,13 +14,17 @@ export default function MapController({
   refresh,
   onClose,
 }) {
-  const token = localStorage.getItem("token");
   const [name, setName] = useState(nameM);
   const createLocation = {
     name: name,
     longitude: centerLng,
     latitude: centerLat,
     radius: radius,
+  };
+  // the server says what is wrong (for example a radius outside 10 to 50 m)
+  const reason = (err) => {
+    const errors = err.response?.data?.errors;
+    return errors ? Object.values(errors)[0][0] : "Please try again.";
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,10 +33,8 @@ export default function MapController({
         await axios
           .put(url + `/location/${id}`, createLocation, {
             headers: {
-              Authorization: `Bearer ${token}`,
               "ngrok-skip-browser-warning": "true",
             },
-            "ngrok-skip-browser-warning": "true",
           })
           .then((response) => {
             if (response.status == 200) {
@@ -42,25 +44,24 @@ export default function MapController({
             }
           });
       } catch (e) {
-        notifyError("Please try again.");
+        notifyError(reason(e), "Could not save location");
       }
     } else if (!modal) {
       try {
         await axios
           .post(url + "/location", createLocation, {
             headers: {
-              Authorization: `Bearer ${token}`,
               "ngrok-skip-browser-warning": "true",
             },
-            "ngrok-skip-browser-warning": "true",
           })
           .then((response) => {
             if (response.status == 201) {
               notifySuccess("The location was added.", "Location added");
+              refresh?.(); // so the new location shows in the list without a page reload
             }
           });
       } catch (e) {
-        notifyError("Please try again.");
+        notifyError(reason(e), "Could not add location");
       }
     }
   };
@@ -70,10 +71,8 @@ export default function MapController({
       await axios
         .delete(url + `/location/${id}`, {
           headers: {
-            Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
-          "ngrok-skip-browser-warning": "true",
         })
         .then((response) => {
           if (response.status == 200) {
@@ -161,20 +160,20 @@ export default function MapController({
                     type="button"
                     onClick={handleDelete}
                     value="Delete"
-                    className="bg-[#EC6668] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                    className="bg-[#EC6668] hover:bg-[#EC6668]/80 text-[#FFFFFF] rounded-[10px] px-4 py-1"
                   />
                   <input
                     type="button"
                     onClick={handleSubmit}
                     value="Edit"
-                    className="bg-[#2AAF56] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                    className="bg-[#2AAF56] hover:bg-[#2AAF56]/80 text-[#FFFFFF] rounded-[10px] px-4 py-1"
                   />
                 </div>
               ) : (
                 <input
                   type="submit"
                   value="Submit"
-                  className="bg-[#2AAF56] hover:bg-[#6675EC] text-[#FFFFFF] rounded-[10px] px-4 py-1"
+                  className="bg-[#2AAF56] hover:bg-[#2AAF56]/80 text-[#FFFFFF] rounded-[10px] px-4 py-1"
                 />
               )}
             </div>

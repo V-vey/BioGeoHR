@@ -3,9 +3,9 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import Containers from "@/components/container";
+import DateInput from "@/components/DateInput";
 
 const headers = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
   "ngrok-skip-browser-warning": "true",
 });
 
@@ -290,7 +290,7 @@ export default function WorkingHoursOutlet() {
               <button
                 type="submit"
                 disabled={savingRule || !settings}
-                className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-60 text-white font-medium"
+                className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#2AAF56]/80 disabled:opacity-60 text-white font-medium"
               >
                 {savingRule ? "Saving..." : "Save"}
               </button>
@@ -321,9 +321,8 @@ export default function WorkingHoursOutlet() {
                 <label htmlFor="startDate" className="font-medium pl-2">
                   School year starts
                 </label>
-                <input
+                <DateInput
                   id="startDate"
-                  type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className={inputClass}
@@ -333,9 +332,8 @@ export default function WorkingHoursOutlet() {
                 <label htmlFor="dateEnd" className="font-medium pl-2">
                   School year ends
                 </label>
-                <input
+                <DateInput
                   id="dateEnd"
-                  type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className={inputClass}
@@ -352,7 +350,7 @@ export default function WorkingHoursOutlet() {
               <button
                 type="submit"
                 disabled={savingSchoolYear || !settings}
-                className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#6675EC] disabled:opacity-60 text-white font-medium"
+                className="px-6 py-2 rounded-full bg-[#2AAF56] hover:bg-[#2AAF56]/80 disabled:opacity-60 text-white font-medium"
               >
                 {savingSchoolYear ? "Saving..." : "Save"}
               </button>
@@ -360,7 +358,7 @@ export default function WorkingHoursOutlet() {
                 <p
                   role="status"
                   className={
-                    messageSchoolYear.ok ? "text-[#2AAF56]" : "text-red-500"
+                    messageSchoolYear.ok ? "text-[#2AAF56]" : "text-[#EC6668]"
                   }
                 >
                   {messageSchoolYear.text}

@@ -64,7 +64,10 @@ export default function Containers({
         {header}
       </div>
       <div className="h-[1px] w-full m-0 bg-[#b2b2b2] my-0.5" />
-      <div className="flex flex-col flex-1">
+      {/* with a fixed height (maxH) the content scrolls inside the box, so the page footer never spills out of it */}
+      <div
+        className={`flex flex-col flex-1 ${maxH ? "min-h-0 overflow-y-auto" : ""}`}
+      >
         {spacing ? (
           <div className="py-4">
             <div className="flex-1 flex flex-wrap gap-4 content-start justify-center">

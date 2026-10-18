@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //clock in and out
     Route::post('clockIn', [AttendanceController::class, 'createAttendance']);
+    Route::post('clockIn/gpsOff', [AttendanceController::class, 'gpsOff']);
+    Route::post('clockIn/biometricFailed', [AttendanceController::class, 'biometricFailed']);
     Route::post('clockOut', [AttendanceController::class, 'clockOut']);
     Route::get('todayAttendance', [AttendanceController::class, 'today']);
     Route::post('geofence', [GeoFenceController::class, 'validationLocation']);
@@ -92,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);
         Route::patch('users/{id}/active', [UsersController::class, 'setActive']);
+        Route::post('users/{id}/resetPassword', [UsersController::class, 'resetPassword']);
         Route::get('loans/paidOffThisPeriod', [LoanController::class, 'paidOffThisPeriod']);
         Route::apiResource('loans', LoanController::class);
         Route::post('loans/{id}/deduct', [LoanController::class, 'deduct']);

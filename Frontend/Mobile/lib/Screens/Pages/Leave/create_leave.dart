@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../Controller/Homepage/leave_balance.dart' show LeaveBalances;
 import '../../../Controller/Leave/apply_leave.dart';
 import '../Homepage/Container/LeaveBalance/leave_balance_main.dart';
+import '../../../Service/dialogs.dart';
 import 'leave_card.dart';
 
 class CreateLeavePage extends StatefulWidget {
@@ -166,18 +167,17 @@ class _CreateLeavePageState extends State<CreateLeavePage> {
 
   Future<void> _submit() async {
     // take these BEFORE the await: after it, `context` may no longer be valid
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    void say(String text) =>
-        messenger.showSnackBar(SnackBar(content: Text(text)));
+    Future<void> say(String text) =>
+        showError(text, title: 'Check your request');
 
     // 1) check on the phone first, so a simple mistake does not need a round trip
     if (_start == null || _end == null) {
-      say('Pick the start and end dates');
+      await say('Pick the start and end dates');
       return;
     }
     if (_reason.text.trim().isEmpty) {
-      say('Write a reason for your leave');
+      await say('Write a reason for your leave');
       return;
     }
 
@@ -193,9 +193,12 @@ class _CreateLeavePageState extends State<CreateLeavePage> {
     setState(() => _sending = false);
 
     // 3) tell them what happened (the server's own words)
-    say(result.message);
-
-    // 4) success: go back to the Leave tab; `true` tells it to reload its list
-    if (result.ok) navigator.pop(true);
+    if (result.ok) {
+      await showSuccess(result.message, title: 'Request sent');
+      // 4) success: go back to the Leave tab; `true` tells it to reload its list
+      navigator.pop(true);
+    } else {
+      await showError(result.message, title: "Couldn't send request");
+    }
   }
 }

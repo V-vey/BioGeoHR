@@ -4,6 +4,7 @@ import { format, parse } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { url } from "@/resources/api";
+import DateInput from "@/components/DateInput";
 
 // the server refuses to build a report bigger than this (AttendanceController::export)
 const MAX_RECORDS = 20000;
@@ -17,7 +18,6 @@ const formatTime = (timeStr) => {
 const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
 const headers = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
   "ngrok-skip-browser-warning": "true",
 });
 
@@ -161,8 +161,7 @@ export default function DownloadReportModal({ departments = [], onClose }) {
         <div className="flex flex-row gap-2">
           <label className="flex-1 text-left text-sm font-medium">
             From
-            <input
-              type="date"
+            <DateInput
               value={from}
               onChange={(e) => setFrom(e.target.value)}
               className={fieldClass}
@@ -170,8 +169,7 @@ export default function DownloadReportModal({ departments = [], onClose }) {
           </label>
           <label className="flex-1 text-left text-sm font-medium">
             To
-            <input
-              type="date"
+            <DateInput
               value={to}
               onChange={(e) => setTo(e.target.value)}
               className={fieldClass}

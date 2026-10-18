@@ -56,7 +56,7 @@ export default function Items({
             <button
               onClick={onView}
               type="button"
-              className="w-20 bg-[#2AAF56] hover:bg-[#EC6668] rounded-full text-white "
+              className="w-20 bg-[#2AAF56] hover:bg-[#2AAF56]/80 rounded-full text-white "
             >
               View
             </button>

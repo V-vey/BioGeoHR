@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../Controller/Homepage/my_leave.dart';
 import '../../../Controller/Leave/cancel_leave.dart';
 import '../../Reusable/Badge/leave_badge.dart';
+import '../../../Service/dialogs.dart';
 import 'leave_card.dart';
 
 /// The View screen of one leave request: type and status, dates, the reason the employee
@@ -50,7 +51,6 @@ class _LeaveDetailPageState extends State<LeaveDetailPage> {
 
   Future<void> _cancel() async {
     // take these BEFORE the awaits: after them, `context` may no longer be valid
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
     final sure = await showDialog<bool>(
@@ -77,9 +77,13 @@ class _LeaveDetailPageState extends State<LeaveDetailPage> {
     if (!mounted) return; // the user left the page while waiting
     setState(() => _busy = false);
 
-    messenger.showSnackBar(SnackBar(content: Text(result.message)));
-    // success: go back to the list; `true` tells it to reload
-    if (result.ok) navigator.pop(true);
+    if (result.ok) {
+      await showSuccess(result.message, title: 'Request cancelled');
+      // success: go back to the list; `true` tells it to reload
+      navigator.pop(true);
+    } else {
+      await showError(result.message, title: "Couldn't cancel request");
+    }
   }
 
   @override

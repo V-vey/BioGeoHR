@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Geo-fence test points, school (radius 50 m)</name>
+    <Placemark><name>School center</name><Point><coordinates>120.6030806,15.4720327,0</coordinates></Point></Placemark>
+    <Placemark><name>FT-01 25 m inside</name><Point><coordinates>120.6030806,15.4722575,0</coordinates></Point></Placemark>
+    <Placemark><name>FT-02 49.99 m boundary</name><Point><coordinates>120.6030806,15.4724823,0</coordinates></Point></Placemark>
+    <Placemark><name>FT-03 75 m outside</name><Point><coordinates>120.6030806,15.4727072,0</coordinates></Point></Placemark>
+  </Document>
+</kml>

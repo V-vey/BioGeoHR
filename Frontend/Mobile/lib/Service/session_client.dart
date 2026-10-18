@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'dialogs.dart';
+
 // lets code outside a screen change screens and show a message
 final navigatorKey = GlobalKey<NavigatorState>();
 final messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -21,10 +23,9 @@ Future<void> sessionExpired() async {
     navigatorKey.currentState?.popUntil(
       (r) => r.isFirst,
     ); // back to the login screen
-    messengerKey.currentState?.showSnackBar(
-      const SnackBar(
-        content: Text('Your session expired. Please log in again.'),
-      ),
+    showWarning(
+      'Your session expired. Please log in again.',
+      title: 'Session expired',
     );
   }
   _handling = false;

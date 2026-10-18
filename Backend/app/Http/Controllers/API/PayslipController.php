@@ -98,7 +98,6 @@ class PayslipController extends Controller
             'excluded_ids' => 'sometimes|array',
         ]);
 
-        $isDesignatedCutoff = Carbon::parse($request->period_start)->day >= 16;
         $salaryService = new SalaryService();
         $created = [];
 
@@ -134,25 +133,9 @@ class PayslipController extends Controller
                 $request->period_end,
             );
 
-            $loanDeduction = 0;
-            $loan = null;
-            if ($isDesignatedCutoff) {
-                $loan = Loan::where('user_id', $employee->id)
-                    ->where('status', 'Active')
-                    ->whereDate('start_date', '<=', $request->period_end)
-                    ->first();
-                if ($loan) {
-                    $loanDeduction = min($loan->monthly_deduction, $loan->remaining_balance);
-                    
-                }
-            }
-
-            $netPay = $result['net_pay'] - $loanDeduction;
-
-            if ($netPay < 0) {
-                $loanDeduction = $loanDeduction + $netPay;
-                $netPay = 0;
-            }
+            $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
+            $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            $netPay = max(0, $result['net_pay'] - $loanDeduction);
 
             if ($loan && $loanDeduction > 0) {
                 $loan->decrement('remaining_balance', $loanDeduction);
@@ -178,7 +161,7 @@ class PayslipController extends Controller
                 'income_tax' => $result['income_tax'],
                 // overtime Comment
                 'overtime_pay' => $result['overtime_pay'],
-              
+                'holiday_pay' => $result['holiday_pay'],
             ]);
 
             $created[] = $payslip;
@@ -248,7 +231,9 @@ class PayslipController extends Controller
             $gov     = ($p->sss + $p->philhealth + $p->pagibig) / 2;
             $lateDed = $p->late_deduction / 2;
       
-            $other   = ($gross - $p->net_pay) - ($gov + $p->income_tax + $lateDed + $p->loan_deduction);
+            // pay added on top of the salary: Sunday (rest day) pay, stored as overtime_pay, and holiday pay
+            $extra   = $p->overtime_pay + $p->holiday_pay;
+            $other   = ($gross + $extra - $p->net_pay) - ($gov + $p->income_tax + $lateDed + $p->loan_deduction);
 
             $absentDays  = (int) ($byStatus['Absent'] ?? 0);
             $absenceDed  = ($absentDays > 0 && $other > 0.01) ? $other : 0;
@@ -265,6 +250,9 @@ class PayslipController extends Controller
                 'leave_days'        => $leaveDays,
                 'hours'             => round(($seconds[$p->user_id] ?? 0) / 3600, 1),
                 'gross'             => round($gross, 2),
+                // pay added on top of the salary (the net pay includes both)
+                'additional_pay'    => round($p->overtime_pay, 2),
+                'holiday_pay'       => round($p->holiday_pay, 2),
                 'government'        => round($gov, 2),
                 // the same half-month amount, shown one contribution at a time
                 'sss'               => round($p->sss / 2, 2),
@@ -297,7 +285,6 @@ class PayslipController extends Controller
             'period_end' => 'required|date',
             
         ]);
-        $isDesignatedCutoff = \Carbon\Carbon::parse($request->period_start)->day >= 16;
         $salaryService = new SalaryService();
         $preview = [];
 
@@ -324,21 +311,9 @@ class PayslipController extends Controller
             
             );
 
-            $loanDeduction = 0;
-            if ($isDesignatedCutoff) {
-                $loan = Loan::where('user_id', $employee->id)
-                    ->where('status', 'Active')
-                    ->first();
-                if ($loan) {
-                    $loanDeduction = min($loan->monthly_deduction, $loan->remaining_balance);
-                }
-            }
-
-            $netPay = $result['net_pay'] - $loanDeduction;
-            if ($netPay < 0) {
-                $loanDeduction = $loanDeduction + $netPay;
-                $netPay = 0;
-            }
+            $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
+            $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            $netPay = max(0, $result['net_pay'] - $loanDeduction);
 
             $preview[] = [
                 'user_id' => $employee->id,
@@ -356,6 +331,7 @@ class PayslipController extends Controller
                 'net_pay' => $netPay,
                 // overtime Comment
                 'overtime_pay' => $result['overtime_pay'],
+                'holiday_pay' => $result['holiday_pay'],
             ];
         }
 
@@ -378,13 +354,17 @@ class PayslipController extends Controller
         $pagibig = $p->pagibig / 2;
         $lateDed = $p->late_deduction / 2;
         // whatever else lowered the pay (e.g. an absence deduction), so the lines add up
-        $other   = ($gross - $p->net_pay) - ($sss + $phil + $pagibig + $p->income_tax + $lateDed + $p->loan_deduction);
+        // pay added on top of the salary: Sunday (rest day) pay, stored as overtime_pay, and holiday pay
+        $extra   = $p->overtime_pay + $p->holiday_pay;
+        $other   = ($gross + $extra - $p->net_pay) - ($sss + $phil + $pagibig + $p->income_tax + $lateDed + $p->loan_deduction);
 
         return response()->json([
             'period_start' => $p->period_start,
             'period_end'   => $p->period_end,
             'gross'        => round($gross, 2),
-            'deductions'   => round($gross - $p->net_pay, 2),
+            'additional'   => round($p->overtime_pay, 2),
+            'holiday'      => round($p->holiday_pay, 2),
+            'deductions'   => round($gross + $extra - $p->net_pay, 2),
             'net'          => round($p->net_pay, 2),
             'sss'          => round($sss, 2),
             'philhealth'   => round($phil, 2),
