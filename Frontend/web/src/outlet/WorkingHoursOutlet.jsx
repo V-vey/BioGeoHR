@@ -4,6 +4,7 @@ import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import Containers from "@/components/container";
 import DateInput from "@/components/DateInput";
+import { confirmDialog, notifySuccess, notifyError } from "@/lib/dialog";
 
 const headers = () => ({
   "ngrok-skip-browser-warning": "true",
@@ -52,6 +53,7 @@ export default function WorkingHoursOutlet() {
   const [endDate, setEndDate] = useState("");
   const [savingRule, setSavingRule] = useState(false);
   const [savingSchoolYear, setSavingSchoolYear] = useState(false);
+  const [resettingLeave, setResettingLeave] = useState(false);
   const [messageRule, setMessageRule] = useState(null); // { ok: boolean, text: string }
   const [messageSchoolYear, setMessageSchoolYear] = useState(null); // { ok: boolean, text: string }
 
@@ -164,6 +166,32 @@ export default function WorkingHoursOutlet() {
       });
     } finally {
       setSavingSchoolYear(false);
+    }
+  };
+
+  // the start of a school year: every active Regular employee gets the full leave credits again
+  const handleResetLeave = async () => {
+    const ok = await confirmDialog(
+      "Every active Regular employee gets the full leave credits again, and unused credits are not carried over. This cannot be undone.",
+      { title: "Reset leave credits?", confirmLabel: "Reset" },
+    );
+    if (!ok) return;
+
+    setResettingLeave(true);
+    try {
+      const res = await axios.post(
+        `${url}/balance/reset`,
+        {},
+        { headers: headers() },
+      );
+      notifySuccess(res.data.message, "Leave credits reset");
+    } catch (error) {
+      notifyError(
+        errorText(error, "Could not reset the leave credits."),
+        "Could not reset",
+      );
+    } finally {
+      setResettingLeave(false);
     }
   };
 
@@ -341,12 +369,21 @@ export default function WorkingHoursOutlet() {
               </div>
             </div>
             <p className="text-sm text-[#8a90a3] pl-2 text-start">
-              The first and last day of the school year. Leave credits are given
-              at the start date, and loans must be fully paid by the end date.
-              Update these dates each year.
+              The first and last day of the school year. Loans must be fully
+              paid by the end date. Update these dates each year, then use Reset
+              leave credits to give every Regular employee their full credits
+              again for the new school year.
             </p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetLeave}
+                disabled={resettingLeave}
+                className="px-6 py-2 rounded-full bg-[#EC6668] hover:bg-[#EC6668]/80  text-white font-medium"
+              >
+                {resettingLeave ? "Resetting..." : "Reset leave credits"}
+              </button>
               <button
                 type="submit"
                 disabled={savingSchoolYear || !settings}
@@ -354,6 +391,7 @@ export default function WorkingHoursOutlet() {
               >
                 {savingSchoolYear ? "Saving..." : "Save"}
               </button>
+
               {messageSchoolYear && (
                 <p
                   role="status"

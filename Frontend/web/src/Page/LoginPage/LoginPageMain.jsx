@@ -20,6 +20,7 @@ function LoginPageMain() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // true while the login is being checked
   // Being Posted
   const loginForm = {
     email: email,
@@ -29,7 +30,9 @@ function LoginPageMain() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // already logging in
 
+    setLoading(true);
     try {
       await axios.post(url + "/login", loginForm).then(async (response) => {
         //block the user if they are not HR
@@ -74,6 +77,8 @@ function LoginPageMain() {
       } else {
         console.error("Error during login:", error);
       }
+    } finally {
+      setLoading(false);
     }
   };
   //pass
@@ -104,7 +109,11 @@ function LoginPageMain() {
             onChange={(e) => setPassword(e.target.value)}
           />
           <br />
-          <input type="submit" value="Log-in" />
+          <input
+            type="submit"
+            value={loading ? "Logging in..." : "Log-in"}
+            disabled={loading}
+          />
         </form>
       </div>
     </>

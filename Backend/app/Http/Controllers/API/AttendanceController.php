@@ -140,8 +140,8 @@ class AttendanceController extends Controller
         if (Carbon::parse($data['date'])->isSunday()) {
             return response()->json(['message' => 'Sunday is a non-working day.'], 422);
         }
-        if (Carbon::parse($data['date'])->isSaturday()) {
-            return response()->json(['message' => 'Saturday is a non-working day.'], 422);
+        if (Carbon::parse($data['date'])->isSaturday() && $data['status'] === 'Absent') {
+            return response()->json(['message' => 'Saturday is optional, so it cannot be marked absent.'], 422);
         }
 
         $absent = $data['status'] === 'Absent';
@@ -396,7 +396,7 @@ class AttendanceController extends Controller
         $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
         $today = now('Asia/Manila');
 
-        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
+        if ($timeIn <= $graceDeadline || $today->isSunday() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
             return "On-Time";
         }
         return "Late";

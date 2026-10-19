@@ -10,7 +10,7 @@ import {
   TriangleAlert,
   Info,
 } from "lucide-react";
-import DateInput from "@/components/DateInput";
+import { paydayFor } from "@/lib/payday";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("en-PH", {
@@ -30,6 +30,19 @@ const defaultPeriod = () => {
   return [toISO(y, m, 16), toISO(y, m, new Date(y, m + 1, 0).getDate())];
 };
 
+// the school pays two cutoffs a month, so HR picks a month and which half; the dates follow from that
+const periodOf = (month, half) => {
+  if (!month) return { periodStart: "", periodEnd: "" };
+  const [y, m] = month.split("-").map(Number);
+  if (half === "first") {
+    return { periodStart: toISO(y, m - 1, 1), periodEnd: toISO(y, m - 1, 15) };
+  }
+  return {
+    periodStart: toISO(y, m - 1, 16),
+    periodEnd: toISO(y, m - 1, new Date(y, m, 0).getDate()),
+  };
+};
+
 const steps = [
   { label: "Select period", state: "done" },
   { label: "Review pay", state: "active" },
@@ -38,9 +51,12 @@ const steps = [
 
 export default function RunPayrollOutlet() {
   const navigate = useNavigate();
-  const [start, end] = defaultPeriod();
-  const [periodStart, setPeriodStart] = useState(start);
-  const [periodEnd, setPeriodEnd] = useState(end);
+  const [start] = defaultPeriod();
+  const [month, setMonth] = useState(start.slice(0, 7)); // "2026-11"
+  const [half, setHalf] = useState(
+    Number(start.slice(8)) <= 15 ? "first" : "second",
+  );
+  const { periodStart, periodEnd } = periodOf(month, half);
   const [rows, setRows] = useState([]);
   const [excluded, setExcluded] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -116,7 +132,7 @@ export default function RunPayrollOutlet() {
       loan: 0,
       net: 0,
       overtime: 0,
-      holiday: 0,
+      additional: 0,
     };
     rows
       .filter((r) => !excluded.includes(r.user_id))
@@ -131,7 +147,7 @@ export default function RunPayrollOutlet() {
         t.net += Number(r.net_pay);
         // overtime Comment
         t.overtime += Number(r.overtime_pay);
-        t.holiday += Number(r.holiday_pay);
+        t.additional += Number(r.additional_pay);
       });
     return t;
   }, [rows, excluded]);
@@ -150,17 +166,20 @@ export default function RunPayrollOutlet() {
           <h2 className="m-0 text-lg font-bold text-[#3A3A3A]">Run Payroll</h2>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <DateInput
-            value={periodStart}
-            onChange={(e) => setPeriodStart(e.target.value)}
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
             className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
           />
-          <span className="text-[#8a90a3]">to</span>
-          <DateInput
-            value={periodEnd}
-            onChange={(e) => setPeriodEnd(e.target.value)}
+          <select
+            value={half}
+            onChange={(e) => setHalf(e.target.value)}
             className="border border-[#b2b2b2] rounded-[8px] px-2 py-1"
-          />
+          >
+            <option value="first">1st – 15th</option>
+            <option value="second">16th – end of month</option>
+          </select>
         </div>
       </div>
 
@@ -225,8 +244,13 @@ export default function RunPayrollOutlet() {
             <div className="text-sm font-bold text-[#3A3A3A]">
               {totals.count} of {rows.length} employees selected
             </div>
-            <div className="text-xs text-[#8a90a3]">
-              {periodStart} to {periodEnd}
+            <div className="text-xs text-[#8a90a3] text-right">
+              <div>
+                {periodStart} to {periodEnd}
+              </div>
+              <div className="font-semibold text-[#3A3A3A]">
+                Payday {paydayFor(periodStart)}
+              </div>
             </div>
           </div>
 
@@ -243,8 +267,8 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Absent</th>
                   <th className="py-2 px-2 font-semibold">Loan</th>
                   {/* overtime Comment */}
+                  {/* <th className="py-2 px-2 font-semibold">Overtime Pay</th> */}
                   <th className="py-2 px-2 font-semibold">Additional Pay</th>
-                  <th className="py-2 px-2 font-semibold">Holiday Pay</th>
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
               </thead>
@@ -320,11 +344,11 @@ export default function RunPayrollOutlet() {
                           {money(r.loan_deduction)}
                         </td>
                         {/* overtime Comment */}
-                        <td className="py-3 px-2 text-sm">
+                        {/* <td className="py-3 px-2 text-sm">
                           {money(r.overtime_pay)}
-                        </td>
+                        </td> */}
                         <td className="py-3 px-2 text-sm">
-                          {money(r.holiday_pay)}
+                          {money(r.additional_pay)}
                         </td>
 
                         <td className="py-3 pr-4 pl-2 text-sm font-semibold">
@@ -383,14 +407,14 @@ export default function RunPayrollOutlet() {
             </div>
 
             {/* overtime Comment */}
-            <div className="flex justify-between">
-              <span className="text-[#8a90a3]">Additional Pay</span>
+            {/* <div className="flex justify-between">
+              <span className="text-[#8a90a3]">Overtime Pay</span>
               <span className="font-semibold">{money(totals.overtime)}</span>
-            </div>
+            </div> */}
 
             <div className="flex justify-between">
-              <span className="text-[#8a90a3]">Holiday Pay</span>
-              <span className="font-semibold">{money(totals.holiday)}</span>
+              <span className="text-[#8a90a3]">Additional Pay</span>
+              <span className="font-semibold">{money(totals.additional)}</span>
             </div>
           </div>
           <div className="h-px bg-[#eef0f5] my-3.5" />

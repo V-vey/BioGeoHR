@@ -12,7 +12,8 @@ class PayslipPage extends StatefulWidget {
 }
 
 class _PayslipPageState extends State<PayslipPage> {
-  late final Future<PaycheckData?> _latest = MyPayslip().getLatest(); // load once
+  late final Future<PaycheckData?> _latest = MyPayslip()
+      .getLatest(); // load once
 
   static const _text = TextStyle(
     color: Color(0xBF3A3A3A),
@@ -24,7 +25,10 @@ class _PayslipPageState extends State<PayslipPage> {
 
   Widget _row(String label, String value, {bool bold = false}) {
     final style = bold
-        ? _text.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF3A3A3A))
+        ? _text.copyWith(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF3A3A3A),
+          )
         : _text;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -72,11 +76,19 @@ class _PayslipPageState extends State<PayslipPage> {
             '${day.format(p.periodStart)} – ${day.format(p.periodEnd)}',
             style: _text.copyWith(color: Colors.grey, fontSize: 13),
           ),
+          Text(
+            'Payday: ${day.format(p.payday)}',
+            style: _text.copyWith(color: Colors.grey, fontSize: 13),
+          ),
           _divider(),
           _row('Gross Pay', _peso(p.gross)),
+          _row('Overtime Pay', _peso(p.overtime)),
           _row('Additional Pay', _peso(p.additional)),
-          _row('Holiday Pay', _peso(p.holiday)),
-          _row('Total Earnings', _peso(p.gross + p.additional + p.holiday), bold: true),
+          _row(
+            'Total Earnings',
+            _peso(p.gross + p.overtime + p.additional),
+            bold: true,
+          ),
           _divider(),
           _deduction('SSS', p.sss),
           _deduction('PhilHealth', p.philhealth),

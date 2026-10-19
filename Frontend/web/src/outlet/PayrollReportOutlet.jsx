@@ -125,8 +125,8 @@ export default function PayrollReportOutlet() {
     "Leave",
     "Hours",
     "Gross",
+    // "Overtime pay",
     "Additional pay",
-    "Holiday pay",
     "SSS",
     "PhilHealth",
     "Pag-IBIG",
@@ -148,8 +148,8 @@ export default function PayrollReportOutlet() {
       r.leave_days,
       r.hours,
       fmt(r.gross),
+      // fmt(r.overtime_pay),
       fmt(r.additional_pay),
-      fmt(r.holiday_pay),
       fmt(r.sss),
       fmt(r.philhealth),
       fmt(r.pagibig),
@@ -169,8 +169,8 @@ export default function PayrollReportOutlet() {
     total("leave_days"),
     total("hours").toFixed(1),
     fmt(total("gross")),
+    // fmt(total("overtime_pay")),
     fmt(total("additional_pay")),
-    fmt(total("holiday_pay")),
     fmt(total("sss")),
     fmt(total("philhealth")),
     fmt(total("pagibig")),
@@ -312,11 +312,11 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Leave</th>
                 <th className="px-3 py-2 text-right font-medium">Hours</th>
                 <th className="px-3 py-2 text-right font-medium">Gross</th>
+                {/* <th className="px-3 py-2 text-right font-medium">
+                  Overtime Pay
+                </th> */}
                 <th className="px-3 py-2 text-right font-medium">
                   Additional Pay
-                </th>
-                <th className="px-3 py-2 text-right font-medium">
-                  Holiday Pay
                 </th>
                 <th className="px-3 py-2 text-right font-medium">SSS</th>
                 <th className="px-3 py-2 text-right font-medium">PhilHealth</th>
@@ -338,11 +338,11 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{r.leave_days}</td>
                   <td className="px-3 py-2 text-right">{r.hours}</td>
                   <td className="px-3 py-2 text-right">{money(r.gross)}</td>
+                  {/* <td className="px-3 py-2 text-right">
+                    {money(r.overtime_pay)}
+                  </td> */}
                   <td className="px-3 py-2 text-right">
                     {money(r.additional_pay)}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    {money(r.holiday_pay)}
                   </td>
                   <td className="px-3 py-2 text-right">{money(r.sss)}</td>
                   <td className="px-3 py-2 text-right">

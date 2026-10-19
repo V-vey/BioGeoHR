@@ -5,12 +5,20 @@ import '../../../../../Service/auth_storage.dart';
 
 class LocationList extends StatefulWidget {
   const LocationList({super.key});
-
   @override
   State<LocationList> createState() => _LocationListState();
 }
 
+final AuthStorage authStorage = AuthStorage();
+
 class _LocationListState extends State<LocationList> {
+  @override
+  void initState() {
+    super.initState();
+    authStorage
+        .removeTemp(); // nothing is chosen, which is what "Select Location" shows
+  }
+
   //location Available
   final GetLocation location = GetLocation();
   //default

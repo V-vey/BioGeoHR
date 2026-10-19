@@ -220,16 +220,7 @@ class UsersController extends Controller
         ]);
         //Create a Balance
         if($users->contract_type == "Regular"){
-            LeaveBalance::create([
-                'user_id' => $users->id,
-                'sick' => 2,
-                'vacation' => 2,
-                'emergency' => 2,
-                'birthday' => 1,
-                'solo_parent' => 7,
-                'paternity' => 7,
-                'maternity' => 120,
-            ]);
+            LeaveBalance::create(['user_id' => $users->id] + LeaveBalance::FULL_CREDITS);
         } else {
             // not Regular yet (Probationary): the row exists, with no credits
             LeaveBalance::create([

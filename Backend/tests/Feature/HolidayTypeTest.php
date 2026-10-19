@@ -60,25 +60,25 @@ afterEach(fn () => Carbon::setTestNow());
 
 // ---------- pay for a worked day, by day type (extra on top of the monthly salary) ----------
 
-it('pays the DOLE rate for each kind of worked day', function (string $date, ?string $type, float $holidayPay, float $restDayPay) {
+it('pays the DOLE rate for each kind of worked day', function (string $date, ?string $type, float $additional) {
     $u = holEmployee();
     if ($type) holiday($date, $type);
     worked($u, $date);
 
     $r = pay($u);
 
-    expect((float) $r['holiday_pay'])->toEqualWithDelta($holidayPay, 0.01);
-    expect((float) $r['overtime_pay'])->toEqualWithDelta($restDayPay, 0.01);   // "Additional Pay": Sunday work
+    expect((float) $r['additional_pay'])->toEqualWithDelta($additional, 0.01);
+    expect((float) $r['overtime_pay'])->toEqualWithDelta(0, 0.01);   // 8 hours worked: no overtime
 })->with([
-    'ordinary weekday'                        => ['2026-11-17', null,                  0,    0],
-    'Saturday (a non-working day, no extra)'  => ['2026-11-21', null,                  0,    0],
-    'rest day (Sunday): 130%'                 => ['2026-11-22', null,                  0,    1300],
-    'regular holiday: 200% = +100%'           => ['2026-11-17', 'regular',             1000, 0],
-    'special non-working day: 130% = +30%'    => ['2026-11-17', 'special_non_working', 300,  0],
-    'special working day: ordinary'           => ['2026-11-17', 'special_working',     0,    0],
-    'regular holiday on a rest day: 260%'     => ['2026-11-29', 'regular',             2600, 0],
-    'special day on a rest day: 150%'         => ['2026-11-29', 'special_non_working', 1500, 0],
-    'special working day on a rest day: 130%' => ['2026-11-29', 'special_working',     0,    1300],
+    'ordinary weekday'                        => ['2026-11-17', null,                  0],
+    'Saturday (optional): one daily wage'     => ['2026-11-21', null,                  1000],
+    'rest day (Sunday): 130%'                 => ['2026-11-22', null,                  1300],
+    'regular holiday: 200% = +100%'           => ['2026-11-17', 'regular',             1000],
+    'special non-working day: 130% = +30%'    => ['2026-11-17', 'special_non_working', 300],
+    'special working day: ordinary'           => ['2026-11-17', 'special_working',     0],
+    'regular holiday on a rest day: 260%'     => ['2026-11-29', 'regular',             2600],
+    'special day on a rest day: 150%'         => ['2026-11-29', 'special_non_working', 1500],
+    'special working day on a rest day: 130%' => ['2026-11-29', 'special_working',     1300],
 ]);
 
 it('a holiday that is not worked adds nothing and deducts nothing', function (string $type) {
@@ -87,19 +87,9 @@ it('a holiday that is not worked adds nothing and deducts nothing', function (st
 
     $r = pay($u);
 
-    expect((float) $r['holiday_pay'])->toEqualWithDelta(0, 0.01);
+    expect((float) $r['additional_pay'])->toEqualWithDelta(0, 0.01);
     expect((float) $r['absence_deduction'])->toEqualWithDelta(0, 0.01);
 })->with(['regular', 'special_non_working']);
-
-it('workedDayExtra gives the same numbers directly', function () {
-    expect(SalaryService::workedDayExtra(false, null))->toBe(0.0);
-    expect(SalaryService::workedDayExtra(true, null))->toBe(1.3);
-    expect(SalaryService::workedDayExtra(false, 'regular'))->toBe(1.0);
-    expect(SalaryService::workedDayExtra(false, 'special_non_working'))->toEqualWithDelta(0.3, 0.0001);
-    expect(SalaryService::workedDayExtra(true, 'special_non_working'))->toBe(1.5);
-    expect(SalaryService::workedDayExtra(true, 'regular'))->toBe(2.6);
-    expect(SalaryService::workedDayExtra(false, 'special_working'))->toBe(0.0);
-});
 
 // ---------- a special working day is an ordinary workday ----------
 

@@ -131,6 +131,17 @@ class Clockinbutton extends StatelessWidget {
               return;
             }
 
+            // a location has to be chosen first: without it there is nothing to check the position against
+            final chosen = await authStorage.getTemp();
+            if (chosen == null || chosen.trim().isEmpty) {
+              if (!context.mounted) return;
+              await showError(
+                'Choose your location from the list above first.',
+                title: 'Select a location',
+              );
+              return;
+            }
+
             // ask first, so a stray tap does not start the clock
             if (!await _confirm(
               context,

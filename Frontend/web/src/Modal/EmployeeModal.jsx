@@ -226,7 +226,10 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
   const handleResetPassword = async () => {
     const confirmed = await confirmDialog(
       "A new password will be emailed to them and the old one will stop working. They will be logged out everywhere.",
-      { title: `Reset password for ${emp.name}?`, confirmLabel: "Reset password" },
+      {
+        title: `Reset password for ${emp.name}?`,
+        confirmLabel: "Reset password",
+      },
     );
     if (!confirmed) return;
     try {
@@ -390,13 +393,13 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                       }
                     />
                     {/* overtime Comment */}
-                    <SalaryRow
+                    {/* <SalaryRow
                       icon={Hourglass}
                       iconColor="#8a6d10"
                       bg={"#FCF7E2"}
                       label="Overtime this month"
                       value={`${empData.overtime_hours ?? 0} hrs · ₱${Number(empData.overtime_pay ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`}
-                    />
+                    /> */}
 
                     <SalaryRow
                       icon={Wallet}

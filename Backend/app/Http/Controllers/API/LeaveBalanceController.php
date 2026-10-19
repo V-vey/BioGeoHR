@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\AuditLog;
 use App\Models\LeaveBalance;
+use App\Models\Users;
 
 class LeaveBalanceController extends Controller
 {
@@ -99,5 +101,22 @@ class LeaveBalanceController extends Controller
         return response()->json($balance->only([
             'sick', 'vacation', 'emergency', 'birthday', 'solo_parent', 'paternity', 'maternity',
         ]));
+    }
+
+    /**
+     * The start of a school year: every active Regular employee gets the full credits again, nothing is
+     * carried over (the paper's leave policy). Probationary employees stay at 0.
+     */
+    public function resetAll()
+    {
+        $count = LeaveBalance::whereIn('user_id', Users::active()->where('contract_type', 'Regular')->select('id'))
+            ->update(LeaveBalance::FULL_CREDITS);
+
+        AuditLog::record('admin', 'leave_credits_reset', 'success', "{$count} employee(s)");
+
+        return response()->json([
+            'message' => "Leave credits reset for {$count} employee(s)",
+            'count' => $count,
+        ]);
     }
 }

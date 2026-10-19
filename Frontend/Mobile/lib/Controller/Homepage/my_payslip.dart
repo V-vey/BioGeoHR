@@ -19,9 +19,9 @@ class PaycheckData {
   final double loan;
   final double other;
 
-  // pay added on top of the salary: Sunday (rest day) work and holidays worked
+  // pay added on top of the salary: overtime (hours past 8), and additional pay (rest day and holiday work)
+  final double overtime;
   final double additional;
-  final double holiday;
 
   PaycheckData({
     required this.periodStart,
@@ -36,9 +36,14 @@ class PaycheckData {
     this.late = 0,
     this.loan = 0,
     this.other = 0,
+    this.overtime = 0,
     this.additional = 0,
-    this.holiday = 0,
   });
+
+  /// The school's paydays: the 1st-15th period is paid on the 20th, the 16th-end period on the 5th of the next month.
+  DateTime get payday => periodStart.day <= 15
+      ? DateTime(periodStart.year, periodStart.month, 20)
+      : DateTime(periodStart.year, periodStart.month + 1, 5);
 
   // the server sends whole numbers as ints (10640), so read them as `num` and convert
   factory PaycheckData.fromJson(Map<String, dynamic> j) => PaycheckData(
@@ -54,8 +59,8 @@ class PaycheckData {
     late: (j['late'] as num? ?? 0).toDouble(),
     loan: (j['loan'] as num? ?? 0).toDouble(),
     other: (j['other'] as num? ?? 0).toDouble(),
+    overtime: (j['overtime'] as num? ?? 0).toDouble(),
     additional: (j['additional'] as num? ?? 0).toDouble(),
-    holiday: (j['holiday'] as num? ?? 0).toDouble(),
   );
 }
 

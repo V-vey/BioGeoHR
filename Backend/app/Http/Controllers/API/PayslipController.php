@@ -98,6 +98,10 @@ class PayslipController extends Controller
             'excluded_ids' => 'sometimes|array',
         ]);
 
+        if ($problem = $this->badCutoff($request)) {
+            return response()->json(['message' => $problem], 422);
+        }
+
         $salaryService = new SalaryService();
         $created = [];
 
@@ -133,18 +137,35 @@ class PayslipController extends Controller
                 $request->period_end,
             );
 
-            $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
-            $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            // $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
+            // $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            // $netPay = max(0, $result['net_pay'] - $loanDeduction);
+
+            // if ($loan && $loanDeduction > 0) {
+            //     $loan->decrement('remaining_balance', $loanDeduction);
+            //     if ($loan->fresh()->remaining_balance <= 0) {
+            //         $loan->status = 'Paid';
+            //         $loan->paid_off_period_start = $request->period_start;
+            //         $loan->paid_off_period_end = $request->period_end;
+            //         $loan->save();
+            //     }
+            // }
+
+            $plan = Loan::planFor($employee->id, $request->period_start, $request->period_end, $result['net_pay']);
+            $loanDeduction = $plan['total'];
             $netPay = max(0, $result['net_pay'] - $loanDeduction);
 
-            if ($loan && $loanDeduction > 0) {
-                $loan->decrement('remaining_balance', $loanDeduction);
-                if ($loan->fresh()->remaining_balance <= 0) {
+            foreach ($plan['lines'] as $line) {
+                $loan = $line['loan'];
+                $loan->remaining_balance = round($loan->remaining_balance - $line['taken'], 2);
+                $loan->unpaid_amount = $line['unpaid'];
+                if ($loan->remaining_balance <= 0) {
                     $loan->status = 'Paid';
+                    $loan->unpaid_amount = 0;
                     $loan->paid_off_period_start = $request->period_start;
                     $loan->paid_off_period_end = $request->period_end;
-                    $loan->save();
                 }
+                $loan->save();
             }
 
             $payslip = Payslip::create([
@@ -161,7 +182,7 @@ class PayslipController extends Controller
                 'income_tax' => $result['income_tax'],
                 // overtime Comment
                 'overtime_pay' => $result['overtime_pay'],
-                'holiday_pay' => $result['holiday_pay'],
+                'additional_pay' => $result['additional_pay'],
             ]);
 
             $created[] = $payslip;
@@ -231,8 +252,8 @@ class PayslipController extends Controller
             $gov     = ($p->sss + $p->philhealth + $p->pagibig) / 2;
             $lateDed = $p->late_deduction / 2;
       
-            // pay added on top of the salary: Sunday (rest day) pay, stored as overtime_pay, and holiday pay
-            $extra   = $p->overtime_pay + $p->holiday_pay;
+            // pay added on top of the salary: overtime_pay (hours past 8) and additional_pay (rest day and holiday work)
+            $extra   = $p->overtime_pay + $p->additional_pay;
             $other   = ($gross + $extra - $p->net_pay) - ($gov + $p->income_tax + $lateDed + $p->loan_deduction);
 
             $absentDays  = (int) ($byStatus['Absent'] ?? 0);
@@ -251,8 +272,8 @@ class PayslipController extends Controller
                 'hours'             => round(($seconds[$p->user_id] ?? 0) / 3600, 1),
                 'gross'             => round($gross, 2),
                 // pay added on top of the salary (the net pay includes both)
-                'additional_pay'    => round($p->overtime_pay, 2),
-                'holiday_pay'       => round($p->holiday_pay, 2),
+                'overtime_pay'      => round($p->overtime_pay, 2),
+                'additional_pay'    => round($p->additional_pay, 2),
                 'government'        => round($gov, 2),
                 // the same half-month amount, shown one contribution at a time
                 'sss'               => round($p->sss / 2, 2),
@@ -285,6 +306,10 @@ class PayslipController extends Controller
             'period_end' => 'required|date',
             
         ]);
+        if ($problem = $this->badCutoff($request)) {
+            return response()->json(['message' => $problem], 422);
+        }
+
         $salaryService = new SalaryService();
         $preview = [];
 
@@ -311,10 +336,12 @@ class PayslipController extends Controller
             
             );
 
-            $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
-            $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            // $loan = Loan::dueIn($employee->id, $request->period_start, $request->period_end);
+            // $loanDeduction = $loan ? $loan->deductionFor($result['net_pay']) : 0;
+            // $netPay = max(0, $result['net_pay'] - $loanDeduction);
+            $loanDeduction = Loan::planFor($employee->id, $request->period_start, $request->period_end, $result['net_pay'])['total'];
             $netPay = max(0, $result['net_pay'] - $loanDeduction);
-
+            
             $preview[] = [
                 'user_id' => $employee->id,
                 'name' => $employee->name,
@@ -331,7 +358,7 @@ class PayslipController extends Controller
                 'net_pay' => $netPay,
                 // overtime Comment
                 'overtime_pay' => $result['overtime_pay'],
-                'holiday_pay' => $result['holiday_pay'],
+                'additional_pay' => $result['additional_pay'],
             ];
         }
 
@@ -354,16 +381,16 @@ class PayslipController extends Controller
         $pagibig = $p->pagibig / 2;
         $lateDed = $p->late_deduction / 2;
         // whatever else lowered the pay (e.g. an absence deduction), so the lines add up
-        // pay added on top of the salary: Sunday (rest day) pay, stored as overtime_pay, and holiday pay
-        $extra   = $p->overtime_pay + $p->holiday_pay;
+        // pay added on top of the salary: overtime_pay (hours past 8) and additional_pay (rest day and holiday work)
+        $extra   = $p->overtime_pay + $p->additional_pay;
         $other   = ($gross + $extra - $p->net_pay) - ($sss + $phil + $pagibig + $p->income_tax + $lateDed + $p->loan_deduction);
 
         return response()->json([
             'period_start' => $p->period_start,
             'period_end'   => $p->period_end,
             'gross'        => round($gross, 2),
-            'additional'   => round($p->overtime_pay, 2),
-            'holiday'      => round($p->holiday_pay, 2),
+            'overtime'     => round($p->overtime_pay, 2),
+            'additional'   => round($p->additional_pay, 2),
             'deductions'   => round($gross + $extra - $p->net_pay, 2),
             'net'          => round($p->net_pay, 2),
             'sss'          => round($sss, 2),
@@ -375,4 +402,28 @@ class PayslipController extends Controller
             'other'        => abs($other) > 0.01 ? round($other, 2) : 0,
         ]);
     }
+
+    /**
+     * The school pays two cutoffs a month: the 1st to the 15th, and the 16th to the end of the month.
+     * Contributions, loans and the payday all depend on which one it is, so nothing else is accepted.
+     * Returns the message to show, or null when the period is one of the two.
+     */
+    private function badCutoff(Request $request): ?string
+    {
+        $start = Carbon::parse($request->period_start);
+        $end = Carbon::parse($request->period_end);
+
+        $expectedEnd = match ($start->day) {
+            1  => $start->copy()->day(15),
+            16 => $start->copy()->endOfMonth(),
+            default => null,
+        };
+
+        if (!$expectedEnd || $end->toDateString() !== $expectedEnd->toDateString()) {
+            return 'A pay period is the 1st to the 15th, or the 16th to the end of the month.';
+        }
+
+        return null;
+    }
+
 }

@@ -84,3 +84,9 @@
   background-color: #2cbe5d;
   cursor: pointer;
 }
+
+/* while the login is being checked */
+.login-container input[type="submit"]:disabled {
+  background-color: #8fd3a8;
+  cursor: progress;
+}

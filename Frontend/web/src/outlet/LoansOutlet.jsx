@@ -181,7 +181,11 @@ function NewLoanModal({ employees, schoolYearEnd, onClose, onSaved }) {
             required
             type="number"
             min="0"
-            max={10000}
+            max={
+              ["Company", "Cash Advance"].includes(form.loan_type)
+                ? 10000
+                : undefined
+            }
             step="0.01"
             value={form.total_amount}
             onChange={update("total_amount")}

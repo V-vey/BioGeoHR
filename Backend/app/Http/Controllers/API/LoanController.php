@@ -15,23 +15,29 @@ use Carbon\Carbon;
 class LoanController extends Controller
 {
     /**
-     * A loan is only accepted when the employee's pay can cover its monthly deduction.
-     * The deduction comes out of one cutoff (the second of the month), so it may not be more than
-     * what one cutoff pays after contributions and tax. Returns the message to show, or null if fine.
-     */
-    private function unaffordable(int|string $userId, float $monthlyDeduction): ?string
+         * A loan is only accepted when the employee's pay can cover it. Every active loan comes out of the first
+         * cutoff (the 1st-15th), so they have to fit together within what that cutoff pays after contributions and tax.
+         * $ignoreLoanId is the loan being edited, so it is not counted twice. Returns the message to show, or null if fine.
+    */
+    private function unaffordable(int|string $userId, float $monthlyDeduction, ?int $ignoreLoanId = null): ?string
     {
         $salary = Salary::where('user_id', $userId)->orderByDesc('id')->first();
         if (!$salary || !$salary->salary_basis) {
             return 'This employee has no salary record yet. Set the salary before adding a loan.';
         }
 
+        $others = (float) Loan::where('user_id', $userId)
+            ->where('status', 'Active')
+            ->when($ignoreLoanId, fn ($q) => $q->where('id', '!=', $ignoreLoanId))
+            ->sum('monthly_deduction');
+        $total = $monthlyDeduction + $others;
+
         $max = (new SalaryService())->cutoffNetPay($salary->salary_basis);
-        if (round($monthlyDeduction, 2) > $max) {
-            $limit = number_format(max(0, $max), 2);
-            return 'The monthly deduction (₱' . number_format($monthlyDeduction, 2)
-                . ") is more than this employee's pay for one cutoff after contributions and tax (₱{$limit}). "
-                . "Lower it to ₱{$limit} or less.";
+        if (round($total, 2) > $max) {
+            $limit = number_format(max(0, $max - $others), 2);
+            return 'This employee\'s loans would take ₱' . number_format($total, 2)
+                . " from one cutoff, but one cutoff pays only ₱" . number_format($max, 2)
+                . ' after contributions and tax. Lower this deduction to ₱' . $limit . ' or less.';
         }
 
         return null;
@@ -117,25 +123,38 @@ class LoanController extends Controller
     public function store(Request $request)
     {
 
-    $request->validate([
-        'user_id'           => 'required|exists:users,id',
-        'loan_type'         => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
-        'total_amount'      => 'required|numeric|gt:0|max:10000',
-        'monthly_deduction' => 'required|numeric|gt:0|lte:total_amount',   // never more than the loan
-        'start_date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->toDateString(),
-    ], [
-        'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
-        'monthly_deduction.lte' => 'The monthly deduction cannot be more than the loan amount.',
-    ]);
-
-        $hasActiveLoan = Loan::where('user_id', $request->user_id)
-            ->where('status', 'Active')
-            ->exists();
-
-        if ($hasActiveLoan) {
-            return response()->json(['message' => 'Employee already has an active loan'], 422);
+        $request->validate([
+            'user_id'           => 'required|exists:users,id',
+            'loan_type'         => 'required|in:SSS,Pag-IBIG,Company,Cash Advance',
+            'total_amount'      => 'required|numeric|gt:0',
+            'monthly_deduction' => 'required|numeric|gt:0|lte:total_amount',   // never more than the loan
+            'start_date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->toDateString(),
+        ], [
+            // 'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
+            'monthly_deduction.lte' => 'The monthly deduction cannot be more than the loan amount.',
+        ]);
+        if (in_array($request->loan_type, ['Company', 'Cash Advance'], true) && $request->total_amount > 10000) {
+            return response()->json(['message' => 'A company loan or cash advance cannot be more than ₱10,000.00.'], 422);
         }
 
+        // $hasActiveLoan = Loan::where('user_id', $request->user_id)
+        //     ->where('status', 'Active')
+        //     ->exists();
+
+        // if ($hasActiveLoan) {
+        //     return response()->json(['message' => 'Employee already has an active loan'], 422);
+        // }
+        // the school: one active loan at a time applies only to company loans; SSS and Pag-IBIG loans can coexist
+        if ($request->loan_type === 'Company') {
+            $hasActiveCompanyLoan = Loan::where('user_id', $request->user_id)
+                ->where('loan_type', 'Company')
+                ->where('status', 'Active')
+                ->exists();
+
+            if ($hasActiveCompanyLoan) {
+                return response()->json(['message' => 'Employee already has an active company loan'], 422);
+            }
+        }
         if ($problem = $this->unaffordable($request->user_id, (float) $request->monthly_deduction)) {
             return response()->json(['message' => $problem], 422);
         }
@@ -177,22 +196,25 @@ class LoanController extends Controller
 
         $data = $request->validate([
             'loan_type'         => 'sometimes|in:SSS,Pag-IBIG,Company,Cash Advance',
-            'total_amount'      => 'sometimes|numeric|gt:0|max:10000',
+            'total_amount'      => 'sometimes|numeric|gt:0',
             'monthly_deduction' => 'sometimes|numeric|gt:0',
             'start_date'        => 'sometimes|date|after_or_equal:2020-01-01|before_or_equal:' . now()->addYear()->toDateString(),
-        ], [
-            'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
         ]);
 
 
         $total = $data['total_amount'] ?? $loan->total_amount;
-        if (($data['monthly_deduction'] ?? $loan->monthly_deduction) > $total) {
+        $type = $data['loan_type'] ?? $loan->loan_type;
+        if (in_array($type, ['Company', 'Cash Advance'], true) && $total > 10000) {
+            return response()->json(['message' => 'A company loan or cash advance cannot be more than ₱10,000.00.'], 422);
+        }
+
+        if (($data['monthly_deduction'] ?? $loan->monthly_deduction) > $total ) {
             return response()->json(['message' => 'The monthly deduction cannot be more than the loan amount.'], 422);
         }
 
         // only when the deduction itself is being changed, so other edits to an older loan still work
         if (isset($data['monthly_deduction'])
-            && ($problem = $this->unaffordable($loan->user_id, (float) $data['monthly_deduction']))) {
+            && ($problem = $this->unaffordable($loan->user_id, (float) $data['monthly_deduction'], $loan->id))) {
             return response()->json(['message' => $problem], 422);
         }
 

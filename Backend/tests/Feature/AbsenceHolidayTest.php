@@ -75,27 +75,27 @@ it('pays 130% of the daily wage for work on a Sunday (the rest day is not in the
 
     $r = paycheckFor($u);
 
-    expect((float) $r['overtime_pay'])->toEqualWithDelta(1300, 0.01);   // 26,000 / 26 = 1,000 a day
+    expect((float) $r['additional_pay'])->toEqualWithDelta(1300, 0.01);   // 26,000 / 26 = 1,000 a day
+    expect((float) $r['overtime_pay'])->toEqualWithDelta(0, 0.01);        // 8 hours: no overtime
 });
 
-it('pays nothing extra for work on a Saturday', function () {
+it('pays one regular daily wage on top of the salary for work on a Saturday', function () {
     $u = payrollEmployee();
     mark($u, 'On-Time', '2026-11-21');
 
     $r = paycheckFor($u);
 
-    expect((float) $r['overtime_pay'])->toEqualWithDelta(0, 0.01);
+    expect((float) $r['additional_pay'])->toEqualWithDelta(1000, 0.01);   // 26,000 / 26, no premium
 });
 
-it('pays a Sunday holiday as a holiday only, not also as Sunday work', function () {
+it('pays a Sunday regular holiday as 260%, not also as plain Sunday work', function () {
     $u = payrollEmployee();
     Holiday::create(['date' => '2026-11-29', 'name' => 'Sunday holiday']);
     mark($u, 'On-Time', '2026-11-29');
 
     $r = paycheckFor($u);
 
-    expect((float) $r['overtime_pay'])->toEqualWithDelta(0, 0.01);
-    expect((float) $r['holiday_pay'])->toBeGreaterThan(0);
+    expect((float) $r['additional_pay'])->toEqualWithDelta(2600, 0.01);   // regular holiday on a rest day: 260%, paid once
 });
 
 // ---------- the profile's absent count ----------

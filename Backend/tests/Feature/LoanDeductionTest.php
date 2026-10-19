@@ -81,11 +81,11 @@ it('1. deducts min(monthly, balance) when net pay covers it', function () {
     expect($loan->fresh()->status)->toBe('Active');
 });
 
-it('2. deducts only the available net pay (about 1,500 of 2,000), net pay becomes 0, balance drops by the amount taken', function () {
-    $u = employee(3421.05);                       // SSS has a 5,000 minimum credit: one cutoff nets 1,500.00
+it('2. deducts only the available net pay (about 1,289 of 2,000), net pay becomes 0, balance drops by the amount taken', function () {
+    $u = employee(3421.05);                       // the first cutoff takes the whole month's contributions (421.05): 1,710.53 - 421.05 = 1,289.47
     $loan = loanFor($u, 2000, 6000);
     $net = netBeforeLoan($u, FIRST_CUTOFF);
-    expect($net)->toEqualWithDelta(1500, 0.01);
+    expect($net)->toEqualWithDelta(1289.47, 0.01);
 
     [$preview, $payslip] = previewAndRun($this, $u, FIRST_CUTOFF);
 

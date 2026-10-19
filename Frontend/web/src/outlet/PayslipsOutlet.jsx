@@ -4,6 +4,7 @@ import axios from "axios";
 import { url } from "@/resources/api";
 import { Printer, ChevronDown } from "lucide-react";
 import Loading from "@/components/Loading";
+import { paydayFor } from "@/lib/payday";
 
 const company = {
   name: "BioGeoHR",
@@ -33,9 +34,9 @@ const halfGross = (p) => Number(p.gross_salary) / 2;
 // SSS, PhilHealth, Pag-IBIG and the late deduction are monthly amounts, and each
 // semi-monthly payslip carries half of them.
 const half = (n) => Number(n) / 2;
-// pay added on top of the salary: the Sunday (rest day) pay, kept in overtime_pay, and the holiday pay
+// pay added on top of the salary: overtime_pay (hours past 8) and additional_pay (rest day and holiday work)
 const extraPay = (p) =>
-  Number(p.overtime_pay || 0) + Number(p.holiday_pay || 0);
+  Number(p.overtime_pay || 0) + Number(p.additional_pay || 0);
 
 function buildSlip(p) {
   const gross = halfGross(p);
@@ -274,6 +275,14 @@ export default function PayslipsOutlet() {
                 </div>
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-[#8a90a3] font-semibold">
+                    Payday
+                  </div>
+                  <div className="text-sm font-semibold text-[#3A3A3A] mt-1">
+                    {fmtDate(paydayFor(current.period_start))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-[#8a90a3] font-semibold">
                     Generated on
                   </div>
                   <div className="text-sm font-semibold text-[#3A3A3A] mt-1">
@@ -297,16 +306,16 @@ export default function PayslipsOutlet() {
                     </td>
                   </tr>
                   {/* overtime Comment */}
-                  <tr className="border-t border-[#eef0f5]">
-                    <td className="py-2.5 text-sm">Additional Pay</td>
+                  {/* <tr className="border-t border-[#eef0f5]">
+                    <td className="py-2.5 text-sm">Overtime Pay</td>
                     <td className="py-2.5 text-sm text-right">
                       {money(current.overtime_pay)}
                     </td>
-                  </tr>
+                  </tr> */}
                   <tr className="border-t border-[#eef0f5]">
-                    <td className="py-2.5 text-sm">Holiday Pay</td>
+                    <td className="py-2.5 text-sm">Additional Pay</td>
                     <td className="py-2.5 text-sm text-right">
-                      {money(current.holiday_pay)}
+                      {money(current.additional_pay)}
                     </td>
                   </tr>
 
