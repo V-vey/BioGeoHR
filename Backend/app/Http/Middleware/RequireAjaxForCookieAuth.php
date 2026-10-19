@@ -17,7 +17,7 @@ class RequireAjaxForCookieAuth
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $cookieOnly = !$request->bearerToken() && $request->cookie('token');
+        $cookieOnly = !TokenFromCookie::bearer($request) && $request->cookie('token');
 
         if ($cookieOnly && !$request->isMethodSafe() && $request->header('X-Requested-With') !== 'XMLHttpRequest') {
             return response()->json(['message' => 'Missing request header.'], 419);

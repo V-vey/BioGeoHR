@@ -102,8 +102,14 @@ class DemoDataSeeder extends Seeder
             '2026-12-30' => 'Rizal Day',
             '2026-12-31' => 'Last Day of the Year',
         ];
+        // the special non-working days among them; the rest are regular holidays
+        $special = ['2026-10-31', '2026-11-01', '2026-12-08', '2026-12-31'];
         foreach ($rows as $date => $name) {
-            Holiday::create(['date' => $date, 'name' => $name]);
+            Holiday::create([
+                'date' => $date,
+                'name' => $name,
+                'type' => in_array($date, $special, true) ? Holiday::SPECIAL_NON_WORKING : Holiday::REGULAR,
+            ]);
         }
     }
 

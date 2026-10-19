@@ -439,7 +439,7 @@ class UsersController extends Controller
         foreach ($startOfMonth->daysUntil($today) as $date) {
             if ($date->isWeekend()) continue;   // Saturday and Sunday are not workdays, so nobody is absent on them
 
-            $isHoliday = Holiday::where('date', $date->toDateString())->exists();
+            $isHoliday = Holiday::nonWorking()->where('date', $date->toDateString())->exists();
             if ($isHoliday) continue;
 
             $hasAttendance = Attendance::where('user_id', $userId)->whereDate('date', $date)->exists();

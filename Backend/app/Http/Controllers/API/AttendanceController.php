@@ -396,7 +396,7 @@ class AttendanceController extends Controller
         $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
         $today = now('Asia/Manila');
 
-        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::whereDate('date', $today->toDateString())->exists()) {
+        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
             return "On-Time";
         }
         return "Late";
@@ -516,7 +516,7 @@ class AttendanceController extends Controller
 
         // "Not Yet In": no attendance today and not on leave. On a weekend or a holiday nobody is
         // expected, so it is 0 and the page says it is a non-working day.
-        $nonWorkingDay = $today->isWeekend() || Holiday::whereDate('date', $today)->exists();
+        $nonWorkingDay = $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today)->exists();
         $accounted = $attendanceToday->pluck('user_id')->merge($leaveIds)->unique();
         $notYetIn = $nonWorkingDay ? 0 : max(0, $employeesCount - $accounted->count());
 
@@ -560,7 +560,7 @@ class AttendanceController extends Controller
         $onLeave = LeaveApplication::where('status', 'approved')
             ->whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)
             ->whereIn('user_id', $ids)->pluck('user_id')->flip();
-        $nonWorkingDay = $today->isWeekend() || Holiday::whereDate('date', $today)->exists();
+        $nonWorkingDay = $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today)->exists();
 
         $rows = $page->getCollection()->map(function ($u) use ($attendance, $onLeave, $nonWorkingDay) {
             $status = $attendance[$u->id]->status

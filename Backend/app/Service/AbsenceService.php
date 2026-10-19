@@ -15,7 +15,7 @@ class AbsenceService
         $staff = Users::active()->has('salary')->get();
 
         foreach ($from->copy()->daysUntil($to) as $date) {
-            if ($date->isSunday() || $date->isSaturday() || Holiday::whereDate('date', $date)->exists()) continue;
+            if ($date->isSunday() || $date->isSaturday() || Holiday::nonWorking()->whereDate('date', $date)->exists()) continue;
 
             foreach ($staff as $u) {
                 if ($date->lt($u->created_at->startOfDay())) continue;

@@ -125,3 +125,27 @@ it('the phone, which sends the token as a header, never needs X-Requested-With',
     app('auth')->forgetGuards();
     test()->call('POST', '/api/clockIn/gpsOff', [], [], [], ['HTTP_AUTHORIZATION' => "Bearer {$token}"] + JSON_ACCEPT)->assertNoContent();
 });
+
+// ---------- a leftover header must not hide the cookie ----------
+
+it('a leftover "Bearer undefined" header (an old page) does not stop the cookie from logging in', function () {
+    $token = tokenCookie(login('web'))->getValue();
+
+    foreach (['Bearer undefined', 'Bearer null', 'Bearer '] as $junk) {
+        withCookie('GET', '/api/profile', $token, ['HTTP_AUTHORIZATION' => $junk])->assertOk();
+    }
+});
+
+it('a leftover header does not switch the CSRF check off', function () {
+    $token = tokenCookie(login('web'))->getValue();
+
+    withCookie('POST', '/api/clockIn/gpsOff', $token, ['HTTP_AUTHORIZATION' => 'Bearer undefined'])->assertStatus(419);
+});
+
+it('a real header token still wins over the cookie', function () {
+    $mobile = login('mobile')->json('token');
+    $cookie = tokenCookie(login('web'))->getValue();
+
+    app('auth')->forgetGuards();
+    test()->call('GET', '/api/profile', [], ['token' => $cookie], [], ['HTTP_AUTHORIZATION' => "Bearer {$mobile}"] + JSON_ACCEPT)->assertOk();
+});
