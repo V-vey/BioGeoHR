@@ -30,6 +30,8 @@ const defaultPeriod = () => {
   return [toISO(y, m, 16), toISO(y, m, new Date(y, m + 1, 0).getDate())];
 };
 
+const PAGE_SIZE = 10; // employees shown per page
+
 // the school pays two cutoffs a month, so HR picks a month and which half; the dates follow from that
 const periodOf = (month, half) => {
   if (!month) return { periodStart: "", periodEnd: "" };
@@ -59,6 +61,7 @@ export default function RunPayrollOutlet() {
   const { periodStart, periodEnd } = periodOf(month, half);
   const [rows, setRows] = useState([]);
   const [excluded, setExcluded] = useState([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const headers = {
@@ -79,6 +82,7 @@ export default function RunPayrollOutlet() {
         if (cancelled) return;
         setRows(res.data);
         setExcluded([]);
+        setPage(1);
       } catch (error) {
         if (cancelled) return;
         console.error("Failed to load payroll preview:", error);
@@ -97,6 +101,17 @@ export default function RunPayrollOutlet() {
     setExcluded((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+
+  // select all / unselect all covers every employee on every page, not only the ones on screen
+  const allSelected = rows.length > 0 && excluded.length === 0;
+  const noneSelected = rows.length > 0 && excluded.length === rows.length;
+  const toggleAll = () =>
+    setExcluded(allSelected ? rows.map((r) => r.user_id) : []);
+
+  const lastPage = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const firstShown = rows.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastShown = Math.min(page * PAGE_SIZE, rows.length);
+  const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleRun = async () => {
     try {
@@ -241,8 +256,18 @@ export default function RunPayrollOutlet() {
         {/* Employee table */}
         <div className="flex-1 min-w-0 border border-[#eef0f5] rounded-[12px] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#eef0f5]">
-            <div className="text-sm font-bold text-[#3A3A3A]">
-              {totals.count} of {rows.length} employees selected
+            <div className="flex items-center gap-3">
+              <div className="text-sm font-bold text-[#3A3A3A]">
+                {totals.count} of {rows.length} employees selected
+              </div>
+              <button
+                type="button"
+                onClick={toggleAll}
+                disabled={rows.length === 0}
+                className="text-xs font-semibold text-[#6675EC] hover:underline disabled:opacity-40 disabled:no-underline"
+              >
+                {allSelected ? "Unselect all" : "Select all"}
+              </button>
             </div>
             <div className="text-xs text-[#8a90a3] text-right">
               <div>
@@ -258,7 +283,19 @@ export default function RunPayrollOutlet() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[11px] uppercase tracking-wide text-[#8a90a3]">
-                  <th className="py-2 pl-4 pr-2 w-8"></th>
+                  <th className="py-2 pl-4 pr-2 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = !allSelected && !noneSelected;
+                      }}
+                      onChange={toggleAll}
+                      disabled={rows.length === 0}
+                      title={allSelected ? "Unselect all" : "Select all"}
+                      className="w-4 h-4 accent-[#6675EC]"
+                    />
+                  </th>
                   <th className="py-2 px-2 font-semibold">Employee</th>
                   <th className="py-2 px-2 font-semibold">Gross</th>
                   <th className="py-2 px-2 font-semibold">Gov't</th>
@@ -292,7 +329,7 @@ export default function RunPayrollOutlet() {
                     </td>
                   </tr>
                 ) : (
-                  rows.map((r) => {
+                  visibleRows.map((r) => {
                     const hasLate = Number(r.late_deduction) > 0;
                     const absentDays = Number(r.absent_days) || 0;
                     return (
@@ -361,6 +398,35 @@ export default function RunPayrollOutlet() {
               </tbody>
             </table>
           </div>
+
+          {rows.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#eef0f5] text-sm text-[#8a90a3] select-none">
+              <span>
+                Showing {firstShown}–{lastShown} of {rows.length}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 rounded-[8px] border border-[#b2b2b2] text-[#3A3A3A] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {page} of {lastPage}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                  disabled={page === lastPage}
+                  className="px-3 py-1 rounded-[8px] border border-[#b2b2b2] text-[#3A3A3A] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Summary panel */}
