@@ -4,7 +4,8 @@ A biometric and geo-fenced attendance and payroll system for **Capstone**.
 HR staff manage employees, attendance, leave, loans, and payroll from a web admin. Employees clock in
 and out from an Android app that checks their location and their fingerprint or face.
 
-> Capstone project. The data in the demo seeder is made up.
+> Capstone project, developed in partnership with **Academia de Santiago of Tarlac, Inc.** This
+> repository contains no employee names or records. The data in the demo seeder is made up.
 
 ## Features
 
