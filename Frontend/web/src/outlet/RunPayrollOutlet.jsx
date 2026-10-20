@@ -9,6 +9,7 @@ import {
   ArrowRight,
   TriangleAlert,
   Info,
+  Search,
 } from "lucide-react";
 import { paydayFor } from "@/lib/payday";
 
@@ -62,6 +63,7 @@ export default function RunPayrollOutlet() {
   const [rows, setRows] = useState([]);
   const [excluded, setExcluded] = useState([]);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   const headers = {
@@ -108,10 +110,20 @@ export default function RunPayrollOutlet() {
   const toggleAll = () =>
     setExcluded(allSelected ? rows.map((r) => r.user_id) : []);
 
-  const lastPage = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const firstShown = rows.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const lastShown = Math.min(page * PAGE_SIZE, rows.length);
-  const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // the search only narrows the list on screen: who is ticked, the totals and "Select all" still cover everyone
+  const term = search.trim().toLowerCase();
+  const filtered = term
+    ? rows.filter((r) =>
+        String(r.name ?? "")
+          .toLowerCase()
+          .includes(term),
+      )
+    : rows;
+
+  const lastPage = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const firstShown = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastShown = Math.min(page * PAGE_SIZE, filtered.length);
+  const visibleRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleRun = async () => {
     try {
@@ -247,8 +259,10 @@ export default function RunPayrollOutlet() {
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
           Late deduction: 1 day's pay after 3 lates this month. Absence
           deduction: 1 day's pay for each day marked Absent (approved leave and
-          holidays are not counted). SSS, PhilHealth, Pag-IBIG and BIR income
-          tax are withheld. Loan installments are deducted on the first cutoff.
+          holidays are not counted). SSS, PhilHealth and Pag-IBIG are taken in
+          full in the 1st–15th cutoff, and BIR income tax is withheld each
+          cutoff. Loan installments are taken in the cutoff chosen for each
+          loan.
         </span>
       </div>
 
@@ -269,6 +283,7 @@ export default function RunPayrollOutlet() {
                 {allSelected ? "Unselect all" : "Select all"}
               </button>
             </div>
+
             <div className="text-xs text-[#8a90a3] text-right">
               <div>
                 {periodStart} to {periodEnd}
@@ -278,7 +293,27 @@ export default function RunPayrollOutlet() {
               </div>
             </div>
           </div>
-
+          <div className="px-4 py-3 border-b border-[#eef0f5]">
+            <div className="flex flex-row w-full justify-end">
+              {/* <Search className="w-4 h-4 text-[#8a90a3] absolute left-3 top-1/2 -translate-y-1/2" /> */}
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search employee name"
+                className="w-full border border-[#b2b2b2] rounded-[8px] px-3 py-1.5 text-sm"
+              />
+            </div>
+            {term && (
+              <p className="mt-2 mb-0 text-xs text-[#8a90a3] text-left">
+                The search only filters this list. Employees you can't see here
+                keep their tick and are still included in the run.
+              </p>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -288,7 +323,8 @@ export default function RunPayrollOutlet() {
                       type="checkbox"
                       checked={allSelected}
                       ref={(el) => {
-                        if (el) el.indeterminate = !allSelected && !noneSelected;
+                        if (el)
+                          el.indeterminate = !allSelected && !noneSelected;
                       }}
                       onChange={toggleAll}
                       disabled={rows.length === 0}
@@ -304,7 +340,7 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Absent</th>
                   <th className="py-2 px-2 font-semibold">Loan</th>
                   {/* overtime Comment */}
-                  {/* <th className="py-2 px-2 font-semibold">Overtime Pay</th> */}
+                  <th className="py-2 px-2 font-semibold">Overtime Pay</th>
                   <th className="py-2 px-2 font-semibold">Additional Pay</th>
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
@@ -326,6 +362,15 @@ export default function RunPayrollOutlet() {
                       className="py-6 text-center text-sm text-[#8a90a3]"
                     >
                       No employees to pay for this period.
+                    </td>
+                  </tr>
+                ) : visibleRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className="py-6 text-center text-sm text-[#8a90a3]"
+                    >
+                      No employee matches "{search.trim()}".
                     </td>
                   </tr>
                 ) : (
@@ -381,9 +426,9 @@ export default function RunPayrollOutlet() {
                           {money(r.loan_deduction)}
                         </td>
                         {/* overtime Comment */}
-                        {/* <td className="py-3 px-2 text-sm">
+                        <td className="py-3 px-2 text-sm">
                           {money(r.overtime_pay)}
-                        </td> */}
+                        </td>
                         <td className="py-3 px-2 text-sm">
                           {money(r.additional_pay)}
                         </td>
@@ -402,7 +447,8 @@ export default function RunPayrollOutlet() {
           {rows.length > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-[#eef0f5] text-sm text-[#8a90a3] select-none">
               <span>
-                Showing {firstShown}–{lastShown} of {rows.length}
+                Showing {firstShown}–{lastShown} of {filtered.length}
+                {term && ` matching (${rows.length} in total)`}
               </span>
               <div className="flex items-center gap-3">
                 <button
@@ -473,10 +519,10 @@ export default function RunPayrollOutlet() {
             </div>
 
             {/* overtime Comment */}
-            {/* <div className="flex justify-between">
+            <div className="flex justify-between">
               <span className="text-[#8a90a3]">Overtime Pay</span>
               <span className="font-semibold">{money(totals.overtime)}</span>
-            </div> */}
+            </div>
 
             <div className="flex justify-between">
               <span className="text-[#8a90a3]">Additional Pay</span>

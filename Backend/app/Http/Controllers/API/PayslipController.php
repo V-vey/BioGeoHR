@@ -177,6 +177,8 @@ class PayslipController extends Controller
                 'philhealth' => $result['philhealth'],
                 'pagibig' => $result['pagibig'],
                 'late_deduction' => $result['late_deduction'],
+                'absence_deduction' => round($result['absence_deduction'], 2),
+                'absent_days' => (int) $result['absent_days'],
                 'loan_deduction' => $loanDeduction,
                 'net_pay' => $netPay,
                 'income_tax' => $result['income_tax'],

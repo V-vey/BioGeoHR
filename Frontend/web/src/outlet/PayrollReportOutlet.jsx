@@ -125,7 +125,7 @@ export default function PayrollReportOutlet() {
     "Leave",
     "Hours",
     "Gross",
-    // "Overtime pay",
+    "Overtime pay",
     "Additional pay",
     "SSS",
     "PhilHealth",
@@ -148,7 +148,7 @@ export default function PayrollReportOutlet() {
       r.leave_days,
       r.hours,
       fmt(r.gross),
-      // fmt(r.overtime_pay),
+      fmt(r.overtime_pay),
       fmt(r.additional_pay),
       fmt(r.sss),
       fmt(r.philhealth),
@@ -169,7 +169,7 @@ export default function PayrollReportOutlet() {
     total("leave_days"),
     total("hours").toFixed(1),
     fmt(total("gross")),
-    // fmt(total("overtime_pay")),
+    fmt(total("overtime_pay")),
     fmt(total("additional_pay")),
     fmt(total("sss")),
     fmt(total("philhealth")),
@@ -312,9 +312,9 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Leave</th>
                 <th className="px-3 py-2 text-right font-medium">Hours</th>
                 <th className="px-3 py-2 text-right font-medium">Gross</th>
-                {/* <th className="px-3 py-2 text-right font-medium">
+                <th className="px-3 py-2 text-right font-medium">
                   Overtime Pay
-                </th> */}
+                </th>
                 <th className="px-3 py-2 text-right font-medium">
                   Additional Pay
                 </th>
@@ -338,9 +338,9 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{r.leave_days}</td>
                   <td className="px-3 py-2 text-right">{r.hours}</td>
                   <td className="px-3 py-2 text-right">{money(r.gross)}</td>
-                  {/* <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 text-right">
                     {money(r.overtime_pay)}
-                  </td> */}
+                  </td>
                   <td className="px-3 py-2 text-right">
                     {money(r.additional_pay)}
                   </td>

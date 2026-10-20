@@ -44,6 +44,7 @@ const emptyForm = {
   loan_type: "SSS",
   total_amount: "",
   monthly_deduction: "",
+  cutoff: "second", // the school allows either cutoff; a new loan starts as 16th-end (the school's usual "every 5th"). "first" = 1st-15th, "both" = half in each
   start_date: "",
 };
 
@@ -55,6 +56,7 @@ function LoanEndNote({ form, schoolYearEnd }) {
     startDate: form.start_date,
     type: form.loan_type,
     schoolYearEnd,
+    cutoff: form.cutoff,
   });
   if (!p) return null;
 
@@ -88,7 +90,10 @@ function LoanEndNote({ form, schoolYearEnd }) {
           {p.needed} deduction{p.needed === 1 ? "" : "s"}
         </span>
         . Expected last deduction:{" "}
-        <span className="font-semibold">{cutoffLabel(p.last)}</span>.
+        <span className="font-semibold">
+          {cutoffLabel(p.last, p.lastIn)}
+        </span>
+        .
       </div>
       {verdict && <div>{verdict}</div>}
     </div>
@@ -172,6 +177,19 @@ function NewLoanModal({ employees, schoolYearEnd, onClose, onSaved }) {
                 {t}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label className="text-left text-sm font-medium">
+          Deducted in
+          <select
+            value={form.cutoff}
+            onChange={update("cutoff")}
+            className={fieldClass}
+          >
+            <option value="first">1st – 15th of the month</option>
+            <option value="second">16th – end of the month</option>
+            <option value="both">Both cutoffs (half in each)</option>
           </select>
         </label>
 
@@ -378,12 +396,14 @@ export default function LoansOutlet() {
       <div className="flex items-start gap-2.5 px-4 py-3 bg-[#6675EC]/10 border border-[#b2b2b2] rounded-[10px]">
         <Info className="w-4 h-4 text-[#6675EC] shrink-0 mt-0.5" />
         <span className="text-xs text-[#8a90a3] text-left leading-relaxed">
-          Loans are interest-free with a fixed monthly deduction, taken once a
-          month on the first cutoff (the 1st to the 15th). An employee may hold
-          only one active loan or cash advance at a time — a new one can't be
-          issued until the existing balance is fully paid off. If net pay can't
-          cover the deduction, a partial amount is taken. When a balance reaches
-          ₱0, the system marks the loan Paid and stops the deduction.
+          Loans are interest-free with a fixed monthly deduction. HR chooses when
+          it is taken: in the 1st–15th cutoff, in the 16th–end cutoff (the
+          default for a new loan), or half in each. An employee may hold only one active company
+          loan at a time; SSS and Pag-IBIG loans can run alongside it. Company
+          loans and cash advances are capped at ₱10,000. If net pay can't cover
+          the deduction, the available amount is taken, and for SSS and Pag-IBIG
+          loans the unpaid part is added to the next cutoff. When a balance
+          reaches ₱0, the system marks the loan Paid and stops the deduction.
         </span>
       </div>
 
@@ -486,6 +506,13 @@ export default function LoansOutlet() {
                     </td>
                     <td className="py-3 px-3 text-sm">
                       {peso(loan.monthly_deduction)}
+                      <div className="text-[11px] text-[#8a90a3]">
+                        {loan.cutoff === "second"
+                          ? "16th–end"
+                          : loan.cutoff === "both"
+                            ? "½ + ½ (both cutoffs)"
+                            : "1st–15th"}
+                      </div>
                     </td>
                     <td className="py-3 px-3 text-sm font-semibold">
                       {peso(loan.remaining_balance)}

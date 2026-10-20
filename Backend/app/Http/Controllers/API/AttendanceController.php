@@ -396,7 +396,7 @@ class AttendanceController extends Controller
         $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
         $today = now('Asia/Manila');
 
-        if ($timeIn <= $graceDeadline || $today->isSunday() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
+        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
             return "On-Time";
         }
         return "Late";

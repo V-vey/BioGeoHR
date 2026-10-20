@@ -101,8 +101,8 @@ export default function EdiPofiletModal({
     employment_status: empData.employment_status ?? "",
     salary_basis: empData.salary?.salary_basis,
     call_time: empData.call_time,
-    working_hours_per_day: empData.salary?.working_hours_per_day,
-    working_days_per_month: empData.salary?.working_days_per_month,
+    // working_hours_per_day: empData.salary?.working_hours_per_day,
+    // working_days_per_month: empData.salary?.working_days_per_month,
   }));
   const srvUrl = url.replace("/api", "/storage/");
   const fallbackImage = Fallback;
@@ -141,8 +141,8 @@ export default function EdiPofiletModal({
       philhealth_number: empData.philhealth_number ?? "",
       pagibig_number: empData.pagibig_number ?? "",
       salary_basis: empData.salary?.salary_basis,
-      working_hours_per_day: empData.salary?.working_hours_per_day,
-      working_days_per_month: empData.salary?.working_days_per_month,
+      // working_hours_per_day: empData.salary?.working_hours_per_day,
+      // working_days_per_month: empData.salary?.working_days_per_month,
       image: empData.image_path,
     });
     setPhotoFile(null);
@@ -158,8 +158,8 @@ export default function EdiPofiletModal({
 
     const {
       salary_basis,
-      working_hours_per_day,
-      working_days_per_month,
+      // working_hours_per_day,
+      // working_days_per_month,
       image,
       family,
       ...profile
@@ -183,7 +183,11 @@ export default function EdiPofiletModal({
       if (empData.salary) {
         await axios.put(
           url + `/salary/${empData.salary.id}`,
-          { salary_basis, working_hours_per_day, working_days_per_month },
+          {
+            salary_basis,
+            // working_hours_per_day,
+            // working_days_per_month
+          },
           { headers },
         );
       }
@@ -385,13 +389,13 @@ export default function EdiPofiletModal({
                     onChange={update("call_time")}
                     type="time"
                   />
-                  <Field
+                  {/* <Field
                     label={"Working Hours Per Day"}
                     value={form.working_hours_per_day}
                     onChange={update("working_hours_per_day")}
                     type="number"
-                  />
-                  <div className="flex flex-col flex-1 items-start">
+                  /> */}
+                  {/* <div className="flex flex-col flex-1 items-start">
                     <p className="font-medium pl-2">Working Days Per Month</p>
                     <WorkingDaysField
                       value={form.working_days_per_month}
@@ -400,7 +404,7 @@ export default function EdiPofiletModal({
                       }
                       className="w-full border border-[#b2b2b2] rounded-[10px] p-2"
                     />
-                  </div>
+                  </div> */}
                 </SectionInside>
               </Section>
               <div className="flex flex-row gap-2 justify-end">

@@ -12,7 +12,7 @@ const CATEGORIES = {
   admin: "HR actions",
 };
 
-const emptyFilters = { category: "", status: "", from: "", to: "" };
+const emptyFilters = { search: "", category: "", status: "", from: "", to: "" };
 
 const fieldClass = "w-full border border-[#b2b2b2] rounded-[10px] p-2 bg-white";
 
@@ -89,6 +89,16 @@ export default function AuditLogOutlet() {
       className="flex flex-row flex-wrap gap-4 pt-3 items-end"
     >
       <div className="flex flex-row flex-wrap gap-4 pt-3 items-end w-full">
+        <label className="flex flex-col flex-[2] min-w-[200px] items-start text-sm font-medium">
+          User
+          <input
+            type="search"
+            value={filters.search}
+            onChange={update("search")}
+            placeholder="Name or email"
+            className={fieldClass}
+          />
+        </label>
         <label className="flex flex-col flex-1 min-w-[130px] items-start text-sm font-medium">
           Category
           <select

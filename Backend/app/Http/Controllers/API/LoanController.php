@@ -15,29 +15,39 @@ use Carbon\Carbon;
 class LoanController extends Controller
 {
     /**
-         * A loan is only accepted when the employee's pay can cover it. Every active loan comes out of the first
-         * cutoff (the 1st-15th), so they have to fit together within what that cutoff pays after contributions and tax.
-         * $ignoreLoanId is the loan being edited, so it is not counted twice. Returns the message to show, or null if fine.
-    */
-    private function unaffordable(int|string $userId, float $monthlyDeduction, ?int $ignoreLoanId = null): ?string
+     * A loan is only accepted when the employee's pay can cover it. The loans of one cutoff come out of that
+     * cutoff together, so they have to fit within what it pays after contributions and tax (the 1st-15th also
+     * takes the contributions, the 16th-end does not). A loan set to 'both' takes half from each cutoff, so each
+     * cutoff is checked on its own. $ignoreLoanId is the loan being edited, so it is not counted twice.
+     * Returns the message to show, or null if fine.
+     */
+    private function unaffordable(int|string $userId, float $monthlyDeduction, ?int $ignoreLoanId = null, string $cutoff = 'first'): ?string
     {
         $salary = Salary::where('user_id', $userId)->orderByDesc('id')->first();
         if (!$salary || !$salary->salary_basis) {
             return 'This employee has no salary record yet. Set the salary before adding a loan.';
         }
 
-        $others = (float) Loan::where('user_id', $userId)
+        $active = Loan::where('user_id', $userId)
             ->where('status', 'Active')
             ->when($ignoreLoanId, fn ($q) => $q->where('id', '!=', $ignoreLoanId))
-            ->sum('monthly_deduction');
-        $total = $monthlyDeduction + $others;
+            ->get(['monthly_deduction', 'cutoff']);
 
-        $max = (new SalaryService())->cutoffNetPay($salary->salary_basis);
-        if (round($total, 2) > $max) {
-            $limit = number_format(max(0, $max - $others), 2);
-            return 'This employee\'s loans would take ₱' . number_format($total, 2)
-                . " from one cutoff, but one cutoff pays only ₱" . number_format($max, 2)
-                . ' after contributions and tax. Lower this deduction to ₱' . $limit . ' or less.';
+        foreach (['first', 'second'] as $in) {
+            $mine = Loan::shareOf($monthlyDeduction, $cutoff, $in);
+            if ($mine <= 0) continue;                      // this loan takes nothing from that cutoff
+
+            $others = (float) $active->sum(fn ($l) => Loan::shareOf((float) $l->monthly_deduction, $l->cutoff ?? 'first', $in));
+            $total = $mine + $others;
+            $max = (new SalaryService())->cutoffNetPay($salary->salary_basis, $in);
+
+            if (round($total, 2) > $max) {
+                $room = max(0, $max - $others);            // what is left for this loan in that cutoff
+                $limit = number_format($cutoff === 'both' ? $room * 2 : $room, 2);   // a 'both' loan takes half a month from each
+                return 'This employee\'s loans would take ₱' . number_format($total, 2)
+                    . " from one cutoff, but one cutoff pays only ₱" . number_format($max, 2)
+                    . ' after contributions and tax. Lower this deduction to ₱' . $limit . ' or less.';
+            }
         }
 
         return null;
@@ -57,7 +67,7 @@ class LoanController extends Controller
             . ". Raise the monthly deduction to ₱{$min} or more.";
     }
 
-    private function pastSchoolYear(string $type, float $total, float $monthly, string $startDate): ?string
+    private function pastSchoolYear(string $type, float $total, float $monthly, string $startDate, string $cutoff = 'first'): ?string
     {
         if (!in_array($type, ['Company', 'Cash Advance'], true)) return null;
 
@@ -66,8 +76,9 @@ class LoanController extends Controller
         $end = Carbon::parse($end)->endOfDay();
 
         $start = Carbon::parse($startDate);
-        // the first deduction is in the 1st-15th cutoff that ends on or after the start date
-        $firstMonth = ($start->day <= 15 ? $start->copy() : $start->copy()->addMonthNoOverflow())->startOfMonth();
+        // the first deduction is in the loan's cutoff that ends on or after the start date: the 16th-end cutoff of the
+        // start month always does, the 1st-15th one only when the loan starts on or before the 15th
+        $firstMonth = ($cutoff === 'second' || $start->day <= 15 ? $start->copy() : $start->copy()->addMonthNoOverflow())->startOfMonth();
 
         $available = $firstMonth->gt($end) ? 0
             : (int) $firstMonth->diffInMonths($end->copy()->startOfMonth()) + 1;   // deductions that fit before it ends
@@ -129,6 +140,7 @@ class LoanController extends Controller
             'total_amount'      => 'required|numeric|gt:0',
             'monthly_deduction' => 'required|numeric|gt:0|lte:total_amount',   // never more than the loan
             'start_date' => 'required|date|after_or_equal:today|before_or_equal:' . now()->addYear()->toDateString(),
+            'cutoff'            => 'sometimes|in:first,second,both',   // which cutoff takes it: either one, or half in each
         ], [
             // 'total_amount.max' => 'The loan amount cannot be more than ₱10,000.00.',
             'monthly_deduction.lte' => 'The monthly deduction cannot be more than the loan amount.',
@@ -155,10 +167,11 @@ class LoanController extends Controller
                 return response()->json(['message' => 'Employee already has an active company loan'], 422);
             }
         }
-        if ($problem = $this->unaffordable($request->user_id, (float) $request->monthly_deduction)) {
+        $cutoff = $request->input('cutoff', 'first');
+        if ($problem = $this->unaffordable($request->user_id, (float) $request->monthly_deduction, null, $cutoff)) {
             return response()->json(['message' => $problem], 422);
         }
-        if ($problem = $this->pastSchoolYear($request->loan_type, (float) $request->total_amount, (float) $request->monthly_deduction, $request->start_date)) {
+        if ($problem = $this->pastSchoolYear($request->loan_type, (float) $request->total_amount, (float) $request->monthly_deduction, $request->start_date, $cutoff)) {
             return response()->json(['message' => $problem], 422);
         }
         if ($problem = $this->tooLong((float) $request->total_amount, (float) $request->monthly_deduction)) {
@@ -170,6 +183,7 @@ class LoanController extends Controller
             'loan_type' => $request->loan_type,
             'total_amount' => $request->total_amount,
             'monthly_deduction' => $request->monthly_deduction,
+            'cutoff' => $cutoff,
             'remaining_balance' => $request->total_amount,
             'start_date' => $request->start_date,
             'status' => 'Active',
@@ -199,7 +213,9 @@ class LoanController extends Controller
             'total_amount'      => 'sometimes|numeric|gt:0',
             'monthly_deduction' => 'sometimes|numeric|gt:0',
             'start_date'        => 'sometimes|date|after_or_equal:2020-01-01|before_or_equal:' . now()->addYear()->toDateString(),
+            'cutoff'            => 'sometimes|in:first,second,both',
         ]);
+        $cutoff = $data['cutoff'] ?? $loan->cutoff ?? 'first';
 
 
         $total = $data['total_amount'] ?? $loan->total_amount;
@@ -212,9 +228,9 @@ class LoanController extends Controller
             return response()->json(['message' => 'The monthly deduction cannot be more than the loan amount.'], 422);
         }
 
-        // only when the deduction itself is being changed, so other edits to an older loan still work
-        if (isset($data['monthly_deduction'])
-            && ($problem = $this->unaffordable($loan->user_id, (float) $data['monthly_deduction'], $loan->id))) {
+        // only when the deduction or its cutoff is being changed, so other edits to an older loan still work
+        if ((isset($data['monthly_deduction']) || isset($data['cutoff']))
+            && ($problem = $this->unaffordable($loan->user_id, (float) ($data['monthly_deduction'] ?? $loan->monthly_deduction), $loan->id, $cutoff))) {
             return response()->json(['message' => $problem], 422);
         }
 
@@ -224,7 +240,7 @@ class LoanController extends Controller
 
         // an edit that changes the repayment plan must still finish within the school year. A loan already
         // running is judged on what is left to pay, counted from today (or its start date, if later).
-        if (isset($data['total_amount']) || isset($data['monthly_deduction']) || isset($data['start_date']) || isset($data['loan_type'])) {
+        if (isset($data['total_amount']) || isset($data['monthly_deduction']) || isset($data['start_date']) || isset($data['loan_type']) || isset($data['cutoff'])) {
             $startsOn = Carbon::parse($data['start_date'] ?? $loan->start_date);
             if ($startsOn->lt(today())) $startsOn = today();
             if ($problem = $this->pastSchoolYear(
@@ -232,6 +248,7 @@ class LoanController extends Controller
                 (float) ($data['remaining_balance'] ?? $loan->remaining_balance),
                 (float) ($data['monthly_deduction'] ?? $loan->monthly_deduction),
                 $startsOn->toDateString(),
+                $cutoff,
             )) {
                 return response()->json(['message' => $problem], 422);
             }

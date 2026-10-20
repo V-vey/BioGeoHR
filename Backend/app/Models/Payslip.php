@@ -30,9 +30,8 @@ class Payslip extends Model
         // overtime Comment
         'overtime_pay',
         'additional_pay',
-        'absence_deduction'
-
-
+        'absence_deduction',
+        'absent_days',
     ];
 
     public function user()

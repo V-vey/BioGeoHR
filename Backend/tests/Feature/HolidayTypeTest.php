@@ -72,13 +72,13 @@ it('pays the DOLE rate for each kind of worked day', function (string $date, ?st
 })->with([
     'ordinary weekday'                        => ['2026-11-17', null,                  0],
     'Saturday (optional): one daily wage'     => ['2026-11-21', null,                  1000],
-    'rest day (Sunday): 130%'                 => ['2026-11-22', null,                  1300],
+    'Sunday (a day off): one daily wage'      => ['2026-11-22', null,                  1000],
     'regular holiday: 200% = +100%'           => ['2026-11-17', 'regular',             1000],
     'special non-working day: 130% = +30%'    => ['2026-11-17', 'special_non_working', 300],
     'special working day: ordinary'           => ['2026-11-17', 'special_working',     0],
     'regular holiday on a rest day: 260%'     => ['2026-11-29', 'regular',             2600],
     'special day on a rest day: 150%'         => ['2026-11-29', 'special_non_working', 1500],
-    'special working day on a rest day: 130%' => ['2026-11-29', 'special_working',     1300],
+    'special working day on a day off: 1 wage' => ['2026-11-29', 'special_working',     1000],
 ]);
 
 it('a holiday that is not worked adds nothing and deducts nothing', function (string $type) {

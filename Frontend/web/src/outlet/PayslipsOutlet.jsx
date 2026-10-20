@@ -38,22 +38,32 @@ const half = (n) => Number(n) / 2;
 const extraPay = (p) =>
   Number(p.overtime_pay || 0) + Number(p.additional_pay || 0);
 
+// A payslip made before the absence columns existed has no absence amount (null). It also comes from the time when
+// SSS, PhilHealth and Pag-IBIG were stored as monthly amounts, with each payslip carrying half of them. A newer payslip
+// stores what was really taken from that cutoff: all of it in the 1st-15th, nothing in the 16th-end.
+const isOlderPayslip = (p) => p.absence_deduction == null;
+
 function buildSlip(p) {
   const gross = halfGross(p);
   const extra = extraPay(p);
+  const older = isOlderPayslip(p);
+  const contribution = (n) => (older ? half(n) : Number(n));
+  // every standard line is listed, even when nothing was taken, so the employee can see each one
   const lines = [
-    { label: "SSS Contribution", amount: half(p.sss) },
-    { label: "PhilHealth Contribution", amount: half(p.philhealth) },
-    { label: "Pag-IBIG Contribution", amount: half(p.pagibig) },
+    { label: "SSS Contribution", amount: contribution(p.sss) },
+    { label: "PhilHealth Contribution", amount: contribution(p.philhealth) },
+    { label: "Pag-IBIG Contribution", amount: contribution(p.pagibig) },
     { label: "Withholding Tax (BIR)", amount: Number(p.income_tax) },
     { label: "Late Deduction", amount: half(p.late_deduction) },
+    { label: "Absence Deduction", amount: older ? 0 : Number(p.absence_deduction) },
     { label: "Loan Deduction", amount: Number(p.loan_deduction) },
-  ].filter((l) => l.amount > 0);
+  ];
 
   const net = Number(p.net_pay);
   // the earnings are the salary plus any extra pay, so the deductions are what is taken from all of it
   const totalDeductions = Math.max(0, gross + extra - net);
-  const listed = lines.reduce((s, l) => s + l.amount, 0);
+  // whatever else lowered the pay, so the lines always add up to the total (an older payslip's absences end up here)
+  const listed = lines.reduce((sum, l) => sum + l.amount, 0);
   const other = totalDeductions - listed;
   if (Math.abs(other) > 0.01) {
     lines.push({ label: "Other adjustments", amount: other });
@@ -289,6 +299,16 @@ export default function PayslipsOutlet() {
                     {fmtDate(current.created_at)}
                   </div>
                 </div>
+                {current.absent_days != null && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wide text-[#8a90a3] font-semibold">
+                      Days absent
+                    </div>
+                    <div className="text-sm font-semibold text-[#3A3A3A] mt-1">
+                      {current.absent_days}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Earnings */}
@@ -306,12 +326,12 @@ export default function PayslipsOutlet() {
                     </td>
                   </tr>
                   {/* overtime Comment */}
-                  {/* <tr className="border-t border-[#eef0f5]">
+                  <tr className="border-t border-[#eef0f5]">
                     <td className="py-2.5 text-sm">Overtime Pay</td>
                     <td className="py-2.5 text-sm text-right">
                       {money(current.overtime_pay)}
                     </td>
-                  </tr> */}
+                  </tr>
                   <tr className="border-t border-[#eef0f5]">
                     <td className="py-2.5 text-sm">Additional Pay</td>
                     <td className="py-2.5 text-sm text-right">
@@ -337,7 +357,9 @@ export default function PayslipsOutlet() {
                   {slip.lines.map((d) => (
                     <tr key={d.label} className="border-t border-[#eef0f5]">
                       <td className="py-2 text-sm text-[#8a90a3]">{d.label}</td>
-                      <td className="py-2 text-sm text-right">
+                      <td
+                        className={`py-2 text-sm text-right ${d.amount === 0 ? "text-[#b2b2b2]" : ""}`}
+                      >
                         {money(d.amount)}
                       </td>
                     </tr>

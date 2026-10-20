@@ -69,13 +69,13 @@ it('still deducts one day for an Absent row on a normal day', function () {
 
 // ---------- the rest day is Sunday ----------
 
-it('pays 130% of the daily wage for work on a Sunday (the rest day is not in the monthly salary)', function () {
+it('pays one plain daily wage for work on a Sunday (a day off, no 130% rest-day rate)', function () {
     $u = payrollEmployee();
     mark($u, 'On-Time', '2026-11-22');
 
     $r = paycheckFor($u);
 
-    expect((float) $r['additional_pay'])->toEqualWithDelta(1300, 0.01);   // 26,000 / 26 = 1,000 a day
+    expect((float) $r['additional_pay'])->toEqualWithDelta(1000, 0.01);   // 26,000 / 26 = 1,000 a day
     expect((float) $r['overtime_pay'])->toEqualWithDelta(0, 0.01);        // 8 hours: no overtime
 });
 

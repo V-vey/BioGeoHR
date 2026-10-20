@@ -5,6 +5,7 @@ namespace App\Service;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Holiday;
+use App\Models\Salary;
 use Carbon\Carbon;
 class SalaryService
 {
@@ -58,9 +59,9 @@ class SalaryService
         'regular_holiday_rest_day'=> 3.38,
     ];
     const REGULAR_RATES =[
-        'saturday'                => 1,
+        'sunday'                  => 1,
         'regular'                 => 1,
-        'rest_day'                => 1.3,
+        'rest_day'                => 1,
         'special_day'             => 1.3,
         'special_day_rest_day'    => 1.5,
         'regular_holiday'         => 2,
@@ -151,7 +152,14 @@ class SalaryService
         return $salary * .025;
     } 
     
-    function cutoffNetPay($salary){
+    function cutoffNetPay($salary, string $cutoff = 'first'){
+        if ($cutoff === 'second') {
+            // the 16th-end cutoff takes no contributions (SSS, PhilHealth and Pag-IBIG come out of the 1st-15th)
+            $half = $salary / 2;
+
+            return round($half - $this->incomeTax($half), 2);
+        }
+
         $contributions = $this->sssContributionTable($salary)['employee_total']
             + $this->philHealth($salary)
             + $this->pagIbig($salary);
@@ -213,7 +221,7 @@ class SalaryService
 
             $additionalPay = $this->additionalPay($userId, $periodStart, $periodEnd, $dailyWage);
     
-            // $overtimePay = $this->overtime($userId, $periodStart, $periodEnd, $hrRate);
+            $overtimePay = $this->overtime($userId, $periodStart, $periodEnd, $hrRate);
             $absenceDeduction = $absentDays * $dailyWage;
            
         }
@@ -244,6 +252,7 @@ class SalaryService
             'additional_pay' => $additionalPay,
         ];
     }
+
     function incomeTax($taxableIncome)
     {
         if ($taxableIncome <= 10417) {
@@ -261,23 +270,25 @@ class SalaryService
         }
     }
     function additionalPay($userId, $periodStart, $periodEnd, $dailyWage){
-        $saturdayCount = Attendance::where('user_id', $userId)
-            ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) = 7') //saturday
-            ->whereBetween('date', [$periodStart, $periodEnd])
-            ->whereNotIn('date', Holiday::nonWorking()->select('date'))
-            ->count();
+        $weekend = 'DAYOFWEEK(date) IN (1, 7)';
+
+        // $sundayCount = Attendance::where('user_id', $userId)
+        //     ->whereIn('status', ['On-Time', 'Late'])
+        //     ->whereRaw($weekend) //saturday
+        //     ->whereBetween('date', [$periodStart, $periodEnd])
+        //     ->whereNotIn('date', Holiday::nonWorking()->select('date'))
+        //     ->count();
 
         $restdayCount = Attendance::where('user_id', $userId)
             ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) = 1') //restday
+            ->whereRaw($weekend) //restday
             ->whereBetween('date', [$periodStart, $periodEnd])
             ->whereNotIn('date', Holiday::select('date')->where('type', '!=', 'special_working'))   // a Sunday holiday is paid as a holiday, not twice
             ->count(); //restday
 
         $specialDayCount = Attendance::where('user_id', $userId)
             ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) <> 1') //exclude sunday
+            ->whereRaw("NOT ($weekend)") //exclude sunday
             ->whereBetween('date', [$periodStart, $periodEnd])
             ->whereIn('date', Holiday::select('date')->where('type', 'special_non_working'))  
             ->count();
@@ -285,40 +296,42 @@ class SalaryService
         //BOTH REST and SPECIAL
         $specialDayRestDayCount = Attendance::where('user_id', $userId)
             ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) = 1')
+            ->whereRaw($weekend)
             ->whereBetween('date', [$periodStart, $periodEnd])
             ->whereIn('date', Holiday::select('date')->where('type', 'special_non_working'))  
             ->count();
 
         $regularHolidayCount =Attendance::where('user_id', $userId)
             ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) <> 1')
+            ->whereRaw("NOT ($weekend)")
             ->whereBetween('date', [$periodStart, $periodEnd])
             ->whereIn('date', Holiday::select('date')->where('type', 'regular'))  
             ->count();
 
         $regularHolidayRestDayCount =Attendance::where('user_id', $userId)
             ->whereIn('status', ['On-Time', 'Late'])
-            ->whereRaw('DAYOFWEEK(date) = 1')
+            ->whereRaw($weekend)
             ->whereBetween('date', [$periodStart, $periodEnd])
             ->whereIn('date', Holiday::select('date')->where('type', 'regular'))   
             ->count();
 
-        $saturday = $saturdayCount * ($dailyWage * self::REGULAR_RATES['saturday']);
+        // $sunday = $sundayCount * ($dailyWage * self::REGULAR_RATES['sunday']);
         $restday =  $restdayCount * ($dailyWage * self::REGULAR_RATES['rest_day']);
         $specialDay =  $specialDayCount * ($dailyWage * (self::REGULAR_RATES['special_day']-1));
         $specialDayRestDay =  $specialDayRestDayCount * ($dailyWage * self::REGULAR_RATES['special_day_rest_day']);
         $regularHoliday =  $regularHolidayCount * ($dailyWage * (self::REGULAR_RATES['regular_holiday']-1));
         $regularHolidayRestDay=  $regularHolidayRestDayCount * ($dailyWage * self::REGULAR_RATES['regular_holiday_rest_day']);
         
-        return $additionalPay = $restday + $saturday + $specialDay + $specialDayRestDay + $regularHoliday + $regularHolidayRestDay;
+        // return $additionalPay = $restday + $sunday + $specialDay + $specialDayRestDay + $regularHoliday + $regularHolidayRestDay;
+        return $additionalPay = $restday + $specialDay + $specialDayRestDay + $regularHoliday + $regularHolidayRestDay;
     }
     function overtime($userId, $periodStart, $periodEnd, $hrRate)
     {
         $types = Holiday::whereBetween('date', [$periodStart, $periodEnd])->pluck('type', 'date');
+        $userHrs= Salary::where('user_id', $userId)->pluck('working_hours_per_day')->first();
         $days = Attendance::where('user_id', $userId)
             ->whereBetween('date', [$periodStart, $periodEnd])
-            ->selectRaw('date, GREATEST(0, (' . Attendance::workedSecondsSql() . ') - ?) / 3600 as ot_hours', [8 * 3600])
+            ->selectRaw('date, GREATEST(0, (' . Attendance::workedSecondsSql() . ') - ?) / 3600 as ot_hours', [$userHrs * 3600])
             ->get();
 
         $total = 0;
@@ -326,7 +339,7 @@ class SalaryService
             if ($day->ot_hours <= 0) continue;
             $date = Carbon::parse($day->date);
             $type = $types[$date->toDateString()] ?? null;
-            $sunday = $date->isSunday();
+            $sunday = $date->isWeekend();
 
             $key = match (true) {
                 $type === 'regular' && $sunday             => 'regular_holiday_rest_day',

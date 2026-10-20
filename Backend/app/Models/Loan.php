@@ -22,6 +22,7 @@ class Loan extends Model
         'loan_type',
         'total_amount',
         'monthly_deduction',
+        'cutoff',
         'remaining_balance',
         'start_date',
         'status',
@@ -45,10 +46,33 @@ class Loan extends Model
             ->get();
     }
 
-    /** The full monthly deduction is taken in the 1st-15th cutoff; the 16th-end collects only what was left unpaid. */
+    // the school allows either cutoff, so HR picks it for each loan: 'first' = the 1st-15th, 'second' = the 16th to the
+    // end of the month, 'both' = half of the monthly deduction in each cutoff
+    public const CUTOFFS = ['first', 'second', 'both'];
+
+    /** What a monthly deduction takes from one cutoff ($in = 'first' or 'second') for a loan set to $cutoff. */
+    public static function shareOf(float $monthly, string $cutoff, string $in): float
+    {
+        $monthly = round($monthly, 2);
+        if ($cutoff === 'both') {
+            $first = round($monthly / 2, 2);
+
+            return $in === 'first' ? $first : round($monthly - $first, 2);   // the month adds up exactly
+        }
+
+        return $cutoff === $in ? $monthly : 0.0;
+    }
+
+    /**
+     * What this loan's own schedule takes from this cutoff: the full monthly deduction in its cutoff, half in each
+     * cutoff for 'both', nothing in the other one. What was left unpaid (SSS and Pag-IBIG loans) is added to the
+     * next cutoff, whichever that is, by dueFor().
+     */
     public function scheduledFor(string $periodStart): float
     {
-        return Carbon::parse($periodStart)->day <= 15 ? round((float) $this->monthly_deduction, 2) : 0.0;
+        $in = Carbon::parse($periodStart)->day <= 15 ? 'first' : 'second';
+
+        return self::shareOf((float) $this->monthly_deduction, $this->cutoff ?? 'first', $in);
     }
     /** What is owed this cutoff: the scheduled part plus any unpaid part carried forward, never more than the balance. */
     public function dueFor(string $periodStart): float
