@@ -42,7 +42,6 @@ and out from an Android app that checks their location and their fingerprint or 
 ```
 BioGeoHR/
 ├── Backend/            Laravel API (routes/api.php, app/, database/, tests/)
-│   └── tests/Load/     JMeter load test and geo-fence accuracy test files
 ├── Frontend/
 │   ├── web/            React admin site (src/outlet = pages, src/components, src/Modal)
 │   └── Mobile/         Flutter app (lib/Screens, lib/Controller, lib/Service)

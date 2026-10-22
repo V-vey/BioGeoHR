@@ -56,7 +56,7 @@ void main() async {
                 ),
 
                 //JUST MEHH TESTING auto login to test@example.com user
-                TestingButton(),
+                // TestingButton(),
               ],
             ),
           ),
