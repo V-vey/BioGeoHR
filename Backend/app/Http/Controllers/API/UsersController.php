@@ -158,7 +158,7 @@ class UsersController extends Controller
 
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'contact_number' => 'required',
             'department' => 'required',
             'position' => 'required',
@@ -171,10 +171,13 @@ class UsersController extends Controller
             'address' => 'required',
             'image' => 'nullable|image|max:2048',
 
-            'monthly_salary' => 'required',
+            'monthly_salary' => 'required|numeric|min:1|max:' . Salary::MAX_BASIS,
             'working_hours_per_day' => 'required',
             // 'working_days_per_month' => 'required|numeric|min:1|max:31'
-        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE);
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE + [
+            'email.unique' => 'An employee with this email already exists.',
+            'monthly_salary.max' => 'The monthly salary cannot be more than ₱999,999.99.',
+        ]);
 
         // spouse and children (shown on the profile only); checked before anything is saved
         [$family, $familyError] = $this->parseFamily($request);
@@ -187,52 +190,65 @@ class UsersController extends Controller
         // HR does not choose the password: a random one is made here and emailed to the employee
         $password = StrongPassword::generate();
 
-        $users = Users::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'contact_number' => $request->contact_number,
-            'password' => Hash::make($password),
-            'department' => $request->department,
-            'position' => $request->position,
-            'call_time' => $request->call_time,
-            'contract_type' => $request->contract_type,
-            'employment_status' => $request->employment_status,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'nationality' => $request->nationality,
-            'tin' => $request->tin,
-            'sss_number' => $request->sss_number,
-            'philhealth_number' => $request->philhealth_number,
-            'pagibig_number' => $request->pagibig_number,
-            'address' => $request->address,
-            'image_path' => $imagePath,
-        ]);
+        // all or nothing: a failure part-way (e.g. at the salary) must not leave an employee with no salary
+        // or leave balance, whose email would then block every retry
+        try {
+            $users = DB::transaction(function () use ($request, $password, $imagePath, $family) {
+                $users = Users::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'contact_number' => $request->contact_number,
+                    'password' => Hash::make($password),
+                    'department' => $request->department,
+                    'position' => $request->position,
+                    'call_time' => $request->call_time,
+                    'contract_type' => $request->contract_type,
+                    'employment_status' => $request->employment_status,
+                    'date_of_birth' => $request->date_of_birth,
+                    'gender' => $request->gender,
+                    'nationality' => $request->nationality,
+                    'tin' => $request->tin,
+                    'sss_number' => $request->sss_number,
+                    'philhealth_number' => $request->philhealth_number,
+                    'pagibig_number' => $request->pagibig_number,
+                    'address' => $request->address,
+                    'image_path' => $imagePath,
+                ]);
 
-        if ($family) {
-            $this->saveFamily($users, $family);
-        }
-        
-        Salary::create([
-            'user_id' => $users->id,
-            'salary_basis' => $request->monthly_salary,
-            'working_hours_per_day' => 8,
-            'working_days_per_month' => 26
-        ]);
-        //Create a Balance
-        if($users->contract_type == "Regular"){
-            LeaveBalance::create(['user_id' => $users->id] + LeaveBalance::FULL_CREDITS);
-        } else {
-            // not Regular yet (Probationary): the row exists, with no credits
-            LeaveBalance::create([
-                'user_id' => $users->id,
-                'sick' => 0,
-                'vacation' => 0,
-                'emergency' => 0,
-                'birthday' => 0,
-                'solo_parent' => 0,
-                'paternity' => 0,
-                'maternity' => 0,
-            ]);
+                if ($family) {
+                    $this->saveFamily($users, $family);
+                }
+
+                Salary::create([
+                    'user_id' => $users->id,
+                    'salary_basis' => $request->monthly_salary,
+                    'working_hours_per_day' => 8,
+                    'working_days_per_month' => 26
+                ]);
+                //Create a Balance
+                if($users->contract_type == "Regular"){
+                    LeaveBalance::create(['user_id' => $users->id] + LeaveBalance::FULL_CREDITS);
+                } else {
+                    // not Regular yet (Probationary): the row exists, with no credits
+                    LeaveBalance::create([
+                        'user_id' => $users->id,
+                        'sick' => 0,
+                        'vacation' => 0,
+                        'emergency' => 0,
+                        'birthday' => 0,
+                        'solo_parent' => 0,
+                        'paternity' => 0,
+                        'maternity' => 0,
+                    ]);
+                }
+                return $users;
+            });
+        } catch (\Throwable $e) {
+            // nothing was saved, so the uploaded photo is not needed either
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            throw $e;
         }
        
         

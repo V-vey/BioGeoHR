@@ -91,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('balance', LeaveBalanceController::class);
         // the fixed-name routes go before the resource, or attendance/{id} would swallow them
         Route::get('attendance/export', [AttendanceController::class, 'export']);
+        Route::get('attendance/forDay', [AttendanceController::class, 'forDay']);
         Route::apiResource('attendance', AttendanceController::class);
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);

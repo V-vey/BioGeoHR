@@ -146,18 +146,51 @@ class AttendanceController extends Controller
 
         $absent = $data['status'] === 'Absent';
 
-        $attendance = Attendance::updateOrCreate(
-            ['user_id' => $data['user_id'], 'date' => $data['date']],
-            [
-                'status'      => $data['status'],
-                'location_id' => $absent ? null : $data['location_id'],
-                'time_in'     => $absent ? null : $data['time_in'],
-                'time_out'    => $absent ? null : ($data['time_out'] ?? null),
-                'remarks'     => $data['remarks'],
-            ]
-        );
+        $attendance = DB::transaction(function () use ($data, $absent) {
+            $attendance = Attendance::updateOrCreate(
+                ['user_id' => $data['user_id'], 'date' => $data['date']],
+                [
+                    'status'      => $data['status'],
+                    'location_id' => $absent ? null : $data['location_id'],
+                    'time_in'     => $absent ? null : $data['time_in'],
+                    'time_out'    => $absent ? null : ($data['time_out'] ?? null),
+                    'remarks'     => $data['remarks'],
+                ]
+            );
+            // the phone's sessions of that day (an employee who clocked in) would keep the old times and
+            // the worked hours would not match what HR entered: the day becomes the one session HR typed
+            $attendance->sessions()->delete();
+            $attendance->ensureFirstSession();
+            return $attendance;
+        });
         AuditLog::record('admin', 'manual_attendance', 'success', "User {$data['user_id']}, {$data['date']}, {$data['status']}. Reason: {$data['remarks']}");
         return response()->json($attendance, $attendance->wasRecentlyCreated ? 201 : 200);
+    }
+
+    // The record an employee already has on a day (clocked in on the phone, or entered before), so the
+    // Create attendance form can start from it. "attendance": null when there is none.
+    public function forDay(Request $request)
+    {
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date'    => 'required|date_format:Y-m-d',
+        ]);
+
+        $attendance = Attendance::where('user_id', $data['user_id'])
+            ->whereDate('date', $data['date'])
+            ->orderBy('id')
+            ->first();
+
+        return response()->json([
+            'attendance' => $attendance ? [
+                'status'      => $attendance->status,
+                'location_id' => $attendance->location_id,
+                // the form's time boxes and store() take H:i
+                'time_in'     => $attendance->time_in ? substr($attendance->time_in, 0, 5) : null,
+                'time_out'    => $attendance->time_out ? substr($attendance->time_out, 0, 5) : null,
+                'remarks'     => $attendance->remarks,
+            ] : null,
+        ]);
     }
     /**
      * Display the specified resource.

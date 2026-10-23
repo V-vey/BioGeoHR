@@ -33,7 +33,8 @@ export default function weeklyItems({ chartData }) {
   return (
     <ChartContainer config={chartConfig} className="w-full mt-2 h-[280px]">
       <BarChart data={chartData}>
-        <CartesianGrid vertical={false} />
+        {/* above the hover highlight (200) so it doesn't hide the lines, below the bars (300) */}
+        <CartesianGrid vertical={false} zIndex={250} />
         <XAxis dataKey="day" tickLine={false} axisLine={false} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />

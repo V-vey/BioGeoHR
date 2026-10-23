@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
@@ -10,19 +10,30 @@ const headers = () => ({
   "ngrok-skip-browser-warning": "true",
 });
 
+// today in the school's timezone, as YYYY-MM-DD (toISOString is UTC: before 8 AM it gives yesterday)
+const today = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
+
+const blankRecord = {
+  status: "On-Time",
+  location_id: "",
+  time_in: "",
+  time_out: "",
+  remarks: "",
+};
+
 export default function CreateAttendanceModal({ onSaved, onClose }) {
   const [users, setUsers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     user_id: "",
-    date: new Date().toISOString().slice(0, 10),
-    status: "On-Time",
-    location_id: "",
-    time_in: "",
-    time_out: "",
-    remarks: "",
+    date: today(),
+    ...blankRecord,
   });
+  // the record the employee already has on that day (e.g. clocked in on the phone), or null
+  const [existing, setExisting] = useState(null);
+  const existingRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +52,43 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
     };
     load();
   }, []);
+
+  // when the employee already has a record on the chosen day, start the form from it
+  useEffect(() => {
+    if (!form.user_id || !form.date) return;
+    let cancelled = false;
+    const lookup = async () => {
+      try {
+        const res = await axios.get(url + "/attendance/forDay", {
+          headers: headers(),
+          params: { user_id: form.user_id, date: form.date },
+        });
+        if (cancelled) return;
+        const record = res.data.attendance;
+        if (record) {
+          setForm((f) => ({
+            ...f,
+            status: record.status,
+            location_id: record.location_id ?? "",
+            time_in: record.time_in ?? "",
+            time_out: record.time_out ?? "",
+            remarks: record.remarks ?? "",
+          }));
+        } else if (existingRef.current) {
+          // the fields came from another day or employee: clear them
+          setForm((f) => ({ ...f, ...blankRecord }));
+        }
+        existingRef.current = record;
+        setExisting(record);
+      } catch (error) {
+        console.error("Failed to load the existing attendance:", error);
+      }
+    };
+    lookup();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.user_id, form.date]);
 
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -97,6 +145,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
             Date
             <DateInput
               required
+              max={today()}
               value={form.date}
               onChange={update("date")}
               className={fieldClass}
@@ -172,7 +221,11 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
         </label>
 
         <p className="text-xs text-[#8a90a3] text-left">
-          An existing record for that day will be replaced.
+          {existing
+            ? existing.time_in && !existing.time_out
+              ? `Clocked in at ${existing.time_in} and not clocked out yet. Saving replaces this record.`
+              : "This employee already has a record for that day. Saving replaces it."
+            : "An existing record for that day will be replaced."}
         </p>
 
         <div className="flex flex-row gap-2 justify-end mt-1">

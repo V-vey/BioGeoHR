@@ -28,7 +28,7 @@ class SalaryController extends Controller
     {
         $request->validate([
             'user_id' => 'required',
-            'salary_basis' => 'required',
+            'salary_basis' => 'required|numeric|min:1|max:' . Salary::MAX_BASIS,
             'working_hours_per_day' => 'required',
             'working_days_per_month' => 'required|numeric|min:1|max:31',
         ]);
@@ -69,6 +69,9 @@ class SalaryController extends Controller
             // the daily wage is salary / this number, so a wrong value would make every payslip wrong
             $request->validate([
                 'working_days_per_month' => 'sometimes|required|numeric|min:1|max:31',
+                'salary_basis' => 'sometimes|required|numeric|min:1|max:' . Salary::MAX_BASIS,
+            ], [
+                'salary_basis.max' => 'The monthly salary cannot be more than ₱999,999.99.',
             ]);
             AuditLog::record('admin', 'salary_updated', 'success', "Salary record #{$id}");
             $salary->update($request->all());

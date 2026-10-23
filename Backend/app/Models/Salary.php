@@ -11,6 +11,9 @@ class Salary extends Model
 {
     use HasFactory, Notifiable;
 
+    // salary_basis is decimal(8,2): a bigger amount makes the database refuse the row
+    const MAX_BASIS = 999999.99;
+
     /**
      * The attributes that are mass assignable.
      *
