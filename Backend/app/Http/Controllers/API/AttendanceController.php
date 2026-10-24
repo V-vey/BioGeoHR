@@ -130,7 +130,9 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'user_id'     => 'required|exists:users,id',
             'date'        => 'required|date|before_or_equal:today',
-            'status'      => 'required|in:On-Time,Late,Absent',
+            // Present: On-Time or Late is worked out below from the clock-in. On-Time / Late are still
+            // accepted from older forms, but the clock-in decides either way.
+            'status'      => 'required|in:Present,On-Time,Late,Absent',
             'location_id' => 'required_unless:status,Absent|nullable|exists:locations,id',
             'time_in'     => 'required_unless:status,Absent|nullable|date_format:H:i',
             'time_out'    => 'nullable|date_format:H:i|after:time_in',
@@ -145,6 +147,21 @@ class AttendanceController extends Controller
         }
 
         $absent = $data['status'] === 'Absent';
+
+        // today's clock-in and clock-out cannot be later than now (H:i strings compare in time order)
+        $now = now('Asia/Manila');
+        if (!$absent && Carbon::parse($data['date'])->isSameDay($now)) {
+            $latest = $now->format('H:i');
+            if ($data['time_in'] > $latest || (($data['time_out'] ?? null) && $data['time_out'] > $latest)) {
+                return response()->json(['message' => "The clock-in and clock-out cannot be later than the time now ({$latest})."], 422);
+            }
+        }
+
+        // Late when the clock-in is after the employee's start time plus the grace period, whatever the day
+        if (!$absent) {
+            $callTime = Users::whereKey($data['user_id'])->value('call_time');
+            $data['status'] = $this->isLate($callTime, $data['time_in'] . ':00', Carbon::parse($data['date']), false);
+        }
 
         $attendance = DB::transaction(function () use ($data, $absent) {
             $attendance = Attendance::updateOrCreate(
@@ -424,12 +441,21 @@ class AttendanceController extends Controller
         ]);
     }
 
-    private function isLate($userCallTime, $timeIn){
-        $graceMinutes = SystemSetting::first()->late_grace_period_minutes;
+    // $day: the day of the attendance (today for a clock-in on the phone, any past day for HR's manual entry)
+    // $dayRules: a weekend or non-working holiday is never late (the phone); HR's manual entry goes by the time only
+    private function isLate($userCallTime, $timeIn, ?Carbon $day = null, bool $dayRules = true){
+        $day ??= now('Asia/Manila');
+        if (!$userCallTime) {
+            return "On-Time"; // no arrival time on the profile: nothing to be late for
+        }
+        // 15: the column's default, for a database whose settings row was never made
+        $graceMinutes = SystemSetting::first()?->late_grace_period_minutes ?? 15;
         $graceDeadline = Carbon::parse($userCallTime)->addMinutes($graceMinutes)->format('H:i:s');
-        $today = now('Asia/Manila');
 
-        if ($timeIn <= $graceDeadline || $today->isWeekend() || Holiday::nonWorking()->whereDate('date', $today->toDateString())->exists()) {
+        if ($timeIn <= $graceDeadline) {
+            return "On-Time";
+        }
+        if ($dayRules && ($day->isWeekend() || Holiday::nonWorking()->whereDate('date', $day->toDateString())->exists())) {
             return "On-Time";
         }
         return "Late";

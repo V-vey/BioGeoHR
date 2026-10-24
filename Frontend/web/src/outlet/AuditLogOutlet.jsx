@@ -26,6 +26,9 @@ export default function AuditLogOutlet() {
   // what the inputs show vs. what the table is actually filtered by
   const [filters, setFilters] = useState(emptyFilters);
   const [applied, setApplied] = useState(emptyFilters);
+  // bumped by Apply / Reset so they always reload: with the same filters and page nothing else changes,
+  // the fetch would not run, and the loading screen would stay up
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +60,7 @@ export default function AuditLogOutlet() {
     return () => {
       cancelled = true;
     };
-  }, [page, applied]);
+  }, [page, applied, reload]);
 
   const update = (key) => (e) =>
     setFilters((f) => ({ ...f, [key]: e.target.value }));
@@ -67,6 +70,7 @@ export default function AuditLogOutlet() {
     setLoading(true);
     setPage(1);
     setApplied(filters);
+    setReload((n) => n + 1);
   };
 
   const handleReset = () => {
@@ -74,6 +78,7 @@ export default function AuditLogOutlet() {
     setPage(1);
     setFilters(emptyFilters);
     setApplied(emptyFilters);
+    setReload((n) => n + 1);
   };
 
   // the container calls this with the next / previous page number
