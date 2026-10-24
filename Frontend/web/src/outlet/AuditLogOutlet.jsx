@@ -22,6 +22,9 @@ export default function AuditLogOutlet() {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
+  // Apply and Reset ask for a fresh load every time. Without it, pressing Apply again with the same filters (or
+  // Reset on a list that is already reset) changes no state, so nothing is fetched and the loading box never ends.
+  const [reload, setReload] = useState(0);
 
   // what the inputs show vs. what the table is actually filtered by
   const [filters, setFilters] = useState(emptyFilters);
@@ -57,7 +60,7 @@ export default function AuditLogOutlet() {
     return () => {
       cancelled = true;
     };
-  }, [page, applied]);
+  }, [page, applied, reload]);
 
   const update = (key) => (e) =>
     setFilters((f) => ({ ...f, [key]: e.target.value }));
@@ -67,6 +70,7 @@ export default function AuditLogOutlet() {
     setLoading(true);
     setPage(1);
     setApplied(filters);
+    setReload((n) => n + 1);
   };
 
   const handleReset = () => {
@@ -74,6 +78,7 @@ export default function AuditLogOutlet() {
     setPage(1);
     setFilters(emptyFilters);
     setApplied(emptyFilters);
+    setReload((n) => n + 1);
   };
 
   // the container calls this with the next / previous page number

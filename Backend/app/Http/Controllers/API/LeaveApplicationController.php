@@ -16,6 +16,7 @@ class LeaveApplicationController extends Controller
      */
     public function index()
     {
+        LeaveApplication::rejectExpired();   // a request still pending after its date has passed is rejected first
         $leaveApplications = LeaveApplication::with('user.leaveBalance')->get();
         return response()->json($leaveApplications);
     }
@@ -78,6 +79,12 @@ class LeaveApplicationController extends Controller
 
         if (!$leaveApplication) {
             return response()->json(['message' => 'Leave application not found'], 404);
+        }
+
+        // HR had the request open while its date passed: it is rejected now, and cannot be decided any more
+        if (LeaveApplication::expiredPending()->whereKey($leaveApplication->id)->exists()) {
+            LeaveApplication::rejectExpired();
+            return response()->json(['message' => 'The leave date has already passed, so this request was rejected automatically.'], 422);
         }
 
         $remarksNote = $request->remarks ? ". Remarks: {$request->remarks}" : '';
@@ -208,6 +215,7 @@ class LeaveApplicationController extends Controller
 
     public function myLeave(Request $request)
     {
+        LeaveApplication::rejectExpired();
         $columns = ['id', 'leave_type', 'start_date', 'end_date', 'reason', 'status', 'remarks', 'created_at'];
         $query = LeaveApplication::where('user_id', $this->getUserIdFromToken())->latest()->orderByDesc('id');
 

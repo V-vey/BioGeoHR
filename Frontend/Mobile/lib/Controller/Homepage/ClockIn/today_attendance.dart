@@ -8,12 +8,14 @@ class TodayAttendance {
   final int elapsedSeconds; // time since clock-in, measured by the server
   final int workedSeconds; // everything worked today: finished sessions + the one running now
   final String status; // On-Time / Late
+  final String? location; // where the day was clocked in
 
   TodayAttendance({
     required this.running,
     required this.elapsedSeconds,
     required this.workedSeconds,
     required this.status,
+    this.location,
   });
 
   factory TodayAttendance.fromJson(Map<String, dynamic> j) => TodayAttendance(
@@ -21,6 +23,7 @@ class TodayAttendance {
     elapsedSeconds: (j['elapsed_seconds'] as num? ?? 0).toInt(),
     workedSeconds: (j['worked_seconds'] as num? ?? 0).toInt(),
     status: j['status']?.toString() ?? '',
+    location: j['location']?.toString(),
   );
 }
 

@@ -46,21 +46,7 @@ function LoginPageMain() {
         if (response.data.authenticated === "Log in Success") {
           // the login is now in an HttpOnly cookie the server just set: nothing to store here
 
-          // mark employees with no record on past working days as absent;
-          // a failure here must not block the login
-          try {
-            await axios.post(
-              url + "/attendance/sync-absences",
-              {},
-              {
-                headers: {
-                  "ngrok-skip-browser-warning": "true",
-                },
-              },
-            );
-          } catch (syncError) {
-            console.error("Absence sync failed:", syncError);
-          }
+          // the absences are marked on the dashboard now, so the login does not wait for them
           navigate("/dashboard");
         } else {
           notifyError(

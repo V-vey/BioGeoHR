@@ -1,9 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useBlocker } from "react-router-dom";
 import { ChevronDown, User } from "lucide-react";
 
 import axios from "axios";
 import { url } from "@/resources/api";
-import { notifySuccess, notifyError, confirmDialog } from "@/lib/dialog";
+import {
+  notifySuccess,
+  notifyError,
+  notifyWarning,
+  confirmDialog,
+} from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
 import Loading from "@/components/Loading";
@@ -38,6 +44,25 @@ function Section({ title, children }) {
   );
 }
 
+// the fields marked with a red star on the form
+const REQUIRED_FIELDS = [
+  "lastName",
+  "firstName",
+  "gender",
+  "dob",
+  "nationality",
+  "contactNumber",
+  "address",
+  "email",
+  "department",
+  "position",
+  "contractType",
+  "employmentStatus",
+  "salary",
+  "callTime",
+];
+const REQUIRED_MESSAGE = "Please fill in all required fields.";
+
 export default function NewEmployeeForm() {
   const [form, setForm] = useState({});
   const [photoFile, setPhotoFile] = useState(null);
@@ -45,6 +70,55 @@ export default function NewEmployeeForm() {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   const [formKey, setFormKey] = useState(0);
+
+  // is there anything typed or chosen that would be lost by leaving this page?
+  const hasInfo =
+    !!photoFile ||
+    Object.entries(form).some(([key, value]) =>
+      key === "family"
+        ? cleanFamily(value).length > 0
+        : String(value ?? "").trim() !== "",
+    );
+
+  // leaving for another page (a menu link, the Back button): ask first. Discard = leave and lose it,
+  // Cancel = stay on the form with everything still filled in
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasInfo && currentLocation.pathname !== nextLocation.pathname,
+  );
+  const asking = useRef(false);
+  useEffect(() => {
+    if (blocker.state !== "blocked" || asking.current) return;
+    asking.current = true;
+    confirmDialog(
+      "This form has information that is not saved yet. If you leave this page it will be lost.",
+      { title: "Leave this page?", confirmLabel: "Discard and leave" },
+    ).then((leave) => {
+      asking.current = false;
+      if (leave) blocker.proceed();
+      else blocker.reset();
+    });
+  }, [blocker]);
+
+  // closing the tab or reloading the page has the browser's own warning
+  useEffect(() => {
+    if (!hasInfo) return;
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasInfo]);
+
+  const clearForm = () => {
+    setForm({});
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setFormKey((k) => k + 1);
+  };
+
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -53,6 +127,11 @@ export default function NewEmployeeForm() {
   };
 
   const onSubmit = async (formData) => {
+    // one plain message, before anything is asked or sent, when a required field is empty
+    if (REQUIRED_FIELDS.some((key) => String(formData[key] ?? "").trim() === "")) {
+      notifyWarning(REQUIRED_MESSAGE);
+      return;
+    }
     const data = new FormData();
     data.append(
       "name",
@@ -109,12 +188,17 @@ export default function NewEmployeeForm() {
           "Employee added",
         );
       }
+      clearForm();
     } catch (error) {
       console.error("Failed to create employee:", error);
       // the server says what is wrong (for example a number that is already used)
       const errors = error.response?.data?.errors;
+      const first = errors ? Object.values(errors)[0][0] : null;
       notifyError(
-        errors ? Object.values(errors)[0][0] : "Could not create the employee.",
+        // a "... field is required" from the server is the same thing as an empty field
+        first && /is required/i.test(first)
+          ? REQUIRED_MESSAGE
+          : first || "Could not create the employee.",
         "Could not add employee",
       );
     } finally {
@@ -133,11 +217,7 @@ export default function NewEmployeeForm() {
       },
     );
     if (!confirmed) return;
-    setForm({});
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    setFormKey((k) => k + 1);
+    clearForm();
   };
   return (
     <>

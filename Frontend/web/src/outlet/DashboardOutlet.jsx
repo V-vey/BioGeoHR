@@ -26,6 +26,10 @@ import {
   Hourglass,
 } from "lucide-react";
 import LeaveRequest from "@/Module/LeaveRequestMain";
+// the day the absences were last marked in this visit: the dashboard does it once a day, not at every visit
+let lastAbsenceSync = "";
+const todayKey = () => new Date().toLocaleDateString("en-CA");
+
 export default function DashboardOutlet() {
   const [pending, setPending] = useState(5);
   const done = () => setPending((p) => Math.max(0, p - 1));
@@ -33,6 +37,25 @@ export default function DashboardOutlet() {
   const [attTick, setAttTick] = useState(0);
   const [flagTick, setFlagTick] = useState(0);
   const [leaveTick, setLeaveTick] = useState(0);
+
+  // Absences: employees with no record on a past working day are marked absent. This used to run when HR logged
+  // in; it runs here now, before the cards ask for their numbers, so the absent counts are right the first time.
+  // A failure must not stop the page.
+  const [synced, setSynced] = useState(() => lastAbsenceSync === todayKey());
+  useEffect(() => {
+    if (synced) return;
+    axios
+      .post(
+        url + "/attendance/sync-absences",
+        {},
+        { headers: { "ngrok-skip-browser-warning": "true" } },
+      )
+      .catch((error) => console.error("Absence sync failed:", error))
+      .finally(() => {
+        lastAbsenceSync = todayKey();
+        setSynced(true);
+      });
+  }, [synced]);
   //Calendar
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -100,6 +123,7 @@ export default function DashboardOutlet() {
   });
 
   useEffect(() => {
+    if (!synced) return; // wait for the absences to be marked
     const fetchData = async () => {
       try {
         const response = await axios.get(url + "/attendanceCounts", {
@@ -142,7 +166,7 @@ export default function DashboardOutlet() {
       }
     };
     fetchData();
-  }, [attTick, leaveTick]);
+  }, [attTick, leaveTick, synced]);
 
   //FLAGGED
   const [flagged, setFlagged] = useState([]);
@@ -268,6 +292,7 @@ export default function DashboardOutlet() {
   );
   const [weeklyData, setWeeklyData] = useState([]);
   useEffect(() => {
+    if (!synced) return;
     const fetchWeekly = async () => {
       try {
         const response = await axios.get(url + "/weeklyAttendance", {
@@ -283,7 +308,7 @@ export default function DashboardOutlet() {
       }
     };
     fetchWeekly();
-  }, []);
+  }, [synced]);
 
   //EMPLOYEE
   // Every active employee with what today looks like for them (On-Time, Late, Absent, On Leave,
@@ -310,6 +335,7 @@ export default function DashboardOutlet() {
   }, [searchEmp]);
 
   useEffect(() => {
+    if (!synced) return;
     let cancelled = false;
     // show the loading text for a page or search the employee asked for, not for the quiet refresh
     // that runs when a clock-in or leave changes
@@ -352,7 +378,7 @@ export default function DashboardOutlet() {
     return () => {
       cancelled = true;
     };
-  }, [currentPageEmp, searchEmpSent, attTick, leaveTick]);
+  }, [currentPageEmp, searchEmpSent, attTick, leaveTick, synced]);
   const employeeHeader = (
     <div className="flex flex-row justify-between items-center">
       <h2 className="flex items-start ">Employee List</h2>

@@ -40,6 +40,9 @@ class _ClockInState extends State<ClockIn> {
 
   Timer? geofenceTimer;
 
+  // the place of today's clock-in while the employee is clocked in (the location box shows it, locked)
+  String? lockedLocation;
+
   final Url _api = Url();
   int geofenceIntervalMinutes = 30; // fallback default
 
@@ -104,6 +107,7 @@ class _ClockInState extends State<ClockIn> {
         setState(() {
           duration = Duration();
           status = 'Inactive';
+          lockedLocation = null;
         });
         return false;
       }
@@ -113,6 +117,7 @@ class _ClockInState extends State<ClockIn> {
         setState(() {
           duration = total;
           status = 'Active';
+          lockedLocation = today.location;
         });
         start(askLocation: false); // no-op if the timer is already running
         return true;
@@ -135,7 +140,10 @@ class _ClockInState extends State<ClockIn> {
     try {
       final today = await GetTodayAttendance().get();
       if (mounted && today != null) {
-        setState(() => duration = Duration(seconds: today.workedSeconds));
+        setState(() {
+          duration = Duration(seconds: today.workedSeconds);
+          if (today.running) lockedLocation = today.location;
+        });
       }
     } catch (e) {
       // no connection: carry on from the number on screen
@@ -171,6 +179,7 @@ class _ClockInState extends State<ClockIn> {
     Workmanager().cancelByUniqueName("geofence-check");
     setState(() {
       isRunning = false;
+      lockedLocation = null; // clocked out: the place can be chosen again
       timer?.cancel();
       geofenceTimer?.cancel();
     });
@@ -181,6 +190,7 @@ class _ClockInState extends State<ClockIn> {
     Workmanager().cancelByUniqueName("geofence-check");
     setState(() {
       isRunning = false;
+      lockedLocation = null;
       duration = Duration();
       timer?.cancel();
       geofenceTimer?.cancel();
@@ -280,7 +290,7 @@ class _ClockInState extends State<ClockIn> {
             children: [
               TimeBadge(status: status),
               Spacer(),
-              LocationList(),
+              LocationList(lockedTo: lockedLocation),
             ],
           ),
           //timer and button for callback start

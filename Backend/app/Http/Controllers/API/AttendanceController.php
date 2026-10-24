@@ -146,18 +146,52 @@ class AttendanceController extends Controller
 
         $absent = $data['status'] === 'Absent';
 
-        $attendance = Attendance::updateOrCreate(
-            ['user_id' => $data['user_id'], 'date' => $data['date']],
-            [
-                'status'      => $data['status'],
-                'location_id' => $absent ? null : $data['location_id'],
-                'time_in'     => $absent ? null : $data['time_in'],
-                'time_out'    => $absent ? null : ($data['time_out'] ?? null),
-                'remarks'     => $data['remarks'],
-            ]
-        );
+        $attendance = DB::transaction(function () use ($data, $absent) {
+            $attendance = Attendance::updateOrCreate(
+                ['user_id' => $data['user_id'], 'date' => $data['date']],
+                [
+                    'status'      => $data['status'],
+                    'location_id' => $absent ? null : $data['location_id'],
+                    'time_in'     => $absent ? null : $data['time_in'],
+                    'time_out'    => $absent ? null : ($data['time_out'] ?? null),
+                    'remarks'     => $data['remarks'],
+                ]
+            );
+
+            // the hours of a day are added up from its sessions, so what HR enters has to replace them,
+            // not sit beside the ones the phone made
+            $attendance->sessions()->delete();
+            if (!$absent) {
+                $attendance->sessions()->create(['time_in' => $data['time_in'], 'time_out' => $data['time_out'] ?? null]);
+            }
+
+            return $attendance;
+        });
         AuditLog::record('admin', 'manual_attendance', 'success', "User {$data['user_id']}, {$data['date']}, {$data['status']}. Reason: {$data['remarks']}");
         return response()->json($attendance, $attendance->wasRecentlyCreated ? 201 : 200);
+    }
+
+    // For the Create attendance form: what this employee already has on that day, so the form can start from it
+    public function lookup(Request $request)
+    {
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date'    => 'required|date',
+        ]);
+
+        $a = Attendance::where('user_id', $data['user_id'])->whereDate('date', $data['date'])->orderBy('id')->first();
+        if (!$a) {
+            return response()->json(['found' => false]);
+        }
+
+        return response()->json([
+            'found'       => true,
+            'status'      => $a->status,
+            'location_id' => $a->location_id,
+            'time_in'     => $a->time_in ? substr($a->time_in, 0, 5) : null,
+            'time_out'    => $a->time_out ? substr($a->time_out, 0, 5) : null,
+            'sessions'    => $a->sessions()->count() ?: ($a->time_in ? 1 : 0),
+        ]);
     }
     /**
      * Display the specified resource.
@@ -382,6 +416,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'status'          => $attendance->status,
+            'location'        => $attendance->location?->name,   // where the day was clocked in: the phone shows it, locked, while clocked in
             'time_in'         => $attendance->time_in,
             'time_out'        => $attendance->time_out,
             'running'         => $running,

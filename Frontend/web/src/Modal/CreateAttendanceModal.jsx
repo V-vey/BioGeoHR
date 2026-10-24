@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
@@ -10,13 +10,20 @@ const headers = () => ({
   "ngrok-skip-browser-warning": "true",
 });
 
+// today on this computer's clock (toISOString would give the UTC date, which is still yesterday early in the
+// morning in Manila)
+const today = () => new Date().toLocaleDateString("en-CA");
+
 export default function CreateAttendanceModal({ onSaved, onClose }) {
   const [users, setUsers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  // what the chosen employee already has on the chosen day: null until both are chosen, then { found, ... }
+  const [existing, setExisting] = useState(null);
+  const prefilled = useRef(false); // the fields were filled in from a record, not typed
   const [form, setForm] = useState({
     user_id: "",
-    date: new Date().toISOString().slice(0, 10),
+    date: today(),
     status: "On-Time",
     location_id: "",
     time_in: "",
@@ -41,6 +48,53 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
     };
     load();
   }, []);
+
+  // when an employee and a day are chosen, start from the record that employee already has on that day
+  // (clock in, clock out, location, status), so HR corrects it instead of typing it again
+  useEffect(() => {
+    if (!form.user_id || !form.date) return;
+    const key = `${form.user_id}|${form.date}`;
+    let cancelled = false;
+    axios
+      .get(url + "/attendance/lookup", {
+        params: { user_id: form.user_id, date: form.date },
+        headers: headers(),
+      })
+      .then((res) => {
+        if (cancelled) return;
+        setExisting({ key, ...res.data });
+        if (res.data.found) {
+          prefilled.current = true;
+          setForm((f) => ({
+            ...f,
+            status: res.data.status,
+            location_id: res.data.location_id ? String(res.data.location_id) : "",
+            time_in: res.data.time_in ?? "",
+            time_out: res.data.time_out ?? "",
+          }));
+        } else if (prefilled.current) {
+          // the last choice was filled in from a record: do not carry it over to a day that has none
+          prefilled.current = false;
+          setForm((f) => ({
+            ...f,
+            status: "On-Time",
+            location_id: "",
+            time_in: "",
+            time_out: "",
+          }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setExisting(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.user_id, form.date]);
+
+  // the answer only counts while it is for the employee and day that are chosen now
+  const record =
+    existing?.key === `${form.user_id}|${form.date}` ? existing : null;
 
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -97,6 +151,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
             Date
             <DateInput
               required
+              max={today()}
               value={form.date}
               onChange={update("date")}
               className={fieldClass}
@@ -171,9 +226,22 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
           />
         </label>
 
-        <p className="text-xs text-[#8a90a3] text-left">
-          An existing record for that day will be replaced.
-        </p>
+        {record?.found ? (
+          <p className="text-xs text-left rounded-[8px] bg-[#EACA3A]/15 text-[#8a6d10] px-3 py-2">
+            This employee already has a record for this day
+            {record.time_in ? `, clocked in at ${record.time_in}` : ""}. It is
+            filled in above. Saving updates it; it does not add another.
+            {record.sessions > 1
+              ? ` The day has ${record.sessions} clock-in/out pairs; saving replaces them with this one.`
+              : ""}
+          </p>
+        ) : (
+          <p className="text-xs text-[#8a90a3] text-left">
+            {record
+              ? "No record for this day yet. Saving creates one."
+              : "Pick an employee and a date to see their record for that day."}
+          </p>
+        )}
 
         <div className="flex flex-row gap-2 justify-end mt-1">
           <button
