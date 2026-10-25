@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Flutter Biogeohr</string>
+	<string>BiogeoHR</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,25 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>BioGeoHR checks your location to make sure you are inside the school when you clock in.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>BioGeoHR checks that you are still inside the school while you are clocked in.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>BioGeoHR uses Face ID to confirm it is you when you clock in.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>BioGeoHR uses the camera to take your profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BioGeoHR lets you choose a profile photo from your library.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>location</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>geofence-check</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

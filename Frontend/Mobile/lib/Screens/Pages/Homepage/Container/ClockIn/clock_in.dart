@@ -26,7 +26,7 @@ class ClockIn extends StatefulWidget {
   State<ClockIn> createState() => _ClockInState();
 }
 
-class _ClockInState extends State<ClockIn> {
+class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
   //with AutomaticKeepAliveClientMixin and bool get wantKeepAlive will make it run
   // bool get wantKeepAlive => true;
   final LeaveBalance bal = LeaveBalance();
@@ -79,10 +79,14 @@ class _ClockInState extends State<ClockIn> {
       await Geolocator.openAppSettings();
     }
   }
-
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) resync();
+  }
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _init();
   }
 
@@ -201,6 +205,7 @@ class _ClockInState extends State<ClockIn> {
   void dispose() {
     timer?.cancel();
     geofenceTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
