@@ -77,6 +77,7 @@ it('lookup needs an employee and a date', function () {
 
 it('adding the clock-out by hand closes the phone\'s running session, so the hours are counted', function () {
     $a = phoneDay($this);
+    Carbon::setTestNow(Carbon::parse('2026-10-21 17:00:00', 'Asia/Manila'));   // after the clock-out entered below
 
     $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', [
         'user_id' => $this->emp->id, 'date' => '2026-10-21', 'status' => 'On-Time',
@@ -93,6 +94,7 @@ it('saving replaces every earlier session of the day with the one entered', func
     $a = phoneDay($this);
     $a->sessions()->first()->update(['time_out' => '12:00:00']);
     $a->sessions()->create(['time_in' => '13:00:00', 'time_out' => '17:00:00']);
+    Carbon::setTestNow(Carbon::parse('2026-10-21 17:30:00', 'Asia/Manila'));   // after the times entered below
 
     $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', [
         'user_id' => $this->emp->id, 'date' => '2026-10-21', 'status' => 'On-Time',
@@ -132,4 +134,64 @@ it('a day in the future is refused', function () {
         'user_id' => $this->emp->id, 'date' => '2026-10-22', 'status' => 'On-Time',
         'location_id' => $this->place->id, 'time_in' => '07:30', 'remarks' => 'Too early',
     ])->assertStatus(422)->assertJsonValidationErrors(['date']);
+});
+
+// "now" is 10:00 on 2026-10-21 (see beforeEach)
+it('today, a clock-in or clock-out later than now is refused', function () {
+    $body = [
+        'user_id' => $this->emp->id, 'date' => '2026-10-21', 'status' => 'On-Time',
+        'location_id' => $this->place->id, 'time_in' => '07:30', 'remarks' => 'Device was down',
+    ];
+    $message = 'The clock-in and clock-out cannot be later than the time now (10:00).';
+
+    $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', ['time_in' => '10:01'] + $body)
+        ->assertStatus(422)->assertJsonPath('message', $message);
+    $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', ['time_out' => '16:00'] + $body)
+        ->assertStatus(422)->assertJsonPath('message', $message);
+
+    expect(Attendance::count())->toBe(0);
+});
+
+it('today, times up to now are accepted, and an earlier day takes any time', function () {
+    $body = [
+        'user_id' => $this->emp->id, 'status' => 'On-Time',
+        'location_id' => $this->place->id, 'time_in' => '07:30', 'remarks' => 'Device was down',
+    ];
+
+    $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', ['date' => '2026-10-21', 'time_out' => '10:00'] + $body)
+        ->assertCreated();
+    $this->actingAs($this->hr, 'sanctum')->postJson('/api/attendance', ['date' => '2026-10-20', 'time_out' => '17:00'] + $body)
+        ->assertCreated();
+});
+
+// ---------- On-Time / Late from the clock-in (the employee starts at 07:30) ----------
+
+function manualStatusSaved($test, array $overrides): string
+{
+    $test->actingAs($test->hr, 'sanctum')->postJson('/api/attendance', $overrides + [
+        'user_id' => $test->emp->id, 'date' => '2026-10-20', 'status' => 'Present',
+        'location_id' => $test->place->id, 'remarks' => 'Device was down',
+    ])->assertSuccessful();
+
+    return Attendance::where('user_id', $test->emp->id)->value('status');
+}
+
+it('is On-Time up to the start time plus the grace period', function () {
+    \App\Models\SystemSetting::create(['late_grace_period_minutes' => 10, 'geofence_check_interval_minutes' => 15]);
+
+    expect(manualStatusSaved($this, ['time_in' => '07:40']))->toBe('On-Time');
+});
+
+it('is Late after the grace period, even when the form sent On-Time', function () {
+    \App\Models\SystemSetting::create(['late_grace_period_minutes' => 10, 'geofence_check_interval_minutes' => 15]);
+
+    expect(manualStatusSaved($this, ['status' => 'On-Time', 'time_in' => '07:41']))->toBe('Late');
+});
+
+it('is On-Time for an early clock-in, even when the form sent Late', function () {
+    expect(manualStatusSaved($this, ['status' => 'Late', 'time_in' => '07:00']))->toBe('On-Time');
+});
+
+it('goes by the time only, so a late Saturday clock-in is Late too', function () {
+    expect(manualStatusSaved($this, ['date' => '2026-10-17', 'time_in' => '09:00']))->toBe('Late');
 });

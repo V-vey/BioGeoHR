@@ -16,11 +16,11 @@ import FlaggedAttendance from "@/Module/FlaggedAttendance";
 import Payroll from "@/Module/PayrollMain";
 import AuditLogMain from "@/Module/AuditLogMain";
 
-import DashboardOutlet from "@/Outlet/DashboardOutlet";
+import DashboardOutlet from "@/outlet/DashboardOutlet";
 import AllEmployeeOutlet from "@/outlet/AllEmployeeOutlet";
-import AttendanceOutlet from "@/Outlet/AttendanceOutlet";
+import AttendanceOutlet from "@/outlet/AttendanceOutlet";
 import NewEmployeeOutlet from "@/outlet/NewEmployeeOutlet";
-import LocationOutlet from "@/Outlet/LocationOutlet";
+import LocationOutlet from "@/outlet/LocationOutlet";
 import FlaggedAttendanceOutlet from "@/outlet/FlaggedAttendanceOutlet";
 import PayrollOutlet from "@/outlet/PayrollOutlet";
 import RunPayrollOutlet from "@/outlet/RunPayrollOutlet";

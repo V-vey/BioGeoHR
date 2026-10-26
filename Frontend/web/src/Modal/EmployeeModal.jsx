@@ -423,6 +423,9 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                     minH={350}
                     maxH={350}
                     totalPages={totalPagesLeave}
+                    total={filteredLeave.length}
+                    perPage={itemsPerPageLeave}
+                    emptyText={false} // shows its own message
                     // header={leaveHeader}
                     // headerDefault={false}
                   >

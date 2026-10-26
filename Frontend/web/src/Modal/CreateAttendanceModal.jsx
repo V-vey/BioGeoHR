@@ -14,17 +14,35 @@ const headers = () => ({
 // morning in Manila)
 const today = () => new Date().toLocaleDateString("en-CA");
 
+// the time now on this computer's clock, as HH:MM (24-hour, like the time boxes)
+const nowTime = () =>
+  new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+// "HH:MM" or "HH:MM:SS" -> minutes since midnight
+const toMinutes = (time) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// minutes since midnight -> "8:15 AM"
+const formatMinutes = (minutes) => {
+  const h = Math.floor(minutes / 60) % 24;
+  const m = String(minutes % 60).padStart(2, "0");
+  return `${h % 12 || 12}:${m} ${h < 12 ? "AM" : "PM"}`;
+};
+
 export default function CreateAttendanceModal({ onSaved, onClose }) {
   const [users, setUsers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [graceMinutes, setGraceMinutes] = useState(15); // for the On-Time / Late preview
   // what the chosen employee already has on the chosen day: null until both are chosen, then { found, ... }
   const [existing, setExisting] = useState(null);
   const prefilled = useRef(false); // the fields were filled in from a record, not typed
   const [form, setForm] = useState({
     user_id: "",
     date: today(),
-    status: "On-Time",
+    status: "Present", // On-Time or Late is worked out from the clock-in (see lateCheck)
     location_id: "",
     time_in: "",
     time_out: "",
@@ -34,12 +52,14 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const [u, l] = await Promise.all([
+        const [u, l, s] = await Promise.all([
           axios.get(url + "/users", { headers: headers() }),
           axios.get(url + "/location", { headers: headers() }),
+          axios.get(url + "/systemSettings", { headers: headers() }),
         ]);
         setUsers(u.data);
         setLocations(l.data);
+        setGraceMinutes(s.data?.late_grace_period_minutes ?? 15);
       } catch (error) {
         console.error("Failed to load form data:", error);
       } finally {
@@ -67,7 +87,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
           prefilled.current = true;
           setForm((f) => ({
             ...f,
-            status: res.data.status,
+            status: res.data.status === "Absent" ? "Absent" : "Present",
             location_id: res.data.location_id ? String(res.data.location_id) : "",
             time_in: res.data.time_in ?? "",
             time_out: res.data.time_out ?? "",
@@ -77,7 +97,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
           prefilled.current = false;
           setForm((f) => ({
             ...f,
-            status: "On-Time",
+            status: "Present",
             location_id: "",
             time_in: "",
             time_out: "",
@@ -101,8 +121,28 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
 
   const absent = form.status === "Absent";
 
+  // on today's date the clock-in and clock-out cannot be later than now: the box turns red and Save waits
+  const latestTime = form.date === today() ? nowTime() : null;
+  const futureIn = !!latestTime && !!form.time_in && form.time_in > latestTime;
+  const futureOut = !!latestTime && !!form.time_out && form.time_out > latestTime;
+  const futureTime = !absent && (futureIn || futureOut);
+
+  // On-Time or Late, by the same rule the server uses (manualStatus in AttendanceController): late when
+  // the clock-in is after the employee's start time plus the grace period
+  const lateCheck = (() => {
+    const employee = users.find((u) => String(u.id) === String(form.user_id));
+    if (absent || !employee || !form.time_in) return null;
+    if (!employee.call_time) return { status: "On-Time", reason: "no start time on the profile" };
+    const deadline = toMinutes(employee.call_time) + graceMinutes;
+    return {
+      status: toMinutes(form.time_in) <= deadline ? "On-Time" : "Late",
+      reason: `starts at ${formatMinutes(toMinutes(employee.call_time))}, late after ${formatMinutes(deadline)}`,
+    };
+  })();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (futureTime) return;
     setLoading(true);
     try {
       await axios.post(url + "/attendance", form, { headers: headers() });
@@ -164,8 +204,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
               onChange={update("status")}
               className={fieldClass}
             >
-              <option>On-Time</option>
-              <option>Late</option>
+              <option>Present</option>
               <option>Absent</option>
             </select>
           </label>
@@ -197,7 +236,7 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
                   required
                   value={form.time_in}
                   onChange={update("time_in")}
-                  className={fieldClass}
+                  className={`${fieldClass} ${futureIn ? "border-[#EC6668]" : ""}`}
                 />
               </label>
               <label className="flex-1 text-left text-sm font-medium">
@@ -206,10 +245,30 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
                   type="time"
                   value={form.time_out}
                   onChange={update("time_out")}
-                  className={fieldClass}
+                  className={`${fieldClass} ${futureOut ? "border-[#EC6668]" : ""}`}
                 />
               </label>
             </div>
+            {futureTime && (
+              <p className="text-xs text-left text-[#EC6668]">
+                The clock-in and clock-out cannot be later than the time now ({latestTime}).
+              </p>
+            )}
+            {lateCheck && (
+              <p className="text-sm text-left">
+                Will be saved as{" "}
+                <span
+                  className={`px-2 py-0.5 rounded-[6px] text-xs font-medium ${
+                    lateCheck.status === "Late"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {lateCheck.status}
+                </span>{" "}
+                <span className="text-xs text-[#8a90a3]">({lateCheck.reason})</span>
+              </p>
+            )}
           </>
         )}
 
@@ -253,7 +312,8 @@ export default function CreateAttendanceModal({ onSaved, onClose }) {
           </button>
           <button
             type="submit"
-            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80"
+            disabled={futureTime}
+            className="px-4 py-1 rounded-full text-white bg-[#2AAF56] hover:bg-[#2AAF56]/80 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#2AAF56]"
           >
             Save attendance
           </button>

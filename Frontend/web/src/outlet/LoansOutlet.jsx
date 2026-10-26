@@ -20,6 +20,7 @@ import {
 import DateInput from "@/components/DateInput";
 
 const LOAN_TYPES = ["SSS", "Pag-IBIG", "Company", "Cash Advance"];
+const LOANS_PER_PAGE = 10;
 
 const peso = (n) =>
   "₱" + Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0 });
@@ -290,7 +291,7 @@ export default function LoansOutlet() {
     const loadLoans = async () => {
       setRowsLoading(true);
       try {
-        const params = { page, per_page: 10 };
+        const params = { page, per_page: LOANS_PER_PAGE };
         if (searchSent) params.search = searchSent;
         const response = await axios.get(url + "/loans", {
           params,
@@ -446,6 +447,8 @@ export default function LoansOutlet() {
         setCurrentPage={goToPage}
         totalPages={lastPage}
         total={total}
+        perPage={LOANS_PER_PAGE}
+        emptyText={false} // the table shows its own message
         arrowSize={32}
         spacing={false}
       >

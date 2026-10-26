@@ -2,7 +2,7 @@
 
 class Url {
   final String api = 'https://froth-limes-skid.ngrok-free.dev/api';
-
+  // final String api = 'http://192.168.254.138:8000/api';
   //api for login
   String getLogin() {
     return "$api/login";

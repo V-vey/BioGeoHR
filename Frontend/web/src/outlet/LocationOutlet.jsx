@@ -111,6 +111,9 @@ export default function Location() {
           arrowSize={32}
           totalPages={totalPages}
           total={filteredLocations.length}
+          perPage={itemsPerPage}
+          emptyText="No locations yet."
+          loading={loading}
           searchShow={true}
           search={search}
           setSearch={handleSearch}

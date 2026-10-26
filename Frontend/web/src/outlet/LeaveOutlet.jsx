@@ -114,6 +114,9 @@ export default function Leave() {
         filterConfig={filterConfig}
         totalPages={totalPages}
         total={filteredLeave.length}
+        perPage={itemsPerPage}
+        emptyText="No leave requests found."
+        loading={loading}
         search={search}
         setSearch={handleSearch}
         onFilterApply={handleFilterApply}

@@ -69,6 +69,9 @@ export default function FlaggedAttendanceOutlet() {
         searchShow={true}
         totalPages={totalPages}
         total={filteredFlagged.length}
+        perPage={itemsPerPage}
+        emptyText="No flagged attendance."
+        loading={loading}
         search={search}
         setSearch={handleSearch}
       >

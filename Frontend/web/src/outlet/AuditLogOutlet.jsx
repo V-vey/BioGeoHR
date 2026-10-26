@@ -181,6 +181,8 @@ export default function AuditLogOutlet() {
         setCurrentPage={goToPage}
         totalPages={lastPage}
         total={total}
+        perPage={20} // the server's page size (AuditLogController)
+        emptyText={false} // the table shows its own message
         arrowSize={32}
         spacing={false}
       >

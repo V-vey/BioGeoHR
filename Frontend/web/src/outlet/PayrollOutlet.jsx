@@ -202,6 +202,8 @@ export default function PayrollOutlet() {
               header={payrollRunsHeader}
               totalPages={totalPages}
               total={payrollRuns.length}
+              perPage={itemsPerPage}
+              emptyText={false} // the table shows its own message
               spacing={false}
             >
               <div className="w-full justify-start">

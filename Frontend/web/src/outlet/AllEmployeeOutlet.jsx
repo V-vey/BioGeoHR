@@ -103,6 +103,9 @@ export default function AllEmployee({}) {
         filterConfig={filterConfig}
         totalPages={totalPages}
         total={filteredEmployees.length}
+        perPage={itemsPerPage}
+        emptyText="No employees found."
+        loading={loading}
         search={search}
         setSearch={handleSearch}
         onFilterApply={handleFilterApply}

@@ -164,6 +164,9 @@ export default function Attendance() {
           onFilterApply={handleFilterApply}
           totalPages={totalPages}
           total={total}
+          perPage={ITEMS_PER_PAGE}
+          emptyText="No attendance records found."
+          loading={loading || pageLoading}
           search={search}
           setSearch={setSearch}
         >

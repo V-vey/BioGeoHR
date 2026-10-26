@@ -315,7 +315,8 @@ export default function DashboardOutlet() {
   // Not Yet In), one page at a time: the server searches, counts and pages it.
   const EMP_PER_PAGE = 5;
   const [employees, setEmployees] = useState([]); // the records of the current page only
-  const [totalEmp, setTotalEmp] = useState(0);
+  // null until the first answer, so the card does not say "No employees found" while loading
+  const [totalEmp, setTotalEmp] = useState(null);
   const [totalPagesEmp, setTotalPagesEmp] = useState(1);
   const [currentPageEmp, setCurrentPageEmp] = useState(1);
   const [searchEmp, setSearchEmp] = useState("");
@@ -512,6 +513,9 @@ export default function DashboardOutlet() {
               maxH={400}
               totalPages={totalPages}
               total={filteredFlagged.length}
+              perPage={itemsPerPage}
+              emptyText="No flagged attendance."
+              pageShow={false}
             >
               {pageItemsFlagged.map((flag, i) => (
                 <FlaggedSummary key={i} flagged={flag} />
@@ -533,6 +537,9 @@ export default function DashboardOutlet() {
               header={employeeHeader}
               totalPages={totalPagesEmp}
               total={totalEmp}
+              perPage={EMP_PER_PAGE}
+              emptyText="No employees found."
+              loading={empLoading}
               spacing={false}
             >
               <div className="relative w-full justify-start">
@@ -569,6 +576,8 @@ export default function DashboardOutlet() {
               setCurrentPage={setCurrentPageLeave}
               totalPages={totalPagesLeave}
               total={filteredLeave.length}
+              perPage={itemsPerPageLeave}
+              emptyText="No pending leave requests."
               searchShow={false}
               arrowSize={32}
               minH={380}

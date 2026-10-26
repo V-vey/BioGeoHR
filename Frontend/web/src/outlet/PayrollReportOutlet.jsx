@@ -109,11 +109,6 @@ export default function PayrollReportOutlet() {
   const total = (key) =>
     filteredRows.reduce((sum, r) => sum + Number(r[key] || 0), 0);
 
-  // one line for the container's "Total:" slot
-  const totalText =
-    filteredRows.length === 0
-      ? "--"
-      : `${filteredRows.length} employee${filteredRows.length === 1 ? "" : "s"}`;
   // ---- downloads: the rows matching the search, for the chosen period ----
   const reportHead = [
     "Employee",
@@ -298,7 +293,10 @@ export default function PayrollReportOutlet() {
         setCurrentPage={setCurrentPage}
         totalPages={totalPages}
         arrowSize={32}
-        total={totalText}
+        total={filteredRows.length}
+        perPage={itemsPerPage}
+        emptyText="No payroll data for this period."
+        loading={loading}
         spacing={false}
       >
         <div className="w-full overflow-x-auto">
