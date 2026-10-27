@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // input formatters for the contact number
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../Controller/Profile/update_profile.dart';
@@ -34,8 +35,10 @@ class _EditProfile extends State<EditProfile> {
   File? _newImage; // the photo picked just now, not saved yet
   bool _saving = false;
 
-  // same rule as the server: digits, + - ( ) and spaces, 7 to 20 characters
-  static final _phone = RegExp(r'^[0-9+\-\s()]{7,20}$');
+  // same rule as the server (Users::formatPhone): a Philippine mobile number, 09XX XXX XXXX or
+  // +63 9XX XXX XXXX, spaces and dashes allowed
+  static final _phone = RegExp(r'^(?:\+?63|0)9\d{9}$');
+  static String _compact(String s) => s.replaceAll(RegExp(r'[\s\-().]'), '');
 
   Future<void> _pickPhoto() async {
     // maxWidth/imageQuality keep the upload small (the server accepts up to 2 MB)
@@ -85,8 +88,14 @@ class _EditProfile extends State<EditProfile> {
             TextField(
               controller: _contact,
               keyboardType: TextInputType.phone,
+              // digits, a +, spaces and dashes only: no letters
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-]')),
+                LengthLimitingTextInputFormatter(16),
+              ],
               decoration: const InputDecoration(
                 labelText: 'Contact number',
+                hintText: '0917 123 4567',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -117,8 +126,8 @@ class _EditProfile extends State<EditProfile> {
     // 1) check on the phone first, so a simple mistake does not need a round trip
     final contact = _contact.text.trim();
     final address = _address.text.trim();
-    if (!_phone.hasMatch(contact)) {
-      await say('Enter a valid phone number');
+    if (!_phone.hasMatch(_compact(contact))) {
+      await say('Enter a Philippine mobile number, for example 0917 123 4567');
       return;
     }
     if (address.isEmpty) {

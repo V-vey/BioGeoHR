@@ -12,6 +12,9 @@ import {
 } from "@/lib/dialog";
 import FamilyTable from "@/components/FamilyTable";
 import { cleanFamily } from "@/lib/family";
+import { PH_PHONE_PATTERN, PH_PHONE_TITLE, phoneChars } from "@/lib/phone";
+import { govIdChars } from "@/lib/govId";
+import { nameChars, lettersOnly } from "@/lib/textInput";
 import Loading from "@/components/Loading";
 import WorkingDaysField from "@/components/WorkingDaysField";
 import DateInput from "@/components/DateInput";
@@ -208,6 +211,13 @@ export default function NewEmployeeForm() {
 
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
+  // a box that only takes some characters: the rest never get in (filter: e.g. nameChars)
+  const updateWith = (key, filter) => (e) => {
+    e.target.value = filter(e.target.value);
+    update(key)(e);
+  };
+  // government IDs: digits and dashes only, a letter never gets into the box
+  const updateGovId = (key) => updateWith(key, govIdChars);
   const onCancel = async () => {
     const confirmed = await confirmDialog(
       "Are the sure you want to reset the inputs",
@@ -276,13 +286,13 @@ export default function NewEmployeeForm() {
 
           <Section title="Personal Information">
             <Field label="Last name" required>
-              <input className={inputClass} onChange={update("lastName")} />
+              <input className={inputClass} onChange={updateWith("lastName", nameChars)} />
             </Field>
             <Field label="First name" required>
-              <input className={inputClass} onChange={update("firstName")} />
+              <input className={inputClass} onChange={updateWith("firstName", nameChars)} />
             </Field>
             <Field label="Middle name">
-              <input className={inputClass} onChange={update("middleName")} />
+              <input className={inputClass} onChange={updateWith("middleName", nameChars)} />
             </Field>
             <Field label="Gender" required>
               <div className="relative">
@@ -310,13 +320,21 @@ export default function NewEmployeeForm() {
               <input className={inputClass} onChange={update("birthPlace")} />
             </Field>
             <Field label="Nationality" required>
-              <input className={inputClass} onChange={update("nationality")} />
+              <input className={inputClass} onChange={updateWith("nationality", lettersOnly)} />
             </Field>
             <Field label="Contact No." required>
               <input
                 type="tel"
+                inputMode="tel"
                 className={inputClass}
-                onChange={update("contactNumber")}
+                placeholder="0917 123 4567"
+                pattern={PH_PHONE_PATTERN}
+                title={PH_PHONE_TITLE}
+                maxLength={16}
+                onChange={(e) => {
+                  e.target.value = phoneChars(e.target.value); // no letters or symbols
+                  update("contactNumber")(e);
+                }}
               />
             </Field>
             <Field label="Address" required span={2}>
@@ -340,7 +358,7 @@ export default function NewEmployeeForm() {
                 placeholder="000-000-000-000"
                 inputMode="numeric"
                 maxLength={15}
-                onChange={update("tin")}
+                onChange={updateGovId("tin")}
               />
             </Field>
             <Field label="SSS No.">
@@ -349,7 +367,7 @@ export default function NewEmployeeForm() {
                 placeholder="00-0000000-0"
                 inputMode="numeric"
                 maxLength={12}
-                onChange={update("sssNumber")}
+                onChange={updateGovId("sssNumber")}
               />
             </Field>
             <Field label="PhilHealth No.">
@@ -358,7 +376,7 @@ export default function NewEmployeeForm() {
                 placeholder="00-000000000-0"
                 inputMode="numeric"
                 maxLength={14}
-                onChange={update("philhealthNumber")}
+                onChange={updateGovId("philhealthNumber")}
               />
             </Field>
             <Field label="Pag-IBIG No.">
@@ -367,7 +385,7 @@ export default function NewEmployeeForm() {
                 placeholder="0000-0000-0000"
                 inputMode="numeric"
                 maxLength={14}
-                onChange={update("pagibigNumber")}
+                onChange={updateGovId("pagibigNumber")}
               />
             </Field>
           </Section>

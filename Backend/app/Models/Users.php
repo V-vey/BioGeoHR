@@ -60,6 +60,11 @@ class Users extends Authenticatable
      */
     public static function formatGovId(string $field, $value): ?string
     {
+        // a letter or symbol is a typing mistake: leave it as typed so validation refuses it,
+        // instead of dropping it and saving the digits that are left
+        if (is_string($value) && preg_match('/[^\d\s-]/', $value)) {
+            return trim($value);
+        }
         $digits = preg_replace('/\D/', '', (string) $value);
         if ($digits === '') {
             return null;
@@ -86,6 +91,36 @@ class Users extends Authenticatable
             self::GOV_ID_GROUPS[$field],
         );
         return '/^(?:' . implode('|', $options) . ')$/';
+    }
+
+    /**
+     * A person's name: letters (ñ and accented ones too), with spaces, periods, hyphens and apostrophes
+     * for names like "Dela Cruz", "Harvey R. Tayag", "Ana-Marie" or "D'Souza". No digits or other symbols.
+     */
+    public const NAME_REGEX = "/^\\p{L}[\\p{L}\\s.'\\-]*$/u";
+    public const NAME_MESSAGE = 'The name can only have letters, spaces, periods, hyphens and apostrophes.';
+
+    /** A nationality: letters and spaces only, for example "Filipino". */
+    public const NATIONALITY_REGEX = '/^\p{L}[\p{L}\s]*$/u';
+    public const NATIONALITY_MESSAGE = 'The nationality can only have letters and spaces, for example Filipino.';
+
+    /** A Philippine mobile number as it is saved: 09 and 9 more digits. */
+    public const PHONE_REGEX = '/^09\d{9}$/';
+
+    /** The same message wherever a contact number is checked. */
+    public const PHONE_MESSAGE = 'Enter a Philippine mobile number, for example 0917 123 4567 or +63 917 123 4567.';
+
+    /**
+     * "+63 917-123-4567", "639171234567" and "0917 123 4567" all become 09171234567. Anything else is left
+     * without its spaces and dashes, so validation can refuse it.
+     */
+    public static function formatPhone($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $compact = preg_replace('/[\s\-().]/', '', (string) $value);
+        return preg_match('/^\+?63(9\d{9})$/', $compact, $m) ? '0' . $m[1] : $compact;
     }
 
     public function setTinAttribute($value): void

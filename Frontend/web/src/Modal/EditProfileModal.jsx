@@ -13,8 +13,11 @@ import { confirmDialog } from "@/lib/dialog";
 import Loading from "@/components/Loading";
 import DateInput from "@/components/DateInput";
 import { latestBirthDate } from "@/lib/birthDate";
+import { PH_PHONE_PATTERN, PH_PHONE_TITLE, phoneChars } from "@/lib/phone";
+import { govIdChars } from "@/lib/govId";
+import { nameChars, lettersOnly } from "@/lib/textInput";
 
-function Field({ label, value, onChange, type = "text", max }) {
+function Field({ label, value, onChange, type = "text", max, ...inputProps }) {
   const className = "w-full border border-[#b2b2b2] rounded-[10px] p-2";
   return (
     <div className="flex flex-col flex-1 items-start">
@@ -29,6 +32,7 @@ function Field({ label, value, onChange, type = "text", max }) {
         />
       ) : (
         <input
+          {...inputProps}
           type={type}
           value={value ?? ""}
           onChange={onChange}
@@ -121,6 +125,11 @@ export default function EdiPofiletModal({
 
   const update = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
+  // a box that only takes some characters: the rest never get in (filter: e.g. nameChars)
+  const updateWith = (key, filter) => (e) =>
+    setForm((f) => ({ ...f, [key]: filter(e.target.value) }));
+  // government IDs: digits and dashes only, a letter never gets into the box
+  const updateGovId = (key) => updateWith(key, govIdChars);
   const onCancel = () => {
     setForm({
       name: empData.name,
@@ -259,7 +268,7 @@ export default function EdiPofiletModal({
                   <Field
                     label={"Name"}
                     value={form.name}
-                    onChange={update("name")}
+                    onChange={updateWith("name", nameChars)}
                     type="text"
                   />
                   <Field
@@ -271,8 +280,16 @@ export default function EdiPofiletModal({
                   <Field
                     label={"Contact Number"}
                     value={form.contact_number}
-                    onChange={update("contact_number")}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, contact_number: phoneChars(e.target.value) }))
+                    }
                     type="tel"
+                    inputMode="tel"
+                    placeholder="0917 123 4567"
+                    pattern={PH_PHONE_PATTERN}
+                    title={PH_PHONE_TITLE}
+                    maxLength={16}
+                    required
                   />
                 </SectionInside>
                 <SectionInside>
@@ -286,7 +303,7 @@ export default function EdiPofiletModal({
                   <Field
                     label={"Nationality"}
                     value={form.nationality}
-                    onChange={update("nationality")}
+                    onChange={updateWith("nationality", lettersOnly)}
                     type="text"
                   />
 
@@ -309,13 +326,15 @@ export default function EdiPofiletModal({
                   <Field
                     label={"TIN"}
                     value={form.tin}
-                    onChange={update("tin")}
+                    onChange={updateGovId("tin")}
+                    inputMode="numeric"
                     type="text"
                   />
                   <Field
                     label={"SSS No."}
                     value={form.sss_number}
-                    onChange={update("sss_number")}
+                    onChange={updateGovId("sss_number")}
+                    inputMode="numeric"
                     type="text"
                   />
                 </SectionInside>
@@ -323,13 +342,15 @@ export default function EdiPofiletModal({
                   <Field
                     label={"PhilHealth No."}
                     value={form.philhealth_number}
-                    onChange={update("philhealth_number")}
+                    onChange={updateGovId("philhealth_number")}
+                    inputMode="numeric"
                     type="text"
                   />
                   <Field
                     label={"Pag-IBIG No."}
                     value={form.pagibig_number}
-                    onChange={update("pagibig_number")}
+                    onChange={updateGovId("pagibig_number")}
+                    inputMode="numeric"
                     type="text"
                   />
                 </SectionInside>

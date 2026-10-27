@@ -25,7 +25,7 @@ afterEach(fn () => Carbon::setTestNow());
 function newEmployeeBody(string $dob): array
 {
     return [
-        'name' => 'Age Test', 'email' => 'age' . uniqid() . '@test.test', 'contact_number' => '0917', 
+        'name' => 'Age Test', 'email' => 'age' . uniqid() . '@test.test', 'contact_number' => '0917 123 4567', 
         'department' => 'Academic', 'position' => 'Teacher', 'call_time' => '07:30:00',
         'contract_type' => 'Regular', 'employment_status' => 'Permanent', 'date_of_birth' => $dob,
         'gender' => 'Male', 'nationality' => 'Filipino', 'address' => 'Tarlac',

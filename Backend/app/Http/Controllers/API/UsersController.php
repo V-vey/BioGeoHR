@@ -41,6 +41,14 @@ class UsersController extends Controller
         }
     }
 
+    // the contact number in the one saved form (09XXXXXXXXX) before it is checked
+    private function normalizePhone(Request $request): void
+    {
+        if ($request->has('contact_number')) {
+            $request->merge(['contact_number' => Users::formatPhone($request->input('contact_number'))]);
+        }
+    }
+
     /** Validation rules for the four numbers; [$rules, $messages]. $ignoreId = the employee being edited. */
     private function govIdValidation($ignoreId = null): array
     {
@@ -141,6 +149,13 @@ class UsersController extends Controller
 
     private const BIRTH_DATE_MESSAGE = ['date_of_birth.before_or_equal' => 'Employee must be at least 18 years old.'];
 
+    // the messages for the name, nationality and contact number rules (create and edit)
+    private const TEXT_MESSAGES = [
+        'name.regex'           => Users::NAME_MESSAGE,
+        'nationality.regex'    => Users::NATIONALITY_MESSAGE,
+        'contact_number.regex' => Users::PHONE_MESSAGE,
+    ];
+
     /** The latest date of birth an employee may have: today minus 18 years, worked out on every request (Asia/Manila). */
     private function latestBirthDate(): string
     {
@@ -154,12 +169,13 @@ class UsersController extends Controller
     public function store(Request $request)
     {
         $this->normalizeGovIds($request);
+        $this->normalizePhone($request);
         [$govRules, $govMessages] = $this->govIdValidation();
 
         $request->validate([
-            'name' => 'required',
+            'name' => ['required', 'string', 'max:255', 'regex:' . Users::NAME_REGEX],
             'email' => 'required|email',
-            'contact_number' => 'required',
+            'contact_number' => ['required', 'regex:' . Users::PHONE_REGEX],
             'department' => 'required',
             'position' => 'required',
             'call_time' => 'required',
@@ -167,14 +183,14 @@ class UsersController extends Controller
             'employment_status' => 'required|in:Contractual,Permanent',
             'date_of_birth' => ['required', 'date', 'before_or_equal:' . $this->latestBirthDate()],
             'gender' => 'required',
-            'nationality' => 'required',
+            'nationality' => ['required', 'string', 'max:100', 'regex:' . Users::NATIONALITY_REGEX],
             'address' => 'required',
             'image' => 'nullable|image|max:2048',
 
             'monthly_salary' => 'required',
             'working_hours_per_day' => 'required',
             // 'working_days_per_month' => 'required|numeric|min:1|max:31'
-        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE);
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE + self::TEXT_MESSAGES);
 
         // spouse and children (shown on the profile only); checked before anything is saved
         [$family, $familyError] = $this->parseFamily($request);
@@ -274,15 +290,19 @@ class UsersController extends Controller
 
         // the edit form sends every field; an empty number is saved as empty, a filled one is checked
         $this->normalizeGovIds($request);
+        $this->normalizePhone($request);
         [$govRules, $govMessages] = $this->govIdValidation($users->id);
 
         $request->validate([
             'image' => 'nullable|image|max:2048',
+            'name' => ['sometimes', 'required', 'string', 'max:255', 'regex:' . Users::NAME_REGEX],
+            'nationality' => ['sometimes', 'required', 'string', 'max:100', 'regex:' . Users::NATIONALITY_REGEX],
+            'contact_number' => ['sometimes', 'required', 'regex:' . Users::PHONE_REGEX],
             // the edit form sends it every time; older accounts may still have none
             'employment_status' => 'sometimes|nullable|in:Contractual,Permanent',
             // the edit form sends it every time; an employee must be at least 18
             'date_of_birth' => ['sometimes', 'required', 'date', 'before_or_equal:' . $this->latestBirthDate()],
-        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE);
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE + self::TEXT_MESSAGES);
 
         // the whole family list is replaced when the form sends one; left alone when it does not
         [$family, $familyError] = $this->parseFamily($request);
@@ -379,12 +399,13 @@ class UsersController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        $this->normalizePhone($request);
         $request->validate([
-            'contact_number' => ['sometimes', 'required', 'regex:/^[0-9+\-\s()]{7,20}$/'],
+            'contact_number' => ['sometimes', 'required', 'regex:' . Users::PHONE_REGEX],
             'address'        => 'sometimes|required|string|max:255',
             'image'          => 'nullable|image|max:2048',
         ], [
-            'contact_number.regex' => 'Enter a valid phone number.',
+            'contact_number.regex' => Users::PHONE_MESSAGE,
         ]);
 
         $changed = [];

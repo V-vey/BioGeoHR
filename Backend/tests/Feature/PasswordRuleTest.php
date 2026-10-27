@@ -24,7 +24,7 @@ beforeEach(function () {
 function employeeBody(array $extra = []): array
 {
     return $extra + [
-        'name' => 'Pw Test', 'email' => 'pw' . uniqid() . '@test.test', 'contact_number' => '0917',
+        'name' => 'Pw Test', 'email' => 'pw' . uniqid() . '@test.test', 'contact_number' => '0917 123 4567',
         'department' => 'Academic', 'position' => 'Teacher', 'call_time' => '07:30:00',
         'contract_type' => 'Regular', 'employment_status' => 'Permanent', 'date_of_birth' => '1990-01-01',
         'gender' => 'Male', 'nationality' => 'Filipino', 'address' => 'Tarlac',
