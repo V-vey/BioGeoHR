@@ -87,6 +87,11 @@ class Url {
     return "$api/geofenceCheck";
   }
 
+  // the periodic check found the GPS off while clocked in
+  String geofenceCheckGpsOff() {
+    return "$api/geofenceCheck/gpsOff";
+  }
+
   String systemSettings() {
     return "$api/systemSettings";
   }

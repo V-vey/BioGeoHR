@@ -12,6 +12,10 @@ const inputClass =
 export default function FamilyTable({ value, onChange }) {
   const rows = value ?? [];
   const today = new Date().toLocaleDateString("en-CA"); // a birthday cannot be in the future
+  // a spouse must be at least 18: born on or before this day 18 years ago
+  const adultCutoff = new Date();
+  adultCutoff.setFullYear(adultCutoff.getFullYear() - 18);
+  const spouseMax = adultCutoff.toLocaleDateString("en-CA");
   const hasSpouse = rows.some((r) => r.relationship === "Spouse");
 
   const setRow = (index, patch) =>
@@ -43,7 +47,7 @@ export default function FamilyTable({ value, onChange }) {
           <DateInput
             className={inputClass}
             wrapperClassName="max-w-[170px]"
-            max={today}
+            max={row.relationship === "Spouse" ? spouseMax : today}
             value={row.birthday}
             onChange={(e) => setRow(i, { birthday: e.target.value })}
             aria-label={`${row.relationship} birthday`}

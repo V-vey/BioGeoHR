@@ -173,9 +173,28 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
     //change min to 30 later or the data
     geofenceTimer = Timer.periodic(Duration(minutes: geofenceIntervalMinutes), (
       timer,
-    ) {
-      checkGeofencePeriodically();
+    ) async {
+      final result = await checkGeofencePeriodically();
+      if (!mounted) return;
+      switch (result) {
+        case GeofenceResult.notClockedIn:
+          // the server says they are not clocked in (clocked out elsewhere, or a new day): match it
+          resync();
+        case GeofenceResult.gpsOff:
+          _warn('Your GPS is off. Turn it back on: HR can see that your location could not be checked.');
+        case GeofenceResult.outOfRange:
+          _warn('You are outside your work area. HR can see this on your attendance.');
+        case GeofenceResult.inRange:
+        case GeofenceResult.failed:
+          break;
+      }
     });
+  }
+
+  void _warn(String message) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 6)),
+    );
   }
 
   /// Stop the clock and the location checks but keep the time on screen (clock-out).

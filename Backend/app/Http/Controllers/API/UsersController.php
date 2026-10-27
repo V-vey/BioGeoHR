@@ -123,6 +123,10 @@ class UsersController extends Controller
                 if ($date > new \DateTime('today')) {
                     return [null, "Family member {$n}: the birthday cannot be in the future."];
                 }
+                // a spouse must be at least 18
+                if ($relationship === 'Spouse' && $date > new \DateTime('today -18 years')) {
+                    return [null, "Family member {$n}: the spouse must be at least 18 years old."];
+                }
             }
             if ($relationship === 'Spouse') {
                 $spouses++;

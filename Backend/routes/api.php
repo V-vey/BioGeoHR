@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //periodic check
     Route::post('geofenceCheck', [GeoFenceController::class, 'periodicCheck']);
+    Route::post('geofenceCheck/gpsOff', [GeoFenceController::class, 'periodicGpsOff']);
     Route::get('systemSettings', [SystemSettingController::class, 'index']);
     
     Route::get('myLeave', [LeaveApplicationController::class, 'myLeave']);

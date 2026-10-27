@@ -53,12 +53,7 @@ class GeoFenceController extends Controller
             'userLong' => 'required',
         ]);
 
-        $userId = $this->getUserIdFromToken();
-
-        $attendance = Attendance::where('user_id', $userId)
-            ->whereNull('time_out')
-            ->latest()
-            ->first();
+        $attendance = $this->openSession($this->getUserIdFromToken());
 
         if (!$attendance) {
             return response()->json(['message' => 'No active attendance session found'], 404);
@@ -102,5 +97,46 @@ class GeoFenceController extends Controller
         }
 
         return response()->json(['message' => 'Within boundary', 'distance' => $distance]);
+    }
+
+    /**
+     * The phone's periodic check found the GPS off while the employee is clocked in. The place cannot be
+     * checked, so it is flagged like leaving the area: the next check that finds them in range closes it.
+     * The app sends nothing; the audit sentence is written here.
+     */
+    public function periodicGpsOff()
+    {
+        $attendance = $this->openSession($this->getUserIdFromToken());
+
+        if (!$attendance) {
+            return response()->json(['message' => 'No active attendance session found'], 404);
+        }
+
+        $openExcursion = FlaggedAttendance::where('attendance_id', $attendance->id)
+            ->whereNull('in_at')
+            ->exists();
+
+        // one flag and one audit line while it stays off, not one every check
+        if (!$openExcursion) {
+            FlaggedAttendance::create([
+                'attendance_id' => $attendance->id,
+                'out_at' => now(),
+            ]);
+            $place = Location::find($attendance->location_id)?->name;
+            AuditLog::record('check_in', 'gps_off', 'failed', "GPS/Location turned off while clocked in at {$place} (Mobile)");
+        }
+
+        return response()->json(['message' => 'GPS off flagged']);
+    }
+
+    /** Today's clock-in that is still running, or null. */
+    private function openSession(?int $userId): ?Attendance
+    {
+        return Attendance::where('user_id', $userId)
+            ->whereDate('date', now('Asia/Manila')->toDateString()) // today only, not a forgotten earlier day
+            ->whereNotNull('time_in')                                // a real clock-in, not an Absent row
+            ->whereNotNull('location_id')                            // has a place to measure against
+            ->whereNull('time_out')                                  // still clocked in
+            ->first();
     }
 }
