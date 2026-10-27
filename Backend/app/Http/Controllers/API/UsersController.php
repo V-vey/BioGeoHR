@@ -160,6 +160,15 @@ class UsersController extends Controller
         'contact_number.regex' => Users::PHONE_MESSAGE,
     ];
 
+    // salaries.salary_basis is decimal(8,2): anything above this makes MySQL refuse the row
+    private const MAX_SALARY = 999999.99;
+
+    private const STORE_MESSAGES = [
+        'email.unique'       => 'This email is already used by another employee.',
+        'monthly_salary.max' => 'The monthly salary cannot be more than ₱999,999.99.',
+        'monthly_salary.min' => 'The monthly salary must be more than ₱0.',
+    ];
+
     /** The latest date of birth an employee may have: today minus 18 years, worked out on every request (Asia/Manila). */
     private function latestBirthDate(): string
     {
@@ -178,7 +187,7 @@ class UsersController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'regex:' . Users::NAME_REGEX],
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'contact_number' => ['required', 'regex:' . Users::PHONE_REGEX],
             'department' => 'required',
             'position' => 'required',
@@ -191,10 +200,10 @@ class UsersController extends Controller
             'address' => 'required',
             'image' => 'nullable|image|max:2048',
 
-            'monthly_salary' => 'required',
-            'working_hours_per_day' => 'required',
+            'monthly_salary' => 'required|numeric|min:0.01|max:' . self::MAX_SALARY,
+            'working_hours_per_day' => 'required',   // the web form's field is hidden (it sends "undefined"); the salary always uses 8
             // 'working_days_per_month' => 'required|numeric|min:1|max:31'
-        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE + self::TEXT_MESSAGES);
+        ] + $govRules, $govMessages + self::BIRTH_DATE_MESSAGE + self::TEXT_MESSAGES + self::STORE_MESSAGES);
 
         // spouse and children (shown on the profile only); checked before anything is saved
         [$family, $familyError] = $this->parseFamily($request);
@@ -207,55 +216,67 @@ class UsersController extends Controller
         // HR does not choose the password: a random one is made here and emailed to the employee
         $password = StrongPassword::generate();
 
-        $users = Users::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'contact_number' => $request->contact_number,
-            'password' => Hash::make($password),
-            'department' => $request->department,
-            'position' => $request->position,
-            'call_time' => $request->call_time,
-            'contract_type' => $request->contract_type,
-            'employment_status' => $request->employment_status,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'nationality' => $request->nationality,
-            'tin' => $request->tin,
-            'sss_number' => $request->sss_number,
-            'philhealth_number' => $request->philhealth_number,
-            'pagibig_number' => $request->pagibig_number,
-            'address' => $request->address,
-            'image_path' => $imagePath,
-        ]);
+        // all or nothing: if any row fails (for example the salary), no half-made employee is left behind,
+        // and the photo just stored is removed again
+        try {
+            $users = DB::transaction(function () use ($request, $password, $imagePath, $family) {
+                $users = Users::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'contact_number' => $request->contact_number,
+                    'password' => Hash::make($password),
+                    'department' => $request->department,
+                    'position' => $request->position,
+                    'call_time' => $request->call_time,
+                    'contract_type' => $request->contract_type,
+                    'employment_status' => $request->employment_status,
+                    'date_of_birth' => $request->date_of_birth,
+                    'gender' => $request->gender,
+                    'nationality' => $request->nationality,
+                    'tin' => $request->tin,
+                    'sss_number' => $request->sss_number,
+                    'philhealth_number' => $request->philhealth_number,
+                    'pagibig_number' => $request->pagibig_number,
+                    'address' => $request->address,
+                    'image_path' => $imagePath,
+                ]);
 
-        if ($family) {
-            $this->saveFamily($users, $family);
+                if ($family) {
+                    $this->saveFamily($users, $family);
+                }
+
+                Salary::create([
+                    'user_id' => $users->id,
+                    'salary_basis' => $request->monthly_salary,
+                    'working_hours_per_day' => 8,
+                    'working_days_per_month' => 26
+                ]);
+                //Create a Balance
+                if($users->contract_type == "Regular"){
+                    LeaveBalance::create(['user_id' => $users->id] + LeaveBalance::FULL_CREDITS);
+                } else {
+                    // not Regular yet (Probationary): the row exists, with no credits
+                    LeaveBalance::create([
+                        'user_id' => $users->id,
+                        'sick' => 2,
+                        'vacation' => 2,
+                        'emergency' => 2,
+                        'birthday' => 1,
+                        'solo_parent' => 0,
+                        'paternity' => 0,
+                        'maternity' => 0,
+                    ]);
+                }
+
+                return $users;
+            });
+        } catch (\Throwable $e) {
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            throw $e;
         }
-        
-        Salary::create([
-            'user_id' => $users->id,
-            'salary_basis' => $request->monthly_salary,
-            'working_hours_per_day' => 8,
-            'working_days_per_month' => 26
-        ]);
-        //Create a Balance
-        if($users->contract_type == "Regular"){
-            LeaveBalance::create(['user_id' => $users->id] + LeaveBalance::FULL_CREDITS);
-        } else {
-            // not Regular yet (Probationary): the row exists, with no credits
-            LeaveBalance::create([
-                'user_id' => $users->id,
-                'sick' => 2,
-                'vacation' => 2,
-                'emergency' => 2,
-                'birthday' => 1,
-                'solo_parent' => 0,
-                'paternity' => 0,
-                'maternity' => 0,
-            ]);
-        }
-       
-        
+
         $emailSent = (new SendEmail())->send($users, $password);
         AuditLog::record('admin', 'employee_created', 'success', $users->name);
         // the password goes to the employee by email; only when that fails is it shown to HR (once),
