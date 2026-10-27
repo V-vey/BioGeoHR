@@ -220,8 +220,8 @@ class SalaryService
                 ->count();
 
             $additionalPay = $this->additionalPay($userId, $periodStart, $periodEnd, $dailyWage);
-    
-            $overtimePay = $this->overtime($userId, $periodStart, $periodEnd, $hrRate);
+            // UNCOMMENT THIS TO ENABLE OVERTIME PAY
+            //$overtimePay = $this->overtime($userId, $periodStart, $periodEnd, $hrRate);
             $absenceDeduction = $absentDays * $dailyWage;
            
         }
