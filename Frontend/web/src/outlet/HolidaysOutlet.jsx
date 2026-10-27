@@ -6,6 +6,7 @@ import { url } from "@/resources/api";
 import Loading from "@/components/Loading";
 import { confirmDialog, notifyError } from "@/lib/dialog";
 import DateInput from "@/components/DateInput";
+import Containers from "@/components/container";
 
 // The kind of holiday decides the pay (see SalaryService::workedDayExtra):
 //   regular             200% if worked, paid even if not worked
@@ -34,12 +35,15 @@ const TYPES = [
 const typeOf = (value) => TYPES.find((t) => t.value === value) ?? TYPES[0];
 
 const EMPTY = { date: "", name: "", type: "" };
+const PER_PAGE = 10;
 
 export default function HolidayOutlet() {
   const [holidays, setHolidays] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null); // the holiday being edited, or null when adding
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const headers = () => ({
     "ngrok-skip-browser-warning": "true",
@@ -127,6 +131,18 @@ export default function HolidayOutlet() {
   const fieldClass = "w-full border border-[#b2b2b2] rounded-[10px] p-2";
   const selected = TYPES.find((t) => t.value === form.type);
 
+  const handleSearch = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+  const filtered = holidays.filter((h) =>
+    h.name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  // a delete can empty the last page: show the page before it instead
+  const page = Math.min(currentPage, totalPages);
+  const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
   return (
     <>
       {loading && <Loading />}
@@ -210,76 +226,83 @@ export default function HolidayOutlet() {
           </p> */}
         </div>
 
-        <div className="bg-white border border-[#b2b2b2] rounded-[10px] w-full overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[#b2b2b2] text-sm text-[#8a90a3]">
-                <th className="px-4 py-2 font-medium">Date</th>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Type</th>
-                <th className="px-4 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {holidays.length === 0 && !loading && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-6 text-center text-[#8a90a3]"
-                  >
-                    No holidays yet.
-                  </td>
+        <Containers
+          name="Holiday List"
+          currentPage={page}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          total={filtered.length}
+          perPage={PER_PAGE}
+          emptyText={
+            search.trim() ? "No holidays match that name." : "No holidays yet."
+          }
+          loading={loading}
+          search={search}
+          setSearch={handleSearch}
+          arrowSize={32}
+          spacing={false}
+        >
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[#b2b2b2] text-sm text-[#8a90a3]">
+                  <th className="px-4 py-2 font-medium">Date</th>
+                  <th className="px-4 py-2 font-medium">Name</th>
+                  <th className="px-4 py-2 font-medium">Type</th>
+                  <th className="px-4 py-2" />
                 </tr>
-              )}
-              {holidays.map((h) => {
-                const t = typeOf(h.type);
-                return (
-                  <tr
-                    key={h.id}
-                    className={`border-t border-[#b2b2b2] first:border-t-0 ${
-                      editingId === h.id ? "bg-[#6675EC]/5" : ""
-                    }`}
-                  >
-                    <td className="px-4 py-2">
-                      {format(
-                        new Date(String(h.date).slice(0, 10) + "T00:00:00"),
-                        "MMM d, yyyy",
-                      )}
-                    </td>
-                    <td className="px-4 py-2">{h.name}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${t.tag}`}
-                      >
-                        {t.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <div className="flex flex-row gap-3 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(h)}
-                          className="text-[#6675EC] hover:text-[#6675EC]/80"
-                          aria-label="Edit holiday"
+              </thead>
+              <tbody>
+                {pageItems.map((h) => {
+                  const t = typeOf(h.type);
+                  return (
+                    <tr
+                      key={h.id}
+                      className={`border-t border-[#b2b2b2] first:border-t-0 ${
+                        editingId === h.id ? "bg-[#6675EC]/5" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-2">
+                        {format(
+                          new Date(String(h.date).slice(0, 10) + "T00:00:00"),
+                          "MMM d, yyyy",
+                        )}
+                      </td>
+                      <td className="px-4 py-2">{h.name}</td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${t.tag}`}
                         >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(h.id)}
-                          className="text-[#EC6668] hover:text-[#EC6668]/80"
-                          aria-label="Delete holiday"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {t.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <div className="flex flex-row gap-3 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(h)}
+                            className="text-[#6675EC] hover:text-[#6675EC]/80"
+                            aria-label="Edit holiday"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(h.id)}
+                            className="text-[#EC6668] hover:text-[#EC6668]/80"
+                            aria-label="Delete holiday"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Containers>
       </div>
     </>
   );

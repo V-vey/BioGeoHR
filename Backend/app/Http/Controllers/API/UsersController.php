@@ -245,10 +245,10 @@ class UsersController extends Controller
             // not Regular yet (Probationary): the row exists, with no credits
             LeaveBalance::create([
                 'user_id' => $users->id,
-                'sick' => 0,
-                'vacation' => 0,
-                'emergency' => 0,
-                'birthday' => 0,
+                'sick' => 2,
+                'vacation' => 2,
+                'emergency' => 2,
+                'birthday' => 1,
                 'solo_parent' => 0,
                 'paternity' => 0,
                 'maternity' => 0,

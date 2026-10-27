@@ -111,6 +111,16 @@ class LeaveBalanceController extends Controller
     {
         $count = LeaveBalance::whereIn('user_id', Users::active()->where('contract_type', 'Regular')->select('id'))
             ->update(LeaveBalance::FULL_CREDITS);
+            $count = LeaveBalance::whereIn('user_id', Users::active()->where('contract_type', 'Probationary')->select('id'))
+            ->update([
+                'sick' => 2,
+                'vacation' => 2,
+                'emergency' => 2,
+                'birthday' => 1,
+                'solo_parent' => 0,
+                'paternity' => 0,
+                'maternity' => 0,
+            ]);
 
         AuditLog::record('admin', 'leave_credits_reset', 'success', "{$count} employee(s)");
 
