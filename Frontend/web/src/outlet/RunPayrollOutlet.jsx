@@ -340,7 +340,7 @@ export default function RunPayrollOutlet() {
                   <th className="py-2 px-2 font-semibold">Absent</th>
                   <th className="py-2 px-2 font-semibold">Loan</th>
                   {/* overtime Comment */}
-                  <th className="py-2 px-2 font-semibold">Overtime Pay</th>
+                  {/* <th className="py-2 px-2 font-semibold">Overtime Pay</th> */}
                   <th className="py-2 px-2 font-semibold">Additional Pay</th>
                   <th className="py-2 pr-4 pl-2 font-semibold">Net pay</th>
                 </tr>
@@ -426,9 +426,9 @@ export default function RunPayrollOutlet() {
                           {money(r.loan_deduction)}
                         </td>
                         {/* overtime Comment */}
-                        <td className="py-3 px-2 text-sm">
+                        {/* <td className="py-3 px-2 text-sm">
                           {money(r.overtime_pay)}
-                        </td>
+                        </td> */}
                         <td className="py-3 px-2 text-sm">
                           {money(r.additional_pay)}
                         </td>
@@ -519,10 +519,10 @@ export default function RunPayrollOutlet() {
             </div>
 
             {/* overtime Comment */}
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
               <span className="text-[#8a90a3]">Overtime Pay</span>
               <span className="font-semibold">{money(totals.overtime)}</span>
-            </div>
+            </div> */}
 
             <div className="flex justify-between">
               <span className="text-[#8a90a3]">Additional Pay</span>

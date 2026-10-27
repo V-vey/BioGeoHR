@@ -310,9 +310,9 @@ export default function PayrollReportOutlet() {
                 <th className="px-3 py-2 text-right font-medium">Leave</th>
                 <th className="px-3 py-2 text-right font-medium">Hours</th>
                 <th className="px-3 py-2 text-right font-medium">Gross</th>
-                <th className="px-3 py-2 text-right font-medium">
+                {/* <th className="px-3 py-2 text-right font-medium">
                   Overtime Pay
-                </th>
+                </th> */}
                 <th className="px-3 py-2 text-right font-medium">
                   Additional Pay
                 </th>
@@ -336,9 +336,9 @@ export default function PayrollReportOutlet() {
                   <td className="px-3 py-2 text-right">{r.leave_days}</td>
                   <td className="px-3 py-2 text-right">{r.hours}</td>
                   <td className="px-3 py-2 text-right">{money(r.gross)}</td>
-                  <td className="px-3 py-2 text-right">
+                  {/* <td className="px-3 py-2 text-right">
                     {money(r.overtime_pay)}
-                  </td>
+                  </td> */}
                   <td className="px-3 py-2 text-right">
                     {money(r.additional_pay)}
                   </td>

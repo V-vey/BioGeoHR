@@ -452,24 +452,29 @@ class UsersController extends Controller
         $today = Carbon::now();
         $absentDays = 0;
 
-        foreach ($startOfMonth->daysUntil($today) as $date) {
-            if ($date->isWeekend()) continue;   // Saturday and Sunday are not workdays, so nobody is absent on them
+        $absentDays = Attendance::where('user_id', $userId)
+            ->whereDate('date', '>=', $startOfMonth)
+            ->where('status', 'Absent')
+            ->count();
 
-            $isHoliday = Holiday::nonWorking()->where('date', $date->toDateString())->exists();
-            if ($isHoliday) continue;
+        // foreach ($startOfMonth->daysUntil($today) as $date) {
+        //     if ($date->isWeekend()) continue;   // Saturday and Sunday are not workdays, so nobody is absent on them
 
-            $hasAttendance = Attendance::where('user_id', $userId)->whereDate('date', $date)->exists();
-            if ($hasAttendance) continue;
+        //     $isHoliday = Holiday::nonWorking()->where('date', $date->toDateString())->exists();
+        //     if ($isHoliday) continue;
 
-            $onLeave = LeaveApplication::where('user_id', $userId)
-                ->where('status', 'approved')
-                ->whereDate('start_date', '<=', $date)
-                ->whereDate('end_date', '>=', $date)
-                ->exists();
-            if ($onLeave) continue;
+        //     $hasAttendance = Attendance::where('user_id', $userId)->whereDate('date', $date)->exists();
+        //     if ($hasAttendance) continue;
 
-            $absentDays++;
-        }
+        //     $onLeave = LeaveApplication::where('user_id', $userId)
+        //         ->where('status', 'approved')
+        //         ->whereDate('start_date', '<=', $date)
+        //         ->whereDate('end_date', '>=', $date)
+        //         ->exists();
+        //     if ($onLeave) continue;
+
+        //     $absentDays++;
+        // }
         $onTimeCount = Attendance::where('user_id', $userId)
             ->where('status', 'On-Time')
             ->whereDate('date', '>=', $startOfMonth)

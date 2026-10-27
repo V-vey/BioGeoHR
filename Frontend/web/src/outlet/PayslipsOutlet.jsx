@@ -326,12 +326,12 @@ export default function PayslipsOutlet() {
                     </td>
                   </tr>
                   {/* overtime Comment */}
-                  <tr className="border-t border-[#eef0f5]">
+                  {/* <tr className="border-t border-[#eef0f5]">
                     <td className="py-2.5 text-sm">Overtime Pay</td>
                     <td className="py-2.5 text-sm text-right">
                       {money(current.overtime_pay)}
                     </td>
-                  </tr>
+                  </tr> */}
                   <tr className="border-t border-[#eef0f5]">
                     <td className="py-2.5 text-sm">Additional Pay</td>
                     <td className="py-2.5 text-sm text-right">
