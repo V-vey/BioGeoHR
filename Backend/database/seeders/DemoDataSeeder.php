@@ -26,28 +26,46 @@ use Illuminate\Support\Facades\DB;
  *   php artisan db:seed --class=DemoDataSeeder
  *
  * Run it on EMPTY tables (the wipe script truncates them first). It creates, in this order:
- * settings, geofence locations, holidays, employees (+ salary + leave balance), attendance for
- * 1 Sep - 7 Oct 2026, leave requests (approved / pending / rejected), loans, flagged attendance,
- * the September payroll (run through the real PayslipController) and a few audit entries.
+ * settings, geofence locations, holidays, employees (+ salary + leave balance), leave requests
+ * (approved / pending / rejected), attendance, loans, flagged attendance, last month's payroll (run
+ * through the real PayslipController) and a few audit entries.
  *
- * Every demo account uses the password below. The same random seed is used every time, so
- * the data comes out identical on each run.
+ * The dates follow the day it is run, so the demo always looks current:
+ *   - attendance from the 1st of last month up to yesterday, and today's clock-ins so far
+ *     (the phone test account is left out of today, so a clock-in can be shown live);
+ *   - last month's two payroll cutoffs already run;
+ *   - approved leave in the past, pending leave in the next working days.
+ *
+ * Every demo account uses the password below. The same random seed is used every time, so a run on
+ * the same day gives the same data.
  */
 class DemoDataSeeder extends Seeder
 {
     /** Password of every account this seeder creates. */
     const PASSWORD = 'password123';
 
-    // the days the demo covers (the system's "today" is 8 Oct 2026)
-    const FROM = '2026-09-01';
-    const TO = '2026-10-07';
+    /** The phone test account: no record today, so a clock-in can be demonstrated. */
+    const PHONE_TEST = 'test@test.com';
 
     private array $locationIds = [];
+
+    private Carbon $now;    // the moment the seeder runs (Asia/Manila)
+    private Carbon $today;  // its date
+    private Carbon $from;   // the 1st of last month: the first day of the demo
+    private Carbon $to;     // yesterday: the last finished day
+
+    /** Holiday dates ("Y-m-d" => true) that are not working days. */
+    private array $nonWorking = [];
 
     public function run(): void
     {
         Model::unguard(); // a seeder writes any column
         mt_srand(20261008); // same "random" attendance every run
+
+        $this->now = now('Asia/Manila');
+        $this->today = $this->now->copy()->startOfDay();
+        $this->from = $this->today->copy()->subMonthNoOverflow()->startOfMonth();
+        $this->to = $this->today->copy()->subDay();
 
         $this->settings();
         $this->locations();
@@ -56,6 +74,7 @@ class DemoDataSeeder extends Seeder
         $people = $this->employees();
         $leaves = $this->leaves($people);
         $this->attendance($people, $leaves);
+        $this->todayAttendance($people, $leaves);
         $this->loans($people);
         $this->flagged();
         $this->payroll();
@@ -90,27 +109,47 @@ class DemoDataSeeder extends Seeder
         }
     }
 
+    // the Philippine holidays that fall on the same date every year, for each year the demo touches
+    // (holidays that move, such as Eid or National Heroes Day, are left to HR)
     private function holidays(): void
     {
-        $rows = [
-            '2026-10-01' => 'Eidul Fitr',
-            '2026-10-31' => 'Additional Special Day',
-            '2026-11-01' => 'All Saints Day',
-            '2026-11-30' => 'Bonifacio Day',
-            '2026-12-08' => 'Feast of the Immaculate Conception',
-            '2026-12-25' => 'Christmas Day',
-            '2026-12-30' => 'Rizal Day',
-            '2026-12-31' => 'Last Day of the Year',
+        $regular = [
+            '01-01' => "New Year's Day", '04-09' => 'Araw ng Kagitingan', '05-01' => 'Labor Day',
+            '06-12' => 'Independence Day', '11-30' => 'Bonifacio Day', '12-25' => 'Christmas Day',
+            '12-30' => 'Rizal Day',
         ];
-        // the special non-working days among them; the rest are regular holidays
-        $special = ['2026-10-31', '2026-11-01', '2026-12-08', '2026-12-31'];
-        foreach ($rows as $date => $name) {
-            Holiday::create([
-                'date' => $date,
-                'name' => $name,
-                'type' => in_array($date, $special, true) ? Holiday::SPECIAL_NON_WORKING : Holiday::REGULAR,
-            ]);
+        $special = [
+            '08-21' => 'Ninoy Aquino Day', '11-01' => "All Saints' Day",
+            '12-08' => 'Feast of the Immaculate Conception', '12-24' => 'Christmas Eve',
+            '12-31' => 'Last Day of the Year',
+        ];
+
+        $years = array_unique([$this->from->year, $this->today->year, $this->today->year + 1]);
+        foreach ($years as $year) {
+            foreach ([Holiday::REGULAR => $regular, Holiday::SPECIAL_NON_WORKING => $special] as $type => $days) {
+                foreach ($days as $monthDay => $name) {
+                    $date = "{$year}-{$monthDay}";
+                    Holiday::create(['date' => $date, 'name' => $name, 'type' => $type]);
+                    $this->nonWorking[$date] = true;
+                }
+            }
         }
+    }
+
+    private function isWorkingDay(Carbon $day): bool
+    {
+        return !$day->isWeekend() && !isset($this->nonWorking[$day->toDateString()]);
+    }
+
+    // the date $n working days from today (negative: in the past); 0 is today
+    private function workday(int $n): string
+    {
+        $day = $this->today->copy();
+        for ($left = abs($n); $left > 0;) {
+            $n > 0 ? $day->addDay() : $day->subDay();
+            if ($this->isWorkingDay($day)) $left--;
+        }
+        return $day->toDateString();
     }
 
     /**
@@ -123,7 +162,7 @@ class DemoDataSeeder extends Seeder
         $rows = [
             // the web admin login and the phone test account (the wipe script puts their real details back)
             ['Admin HR', 'hr@biogeohr.test', '09000000000', 'Administrative', 'HR Administrator', '08:00:00', 'Regular', '1990-01-01', 'Other', 'N/A', 38000, true],
-            ['R V Test', 'test@test.com', '09617989691', 'Administrator', 'HR Tech', '07:00:00', 'Regular', '2004-12-28', 'Male', 'Diko Alam Gerona Tarlac', 20000, true],
+            ['R V Test', self::PHONE_TEST, '09617989691', 'Administrator', 'HR Tech', '07:00:00', 'Regular', '2004-12-28', 'Male', 'Diko Alam Gerona Tarlac', 20000, true],
 
             ['Jasmine Ocampo', 'jasmine.ocampo@biogeohr.test', '09171234501', 'Administrative', 'HR Staff', '08:00:00', 'Regular', '1993-03-14', 'Female', 'San Miguel, Tarlac City', 29000, true],
             ['Maria Santos', 'maria.santos@biogeohr.test', '09171234502', 'Academic', 'Teacher I', '07:30:00', 'Regular', '1991-07-22', 'Female', 'Maliwalo, Tarlac City', 28000, true],
@@ -138,13 +177,13 @@ class DemoDataSeeder extends Seeder
             ['Kevin Aquino', 'kevin.aquino@biogeohr.test', '09171234511', 'IT', 'IT Staff', '08:00:00', 'Regular', '1995-06-03', 'Male', 'Culipat, Tarlac City', 33000, true],
             ['Nestor Pascual', 'nestor.pascual@biogeohr.test', '09171234512', 'Maintenance', 'Maintenance Staff', '06:30:00', 'Regular', '1980-08-15', 'Male', 'Zamora, Tarlac City', 18500, true],
             ['Rosa Torres', 'rosa.torres@biogeohr.test', '09171234513', 'Maintenance', 'Utility', '06:30:00', 'Regular', '1983-02-25', 'Female', 'Sapang Maragul, Tarlac City', 18000, true],
-            // deactivated on 20 Sep: shows the Deactivate / Reactivate feature
+            // deactivated part-way through last month: shows the Deactivate / Reactivate feature
             ['Dante Cabrera', 'dante.cabrera@biogeohr.test', '09171234514', 'Maintenance', 'Utility', '06:30:00', 'Regular', '1986-09-09', 'Male', 'Villa Bacolor, Tarlac City', 18000, false],
         ];
 
         $credits = ['sick' => 2, 'vacation' => 2, 'emergency' => 2, 'birthday' => 1, 'solo_parent' => 7, 'paternity' => 7, 'maternity' => 120];
         $none = array_map(fn () => 0, $credits);
-        $joined = Carbon::parse('2026-09-01 08:00:00');
+        $joined = $this->from->copy()->setTime(8, 0);
 
         $people = [];
         foreach ($rows as $i => [$name, $email, $contact, $dept, $position, $call, $contract, $dob, $gender, $address, $salary, $active]) {
@@ -155,12 +194,13 @@ class DemoDataSeeder extends Seeder
                 'contract_type' => $contract, 'date_of_birth' => $dob, 'gender' => $gender,
                 'nationality' => 'Filipino', 'address' => $address, 'is_active' => $active,
             ]);
-            // the accounts are "new" as of 1 Sep, so attendance and absences count from then
+            // the accounts are "new" as of the first demo day, so attendance and absences count from then
             DB::table('users')->where('id', $user->id)->update(['created_at' => $joined, 'updated_at' => $joined]);
 
             Salary::create([
                 'user_id' => $user->id, 'salary_basis' => $salary,
-                'working_hours_per_day' => 8, 'working_days_per_month' => 22,
+                // FR24: the school's fixed 26 working days a month (the same as a new employee gets)
+                'working_hours_per_day' => 8, 'working_days_per_month' => 26,
             ]);
             // one row per employee: Regular staff get the school's credits, probationary none yet
             LeaveBalance::create(['user_id' => $user->id] + ($contract === 'Regular' ? $credits : $none));
@@ -171,29 +211,31 @@ class DemoDataSeeder extends Seeder
     }
 
     /**
-     * [email, type, start, end, status, reason, remarks, submitted on]
+     * [email, type, start, end, status, reason, remarks, submitted on], days counted in working days from
+     * today (negative: in the past).
      * Approved ones take days off the balance and leave no attendance row on those days.
-     * Returns the days each employee is on approved leave: [email => ['2026-09-09' => true, ...]].
+     * Returns the days each employee is on approved leave: [email => ['Y-m-d' => true, ...]].
      */
     private function leaves(array $people): array
     {
+        $w = fn (int $n) => $this->workday($n);
         $rows = [
             // approved, in the past
-            ['maria.santos@biogeohr.test', 'Sick Leave', '2026-09-09', '2026-09-09', 'Approved', 'Fever and cough, the doctor advised rest.', 'Approved. Get well soon.', '2026-09-09'],
-            ['jose.delacruz@biogeohr.test', 'Vacation Leave', '2026-09-22', '2026-09-23', 'Approved', 'Family reunion out of town.', 'Enjoy your trip.', '2026-09-14'],
-            ['liza.garcia@biogeohr.test', 'Emergency Leave', '2026-09-17', '2026-09-17', 'Approved', 'A water pipe burst at home.', 'Approved. Please settle it safely.', '2026-09-17'],
-            ['carlo.mendoza@biogeohr.test', 'Birthday Leave', '2026-09-30', '2026-09-30', 'Approved', 'Birthday leave.', null, '2026-09-24'],
-            ['test@test.com', 'Sick Leave', '2026-09-24', '2026-09-24', 'Approved', 'Migraine, could not work.', 'Approved. Take care.', '2026-09-24'],
-            ['rhea.navarro@biogeohr.test', 'Vacation Leave', '2026-10-05', '2026-10-05', 'Approved', 'Personal errand at the city hall.', null, '2026-09-28'],
+            ['maria.santos@biogeohr.test', 'Sick Leave', $w(-20), $w(-20), 'Approved', 'Fever and cough, the doctor advised rest.', 'Approved. Get well soon.', $w(-20)],
+            ['jose.delacruz@biogeohr.test', 'Vacation Leave', $w(-15), $w(-14), 'Approved', 'Family reunion out of town.', 'Enjoy your trip.', $w(-21)],
+            ['liza.garcia@biogeohr.test', 'Emergency Leave', $w(-18), $w(-18), 'Approved', 'A water pipe burst at home.', 'Approved. Please settle it safely.', $w(-18)],
+            ['carlo.mendoza@biogeohr.test', 'Birthday Leave', $w(-10), $w(-10), 'Approved', 'Birthday leave.', null, $w(-14)],
+            ['test@test.com', 'Sick Leave', $w(-13), $w(-13), 'Approved', 'Migraine, could not work.', 'Approved. Take care.', $w(-13)],
+            ['rhea.navarro@biogeohr.test', 'Vacation Leave', $w(-3), $w(-3), 'Approved', 'Personal errand at the city hall.', null, $w(-8)],
             // rejected
-            ['jose.delacruz@biogeohr.test', 'Emergency Leave', '2026-09-30', '2026-09-30', 'Rejected', 'Family matter out of town.', 'Not enough coverage that week. Please file a vacation leave instead.', '2026-09-29'],
+            ['jose.delacruz@biogeohr.test', 'Emergency Leave', $w(-10), $w(-10), 'Rejected', 'Family matter out of town.', 'Not enough coverage that week. Please file a vacation leave instead.', $w(-11)],
             // pending, waiting for HR
-            ['grace.villanueva@biogeohr.test', 'Vacation Leave', '2026-10-14', '2026-10-15', 'Pending', 'Visiting my parents in Pangasinan.', null, '2026-10-06'],
-            ['kevin.aquino@biogeohr.test', 'Emergency Leave', '2026-10-12', '2026-10-12', 'Pending', 'Need to renew my passport on that day.', null, '2026-10-07'],
-            ['mark.bautista@biogeohr.test', 'Birthday Leave', '2026-10-16', '2026-10-16', 'Pending', 'Birthday leave.', null, '2026-10-05'],
-            ['test@test.com', 'Vacation Leave', '2026-10-19', '2026-10-19', 'Pending', 'Family outing.', null, '2026-10-07'],
-            ['maria.santos@biogeohr.test', 'Vacation Leave', '2026-10-20', '2026-10-20', 'Pending', 'Enrollment of my child.', null, '2026-10-08'],
-            ['jasmine.ocampo@biogeohr.test', 'Sick Leave', '2026-10-13', '2026-10-13', 'Pending', 'Dental surgery.', null, '2026-10-08'],
+            ['grace.villanueva@biogeohr.test', 'Vacation Leave', $w(5), $w(6), 'Pending', 'Visiting my parents in Pangasinan.', null, $w(-2)],
+            ['kevin.aquino@biogeohr.test', 'Emergency Leave', $w(3), $w(3), 'Pending', 'Need to renew my passport on that day.', null, $w(-1)],
+            ['mark.bautista@biogeohr.test', 'Birthday Leave', $w(7), $w(7), 'Pending', 'Birthday leave.', null, $w(-3)],
+            ['test@test.com', 'Vacation Leave', $w(8), $w(8), 'Pending', 'Family outing.', null, $w(-1)],
+            ['maria.santos@biogeohr.test', 'Vacation Leave', $w(9), $w(9), 'Pending', 'Enrollment of my child.', null, $w(0)],
+            ['jasmine.ocampo@biogeohr.test', 'Sick Leave', $w(4), $w(4), 'Pending', 'Dental surgery.', null, $w(0)],
         ];
         $column = [
             'Sick Leave' => 'sick', 'Vacation Leave' => 'vacation', 'Emergency Leave' => 'emergency',
@@ -225,36 +267,47 @@ class DemoDataSeeder extends Seeder
         return $onLeave;
     }
 
+    // the day Dante Cabrera was deactivated (part-way through last month)
+    private function deactivatedOn(): Carbon
+    {
+        return $this->from->copy()->addDays(19);
+    }
+
+    // a clock-in for one day: [minutes since midnight, status] (On-Time within the 15-minute grace)
+    private function clockIn(int $callMinutes): array
+    {
+        $grace = 15;
+        if (mt_rand(1, 100) <= 12) {
+            return [$callMinutes + mt_rand($grace + 1, 55), 'Late'];
+        }
+        return [$callMinutes + mt_rand(-12, $grace - 1), 'On-Time']; // up to 14:59 after start = still on time
+    }
+
+    private function callMinutes(Users $user): int
+    {
+        [$h, $m] = array_map('intval', explode(':', $user->call_time));
+        return $h * 60 + $m;
+    }
+
+    // every finished working day, from the first demo day up to yesterday
     private function attendance(array $people, array $onLeave): void
     {
-        $holidays = Holiday::pluck('date')->map(fn ($d) => substr((string) $d, 0, 10))->all();
-        $deactivated = Carbon::parse('2026-09-20');
-
         foreach ($people as $email => $p) {
             $user = $p['user'];
-            $grace = 15;
-            [$h, $m] = array_map('intval', explode(':', $user->call_time));
-            $callMinutes = $h * 60 + $m;
+            $callMinutes = $this->callMinutes($user);
 
-            foreach (CarbonPeriod::create(self::FROM, self::TO) as $day) { // both ends included
+            foreach (CarbonPeriod::create($this->from, $this->to) as $day) { // both ends included
                 $date = $day->toDateString();
-                if ($day->isWeekend() || in_array($date, $holidays, true)) continue;      // no work
+                if (!$this->isWorkingDay($day)) continue;                                   // no work
                 if (isset($onLeave[$email][$date])) continue;                              // on approved leave
-                if (!$user->is_active && $day->gte($deactivated)) continue;                // deactivated
+                if (!$user->is_active && $day->gte($this->deactivatedOn())) continue;      // deactivated
 
-                $roll = mt_rand(1, 100);
-                if ($roll <= 4) {                                                          // absent
+                if (mt_rand(1, 100) <= 4) {                                                // absent
                     Attendance::create(['user_id' => $user->id, 'status' => 'Absent', 'date' => $date]);
                     continue;
                 }
 
-                if ($roll <= 16) {                                                         // late
-                    $in = $callMinutes + mt_rand($grace + 1, 55);
-                    $status = 'Late';
-                } else {                                                                   // on time
-                    $in = $callMinutes + mt_rand(-12, $grace - 1); // up to 14:59 after start = still on time
-                    $status = 'On-Time';
-                }
+                [$in, $status] = $this->clockIn($callMinutes);
                 $out = $in + 8 * 60 + mt_rand(-15, 70);
 
                 Attendance::create([
@@ -263,6 +316,33 @@ class DemoDataSeeder extends Seeder
                     'time_in' => $this->clock($in), 'time_out' => $this->clock($out),
                 ]);
             }
+        }
+    }
+
+    // today so far: whoever's clock-in time has passed is in (still working, or out if the day is over);
+    // the rest are "not yet in". The phone test account is left out so a clock-in can be shown live.
+    private function todayAttendance(array $people, array $onLeave): void
+    {
+        if (!$this->isWorkingDay($this->today)) return;
+        $nowMinutes = $this->now->hour * 60 + $this->now->minute;
+        $date = $this->today->toDateString();
+
+        foreach ($people as $email => $p) {
+            $user = $p['user'];
+            if ($email === self::PHONE_TEST || !$user->is_active || isset($onLeave[$email][$date])) continue;
+
+            [$in, $status] = $this->clockIn($this->callMinutes($user));
+            if ($in > $nowMinutes) continue;                                               // not in yet
+            $out = $in + 8 * 60 + mt_rand(-15, 70);
+            $timeOut = $out <= $nowMinutes ? $this->clock($out) : null;                    // null: still working
+
+            $attendance = Attendance::create([
+                'user_id' => $user->id, 'location_id' => $p['location'],
+                'status' => $status, 'date' => $date,
+                'time_in' => $this->clock($in), 'time_out' => $timeOut,
+            ]);
+            // the phone keeps a session per clock-in; the running one is what the timer resumes from
+            $attendance->sessions()->create(['time_in' => $attendance->time_in, 'time_out' => $timeOut]);
         }
     }
 
@@ -276,16 +356,16 @@ class DemoDataSeeder extends Seeder
     {
         $rows = [
             // email, type, total, monthly, start date
-            ['mark.bautista@biogeohr.test', 'Company', 6000, 1000, '2026-09-10'],
-            ['nestor.pascual@biogeohr.test', 'SSS', 10000, 1500, '2026-08-20'],
-            ['rosa.torres@biogeohr.test', 'Cash Advance', 1500, 1500, '2026-09-20'],
-            ['maria.santos@biogeohr.test', 'Pag-IBIG', 9000, 1500, '2026-10-05'],
+            ['mark.bautista@biogeohr.test', 'Company', 6000, 1000, $this->from->copy()->addDays(9)],
+            ['nestor.pascual@biogeohr.test', 'SSS', 10000, 1500, $this->from->copy()->subDays(12)],
+            ['rosa.torres@biogeohr.test', 'Cash Advance', 1500, 1500, $this->from->copy()->addDays(19)],
+            ['maria.santos@biogeohr.test', 'Pag-IBIG', 9000, 1500, Carbon::parse($this->workday(-3))],
         ];
         foreach ($rows as [$email, $type, $total, $monthly, $start]) {
             Loan::create([
                 'user_id' => $people[$email]['user']->id, 'loan_type' => $type,
                 'total_amount' => $total, 'monthly_deduction' => $monthly,
-                'remaining_balance' => $total, 'start_date' => $start, 'status' => 'Active',
+                'remaining_balance' => $total, 'start_date' => $start->toDateString(), 'status' => 'Active',
             ]);
         }
     }
@@ -308,12 +388,16 @@ class DemoDataSeeder extends Seeder
         }
     }
 
-    // the whole of September, through the same code the Run Payroll page uses
+    // the whole of last month, through the same code the Run Payroll page uses
     private function payroll(): void
     {
-        foreach ([['2026-09-01', '2026-09-15'], ['2026-09-16', '2026-09-30']] as [$start, $end]) {
+        $cutoffs = [
+            [$this->from->copy(), $this->from->copy()->day(15)],
+            [$this->from->copy()->day(16), $this->from->copy()->endOfMonth()],
+        ];
+        foreach ($cutoffs as [$start, $end]) {
             app(PayslipController::class)->run(Request::create('/api/payslips/run', 'POST', [
-                'period_start' => $start, 'period_end' => $end,
+                'period_start' => $start->toDateString(), 'period_end' => $end->toDateString(),
             ]));
         }
     }
@@ -321,19 +405,22 @@ class DemoDataSeeder extends Seeder
     private function audit(array $people): void
     {
         $hr = $people['hr@biogeohr.test']['user'];
+        $phone = $people[self::PHONE_TEST]['user'];
+        $first = $this->from->toDateString();
+        $yesterday = $this->to->toDateString();
         $rows = [
-            ['2026-09-01 08:05:00', 'login', 'login', 'success', null, $hr],
-            ['2026-09-01 08:20:00', 'admin', 'employee_created', 'success', 'Maria Santos', $hr],
-            ['2026-09-01 08:22:00', 'admin', 'employee_created', 'success', 'Jose Dela Cruz', $hr],
-            ['2026-09-01 08:25:00', 'admin', 'employee_created', 'success', 'Kevin Aquino', $hr],
-            ['2026-09-09 15:10:00', 'admin', 'leave_approved', 'success', 'Sick Leave, 1 day(s). Approved. Get well soon.', $hr],
-            ['2026-09-18 09:00:00', 'admin', 'leave_approved', 'success', 'Emergency Leave, 1 day(s)', $hr],
-            ['2026-09-20 17:30:00', 'admin', 'employee_deactivated', 'success', 'Dante Cabrera', $hr],
-            ['2026-09-29 10:45:00', 'admin', 'leave_rejected', 'success', 'Emergency Leave. Not enough coverage that week.', $hr],
-            ['2026-10-06 09:12:00', 'login', 'login', 'failed', 'Wrong password', $hr],
-            ['2026-10-06 09:13:00', 'login', 'login', 'success', null, $hr],
-            ['2026-10-07 14:02:00', 'check_in', 'geofence_check', 'failed', 'Out of range at Real Home: 438 m', $people['test@test.com']['user']],
-            ['2026-10-07 14:05:00', 'check_in', 'clock_in', 'success', 'On-Time at Real Home', $people['test@test.com']['user']],
+            ["$first 08:05:00", 'login', 'login', 'success', null, $hr],
+            ["$first 08:20:00", 'admin', 'employee_created', 'success', 'Maria Santos', $hr],
+            ["$first 08:22:00", 'admin', 'employee_created', 'success', 'Jose Dela Cruz', $hr],
+            ["$first 08:25:00", 'admin', 'employee_created', 'success', 'Kevin Aquino', $hr],
+            [$this->workday(-20) . ' 15:10:00', 'admin', 'leave_approved', 'success', 'Sick Leave, 1 day(s). Approved. Get well soon.', $hr],
+            [$this->workday(-17) . ' 09:00:00', 'admin', 'leave_approved', 'success', 'Emergency Leave, 1 day(s)', $hr],
+            [$this->deactivatedOn()->toDateString() . ' 17:30:00', 'admin', 'employee_deactivated', 'success', 'Dante Cabrera', $hr],
+            [$this->workday(-11) . ' 10:45:00', 'admin', 'leave_rejected', 'success', 'Emergency Leave. Not enough coverage that week.', $hr],
+            ["$yesterday 09:12:00", 'login', 'login', 'failed', 'Wrong password', $hr],
+            ["$yesterday 09:13:00", 'login', 'login', 'success', null, $hr],
+            ["$yesterday 14:02:00", 'check_in', 'geofence_check', 'failed', 'Out of range at Real Home: 438 m', $phone],
+            ["$yesterday 14:05:00", 'check_in', 'clock_in', 'success', 'On-Time at Real Home', $phone],
         ];
         foreach ($rows as [$when, $category, $action, $status, $details, $user]) {
             $log = AuditLog::create([

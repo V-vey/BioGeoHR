@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@base-ui/react";
 import { Link, useNavigate, useLocation } from "react-router-dom"; // 1. Added useLocation
+import axios from "axios";
+import { url } from "@/resources/api";
 
 // Your navigation links
 const items = [
@@ -155,8 +157,14 @@ export function AppSidebar() {
         <SidebarFooter>
           <Button
             className="w-full bg-[#2AAF56] hover:bg-[#EC6668] rounded-[10px] text-white py-2"
-            onClick={() => {
-              // localStorage.removeItem("token");
+            onClick={async () => {
+              try {
+                // the server deletes the login token and expires the cookie; without this the cookie
+                // stays valid and /dashboard opens again
+                await axios.post(url + "/logout");
+              } catch {
+                // already logged out or no connection: go to the login page anyway
+              }
               navigate("/login");
             }}
           >
