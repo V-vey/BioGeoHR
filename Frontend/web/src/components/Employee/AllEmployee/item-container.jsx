@@ -21,8 +21,18 @@ export default function ItemContainer({ item, onSaved }) {
     <>
       <div className="flex gap-1 flex-col min-w-[360px] border-1 border-[#b8b8b8] py-2 rounded-[5px]">
         <div className="flex px-2 justify-between">
-          <div className="flex gap-1 items-center font-semibold">
+          <div className="flex gap-2 items-center font-semibold">
             <p className="text-[16px]">ID - {item.id}</p>
+            {/* a deactivated employee can no longer log in (Deactivate / Reactivate in the profile) */}
+            <span
+              className={`px-2 py-0.5 rounded-[6px] text-xs font-medium ${
+                item.is_active
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {item.is_active ? "Active" : "Deactivated"}
+            </span>
           </div>
           <button
             onClick={onView}
