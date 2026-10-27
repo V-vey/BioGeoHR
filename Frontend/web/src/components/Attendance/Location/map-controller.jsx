@@ -1,7 +1,7 @@
 import axios from "axios";
 import { url } from "@/resources/api";
 import React, { useState, useEffect } from "react";
-import { notifySuccess, notifyError } from "@/lib/dialog";
+import { notifySuccess, notifyError, confirmDialog } from "@/lib/dialog";
 
 export default function MapController({
   centerLng,
@@ -28,7 +28,13 @@ export default function MapController({
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const place = name?.trim() || "this location";
     if (modal) {
+      const confirmed = await confirmDialog(
+        `Employees will be checked against the new area (${radius} m radius).`,
+        { title: `Save changes to ${place}?`, confirmLabel: "Save" },
+      );
+      if (!confirmed) return;
       try {
         await axios
           .put(url + `/location/${id}`, createLocation, {
@@ -47,6 +53,11 @@ export default function MapController({
         notifyError(reason(e), "Could not save location");
       }
     } else if (!modal) {
+      const confirmed = await confirmDialog(
+        `Employees will be able to clock in within ${radius} m of this point.`,
+        { title: `Add ${place}?`, confirmLabel: "Add" },
+      );
+      if (!confirmed) return;
       try {
         await axios
           .post(url + "/location", createLocation, {
@@ -67,6 +78,11 @@ export default function MapController({
   };
   const handleDelete = async (e) => {
     e.preventDefault();
+    const confirmed = await confirmDialog(
+      "Employees will no longer be able to clock in here. This cannot be undone.",
+      { title: `Delete ${name?.trim() || "this location"}?`, confirmLabel: "Delete" },
+    );
+    if (!confirmed) return;
     try {
       await axios
         .delete(url + `/location/${id}`, {
