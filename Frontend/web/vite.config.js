@@ -34,8 +34,8 @@ const __dirname = path.dirname(__filename);
 
 // Where "npm run dev" forwards /api to. Keep it the same as API_ORIGIN in src/resources/api.jsx.
 const API_TARGET =
-  // process.env.VITE_API_TARGET ?? "https://froth-limes-skid.ngrok-free.dev";
-  process.env.VITE_API_TARGET ?? "http://127.0.0.1:8000";
+  process.env.VITE_API_TARGET ?? "https://froth-limes-skid.ngrok-free.dev";
+  // process.env.VITE_API_TARGET ?? "http://127.0.0.1:8000";
 
 export default defineConfig({
   plugins: [

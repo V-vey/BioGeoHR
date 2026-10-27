@@ -7,6 +7,6 @@ import axios from "axios";
 // never has to accept a third-party cookie, and the login cannot loop back to the login page because
 // of cookie blocking. A built site (npm run build) calls the API directly.'
 
-// export const API_ORIGIN = "https://froth-limes-skid.ngrok-free.dev";
-export const API_ORIGIN = "http://192.168.254.138:8000";
+export const API_ORIGIN = "https://froth-limes-skid.ngrok-free.dev";
+// export const API_ORIGIN = "http://192.168.254.138:8000";
 export const url = import.meta.env.DEV ? "/api" : `${API_ORIGIN}/api`;
