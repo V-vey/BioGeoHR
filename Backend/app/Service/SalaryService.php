@@ -227,7 +227,8 @@ class SalaryService
         }
         // $taxableIncome = ($salary - $contributions) / 2 + $overtimePay + $additionalPay - $absenceDeduction;
         // $taxableIncome = (($salary - $contributions) / 2) - $absenceDeduction;
-        $taxableIncome = $salary / 2 - $contributions + $overtimePay + $additionalPay - $absenceDeduction;
+        // the late day is not paid, so it is not taxed either
+        $taxableIncome = ($salary - $lateDay) / 2 - $contributions + $overtimePay + $additionalPay - $absenceDeduction;
         // $semiMonth = ($paycheck / 2) - $absenceDeduction;
         $semiMonth = ($salary - $lateDay) / 2 - $contributions - $absenceDeduction;
 
