@@ -69,8 +69,9 @@ class SystemSettingController extends Controller
 
         $data = $request->validate([
             'late_grace_period_minutes'       => 'sometimes|required|integer|min:0|max:120',
-            // Android runs a background task no more often than every 15 minutes
-            'geofence_check_interval_minutes' => 'sometimes|required|integer|min:15|max:120',
+            // the open app checks at exactly this interval; in the background Android runs the check
+            // no more often than every 15 minutes, whatever is set here
+            'geofence_check_interval_minutes' => 'sometimes|required|integer|min:1|max:120',
             'school_year_start' => 'sometimes|required|date',
             'school_year_end'   => 'sometimes|required|date|after:school_year_start',
         ]);

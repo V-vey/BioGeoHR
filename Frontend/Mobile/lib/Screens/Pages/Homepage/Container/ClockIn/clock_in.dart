@@ -13,6 +13,8 @@ import '../../../../../Controller/Homepage/leave_balance.dart';
 
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../Controller/Homepage/ClockIn/geofence_service.dart';
+import '../../../../../Service/dialogs.dart';
 import '../../../../../Service/url.dart';
 import 'package:http/http.dart' as http;
 
@@ -44,7 +46,8 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
   String? lockedLocation;
 
   final Url _api = Url();
-  int geofenceIntervalMinutes = 30; // fallback default
+  int geofenceIntervalMinutes = 15; // fallback default
+  GeofenceResult? _lastWarning; // what the employee was last warned about; null = nothing
 
   Future<void> fetchGeofenceInterval() async {
     try {
@@ -61,12 +64,13 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
       final data = jsonDecode(response.body);
       setState(() {
         geofenceIntervalMinutes = data['geofence_check_interval_minutes'];
+        // geofenceIntervalMinutes = 1;
       });
     } catch (e) {
       // keep the fallback default on failure
     }
   }
-
+  
   Future<void> requestBackgroundLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
 
@@ -154,7 +158,6 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
     }
     if (mounted) start();
   }
-
   void start({bool askLocation = true}) {
     if (isRunning == true) return;
     isRunning = true;
@@ -166,11 +169,12 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
       "geofenceCheckTask",
       frequency: Duration(minutes: geofenceIntervalMinutes),
     );
+    startGeofenceService(geofenceIntervalMinutes); // keeps checking with the screen off
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() => addTimer());
     });
-
-    //change min to 30 later or the data
+    
+    //change min to 15 later or the data
     geofenceTimer = Timer.periodic(Duration(minutes: geofenceIntervalMinutes), (
       timer,
     ) async {
@@ -181,25 +185,39 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
           // the server says they are not clocked in (clocked out elsewhere, or a new day): match it
           resync();
         case GeofenceResult.gpsOff:
-          _warn('Your GPS is off. Turn it back on: HR can see that your location could not be checked.');
+          _warnOnce(
+            result,
+            'Your GPS is off. Turn it back on: HR can see that your location could not be checked.',
+            'GPS is off',
+          );
         case GeofenceResult.outOfRange:
-          _warn('You are outside your work area. HR can see this on your attendance.');
+          _warnOnce(
+            result,
+            'You are outside your work area. HR can see this on your attendance.',
+            'Not in range',
+          );
         case GeofenceResult.inRange:
+          _lastWarning = null; // back inside: leaving again warns again
+        case GeofenceResult.sessionExpired: // the session client already sent them to the login screen
         case GeofenceResult.failed:
           break;
       }
     });
   }
 
-  void _warn(String message) {
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 6)),
-    );
+  /// The same centered pop-up as the rest of the app. Once per problem, not on every check,
+  /// or a short interval would pile a new pop-up on top of the last one.
+  void _warnOnce(GeofenceResult result, String message, String title) {
+    if (_lastWarning == result) return;
+    _lastWarning = result;
+    showError(message, title: title);
   }
 
   /// Stop the clock and the location checks but keep the time on screen (clock-out).
   void pause() {
     Workmanager().cancelByUniqueName("geofence-check");
+    stopGeofenceService();
+    _lastWarning = null;
     setState(() {
       isRunning = false;
       lockedLocation = null; // clocked out: the place can be chosen again
@@ -211,6 +229,8 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
   /// Stop the clock and go back to zero (a new day, or nothing clocked in).
   void reset() {
     Workmanager().cancelByUniqueName("geofence-check");
+    stopGeofenceService();
+    _lastWarning = null;
     setState(() {
       isRunning = false;
       lockedLocation = null;

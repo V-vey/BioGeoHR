@@ -205,10 +205,10 @@ export default function WorkingHoursOutlet() {
         ok: false,
         text: "Grace period must be 0 to 120 minutes.",
       });
-    if (interval === "" || !Number.isInteger(i) || i < 15 || i > 120)
+    if (interval === "" || !Number.isInteger(i) || i < 1 || i > 120)
       return setMessageRule({
         ok: false,
-        text: "Location check interval must be 15 to 120 minutes.",
+        text: "Location check interval must be 1 to 120 minutes.",
       });
     saveRule({
       late_grace_period_minutes: g,
@@ -301,7 +301,7 @@ export default function WorkingHoursOutlet() {
               <input
                 id="interval"
                 type="number"
-                min="15"
+                min="1"
                 max="120"
                 value={interval}
                 onChange={(e) => setIntervalMinutes(e.target.value)}
@@ -309,8 +309,9 @@ export default function WorkingHoursOutlet() {
               />
               <p className="text-sm text-[#8a90a3] pl-2 text-start">
                 How often the phone re-checks that a clocked-in employee is
-                still inside the geofence (15 to 120; Android does not run the
-                check more often than every 15 minutes).
+                still inside the geofence (1 to 120). The open app checks at
+                this interval; when the app is closed, Android checks no more
+                often than every 15 minutes.
               </p>
             </div>
 

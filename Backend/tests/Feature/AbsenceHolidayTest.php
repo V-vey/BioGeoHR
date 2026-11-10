@@ -100,8 +100,8 @@ it('pays a Sunday regular holiday as 260%, not also as plain Sunday work', funct
 
 // ---------- the profile's absent count ----------
 
-it('the profile absent count skips Saturdays and Sundays', function () {
-    // Mon 19 Oct 2026: the month so far has 13 weekdays (1, 2, 5-9, 12-16, 19) and 3 Sundays + 3 Saturdays
+it('the profile absent count is the Absent records saved this month', function () {
+    // the profile counts what the absence sync (or HR) saved, not days it works out on its own
     Carbon::setTestNow(Carbon::parse('2026-10-19 12:00:00', 'Asia/Manila'));
     $hr = Users::create([
         'name' => 'Test HR', 'email' => 'hr@test.test', 'contact_number' => '0917', 'password' => 'x',
@@ -110,8 +110,13 @@ it('the profile absent count skips Saturdays and Sundays', function () {
         'nationality' => 'Filipino', 'address' => 'Tarlac', 'employment_status' => 'Permanent', 'is_active' => true,
     ]);
     $u = payrollEmployee();
+    foreach (['2026-10-05', '2026-10-12'] as $day) {
+        Attendance::create(['user_id' => $u->id, 'status' => 'Absent', 'date' => $day]);
+    }
+    Attendance::create(['user_id' => $u->id, 'status' => 'Absent', 'date' => '2026-09-30']); // last month
+    Attendance::create(['user_id' => $u->id, 'status' => 'On-Time', 'date' => '2026-10-13', 'time_in' => '07:30:00']);
 
     $this->actingAs($hr, 'sanctum')->getJson("/api/user/{$u->id}")
         ->assertOk()
-        ->assertJsonPath('absent', 13);
+        ->assertJsonPath('absent', 2);
 });

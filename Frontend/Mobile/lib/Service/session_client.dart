@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../Controller/Homepage/ClockIn/geofence_service.dart';
 import 'dialogs.dart';
 
 // lets code outside a screen change screens and show a message
@@ -13,6 +14,7 @@ bool _handling = false;
 
 Future<void> sessionExpired() async {
   Workmanager().cancelByUniqueName("geofence-check");
+  stopGeofenceService();
   if (_handling) return; // five cards fail at once -> only the first one acts
   _handling = true;
   final prefs = await SharedPreferences.getInstance();
