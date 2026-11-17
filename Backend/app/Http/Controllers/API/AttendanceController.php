@@ -14,6 +14,7 @@ use App\Models\SystemSetting;
 use App\Models\AuditLog;
 use App\Http\Controllers\Feature\AttendanceService;
 use App\Service\AbsenceService;
+use App\Service\GeoFenceService;
 use Carbon\Carbon;
 use Laravel\Sanctum\PersonalAccessToken; 
 class AttendanceController extends Controller
@@ -178,7 +179,7 @@ class AttendanceController extends Controller
             // not sit beside the ones the phone made
             $attendance->sessions()->delete();
             if (!$absent) {
-                $attendance->sessions()->create(['time_in' => $data['time_in'], 'time_out' => $data['time_out'] ?? null]);
+                $attendance->sessions()->create(['location_id' => $data['location_id'], 'time_in' => $data['time_in'], 'time_out' => $data['time_out'] ?? null]);
             }
 
             return $attendance;
@@ -258,39 +259,8 @@ class AttendanceController extends Controller
         return response()->json($query->get()->map($row));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request)
-    {
-        $userId = $this->getUserIdFromToken();
-        $attendance = Attendance::find($userId);
-            
-        if (!$attendance) {
-            return response()->json(['message' => 'Attendance record not found'], 404);
-        }
-        else{
-            $attendance->update($request->all());
-            return response()->json($attendance);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy()
-    {
-        $userId = $this->getUserIdFromToken();
-        $attendance = Attendance::find($userId);
-
-        if (!$attendance) {
-            return response()->json(['message' => 'Attendance record not found'], 404);
-        }
-        else{
-            $attendance->delete();
-            return response()->json(['message' => 'Attendance record deleted successfully']);
-        }
-    }
+    // (the old update() and destroy() are gone: they acted on the attendance row that had the logged-in user's own
+    // id. A day is corrected through the manual entry, store().)
 
 
     /*
@@ -432,7 +402,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'status'          => $attendance->status,
-            'location'        => $attendance->location?->name,   // where the day was clocked in: the phone shows it, locked, while clocked in
+            'location'        => Location::find($attendance->currentLocationId())?->name,   // where it is clocked in now (this session's place): the phone shows it, locked, while clocked in
             'time_in'         => $attendance->time_in,
             'time_out'        => $attendance->time_out,
             'running'         => $running,
@@ -470,12 +440,35 @@ class AttendanceController extends Controller
     public function createAttendance(Request $request){
 
         $userId = $this->getUserIdFromToken();
-        
-        //find The user
-        $userCallTime = Users::where("id", $userId)->first()->call_time;
+
+        // The position comes with the clock-in and is checked here, not only on the phone: a login used
+        // outside the app (or an app that skips its own check) still can not clock in away from the work area.
+        $request->validate([
+            'location_name' => 'required|string|exists:locations,name',
+            'userLat' => 'required|numeric|between:-90,90',
+            'userLong' => 'required|numeric|between:-180,180',
+            'mocked' => 'sometimes|boolean',
+        ]);
 
         //Id of the Location name
         $locationId = Location::where("name", $request->location_name)->first();
+
+        // a position the phone says is faked (a mock-location app) is refused and written to the audit log
+        if (config('clockin.refuse_mock_location') && $request->boolean('mocked')) {
+            AuditLog::record('check_in', 'clock_in', 'failed', "Mock location detected at {$locationId->name} (Mobile)");
+            return response()->json(['message' => 'A mock location was detected. Turn it off to clock in.'], 403);
+        }
+
+        $distance = app(GeoFenceService::class)->calculateDistance(
+            $locationId->latitude, $locationId->longitude, $request->userLat, $request->userLong
+        );
+        if ($distance > $locationId->radius) {
+            AuditLog::record('check_in', 'clock_in', 'failed', "Out of range at {$locationId->name}: {$distance} m, clock-in refused");
+            return response()->json(['message' => 'You are outside the designated work area.'], 403);
+        }
+
+        //find The user
+        $userCallTime = Users::where("id", $userId)->first()->call_time;
 
         $date = now('Asia/Manila')->toDateString();
         $time = now()->setTimezone('Asia/Manila')->format('H:i:s');
@@ -492,9 +485,9 @@ class AttendanceController extends Controller
 
             // Clocked out earlier today: this is another session of the same day. The day keeps its
             // first clock-in and status (Late / On-Time), and the hours of the sessions are added up.
-            DB::transaction(function () use ($today, $time) {
+            DB::transaction(function () use ($today, $time, $locationId) {
                 $today->ensureFirstSession();
-                $today->sessions()->create(['time_in' => $time]);
+                $today->sessions()->create(['time_in' => $time, 'location_id' => $locationId->id]);   // this clock-in's own place
                 $today->update(['time_out' => null]); // clocked in again
             });
             AuditLog::record('check_in', 'clock_in', 'success', "Clocked in again at {$locationId->name}, {$time}");
@@ -509,7 +502,7 @@ class AttendanceController extends Controller
                 'date' => now('Asia/Manila')->toDateString(),
                 'time_in' => $time,
             ]);
-            $attendance->sessions()->create(['time_in' => $time]);
+            $attendance->sessions()->create(['time_in' => $time, 'location_id' => $locationId->id]);
             return $attendance;
         });
         
@@ -731,6 +724,9 @@ class AttendanceController extends Controller
             now('Asia/Manila')->startOfMonth(),
             now('Asia/Manila')->subDay()->startOfDay()
         );
+        if ($created > 0) {
+            AuditLog::record('admin', 'absences_marked', 'success', "{$created} absent record(s) created automatically");
+        }
         return response()->json(['message' => 'Absences synced', 'created' => $created]);
     }
 }

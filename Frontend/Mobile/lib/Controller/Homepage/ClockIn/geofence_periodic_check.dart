@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
 
 import '../../../Service/url.dart';
 import 'location_check.dart';
@@ -76,16 +75,4 @@ Future<GeofenceResult> checkGeofencePeriodically() async {
     print('Periodic geofence check failed: $e');
     return GeofenceResult.failed;
   }
-}
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    // in the background there is no screen to update; the server has already flagged what it needs to
-    if (await checkGeofencePeriodically() == GeofenceResult.sessionExpired) {
-      // logged out or the session ended: stop until the next clock-in
-      await Workmanager().cancelByUniqueName("geofence-check");
-    }
-    return Future.value(true);
-  });
 }

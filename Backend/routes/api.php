@@ -29,7 +29,8 @@ use App\Http\Controllers\Feature\AttendanceService;
 use App\Service\SalaryService;
 
 // Public routes
-Route::post('/login', [LoginAuthController::class, 'auth']);
+// the 'login' limiter is in AppServiceProvider: too many wrong passwords in a minute are answered with 429
+Route::post('/login', [LoginAuthController::class, 'auth'])->middleware('throttle:login');
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -93,7 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // the fixed-name routes go before the resource, or attendance/{id} would swallow them
         Route::get('attendance/export', [AttendanceController::class, 'export']);
         Route::get('attendance/lookup', [AttendanceController::class, 'lookup']);
-        Route::apiResource('attendance', AttendanceController::class);
+        // only the list and the manual entry are used; the old update and delete acted on the attendance row that
+        // had the logged-in user's id, which is somebody else's record
+        Route::apiResource('attendance', AttendanceController::class)->only(['index', 'store']);
         Route::post('attendance/sync-absences', [AttendanceController::class, 'syncAbsences']);
         // Route::apiResource('userl', UserLocationController::class);
         Route::patch('users/{id}/active', [UsersController::class, 'setActive']);
@@ -125,8 +128,6 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::get('frequentLates', [AttendanceController::class, 'frequentLates']);
     });
-    //Testing
-    Route::get('test', [AttendanceController::class, 'show']);
 });
 
 

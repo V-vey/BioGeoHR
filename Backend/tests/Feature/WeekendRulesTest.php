@@ -59,7 +59,7 @@ it('a check-in is never late on a Saturday or a Sunday, but is on a weekday', fu
         Carbon::setTestNow(Carbon::parse("$date 09:00:00", 'Asia/Manila'));   // 1.5 hours after the start time
         $token = $u->createToken('t')->plainTextToken;
         app('auth')->forgetGuards();
-        $this->withHeader('Authorization', 'Bearer ' . $token)->postJson('/api/clockIn', ['location_name' => $location->name])->assertCreated();
+        $this->withHeader('Authorization', 'Bearer ' . $token)->postJson('/api/clockIn', ['location_name' => $location->name, 'userLat' => 15.47, 'userLong' => 120.6])->assertCreated();
 
         expect(Attendance::where('user_id', $u->id)->whereDate('date', $date)->value('status'))->toBe($expected, $date);
     }

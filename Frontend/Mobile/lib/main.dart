@@ -10,11 +10,6 @@ import 'Screens/LoginPage/text_box_email.dart';
 // import 'Screens/LoginPage/text_box_password.dart';
 import 'Screens/LoginPage/login_button.dart';
 
-import 'package:workmanager/workmanager.dart';
-import 'Controller/Homepage/ClockIn/geofence_periodic_check.dart';
-//testin widget
-import 'Testing/testing_button.dart';
-
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'Service/session_client.dart';
@@ -25,7 +20,6 @@ final Logintext logintext = Logintext();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Workmanager().initialize(callbackDispatcher);
 
   http.runWithClient(
     () => runApp(
@@ -55,8 +49,6 @@ void main() async {
                   logintext: logintext,
                 ),
 
-                //JUST MEHH TESTING auto login to test@example.com user
-                // TestingButton(),
               ],
             ),
           ),

@@ -215,6 +215,12 @@ class Clockinbutton extends StatelessWidget {
                 return;
               }
               if (!success) {
+                // the server said no (outside the work area, a mock location): tell them what it said
+                if (clock.lastRefusal != null) {
+                  if (!context.mounted) return;
+                  await showError(clock.lastRefusal!, title: "Can't clock in");
+                  return;
+                }
                 // "already clocked in" is not a failure: pick the timer back up
                 final alreadyIn = await resync();
                 if (!context.mounted) return;

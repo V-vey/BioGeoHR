@@ -1,10 +1,14 @@
 import '../../../Service/url.dart';
+import 'location_check.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SaveclockInOut {
   final Url _api = Url();
+
+  /// Why the server refused the last clock-in (outside the work area, a mock location), or null.
+  String? lastRefusal;
 
   Future<bool> clockIn() async {
     final url = Uri.parse(_api.clockIn());
@@ -22,10 +26,22 @@ class SaveclockInOut {
               "Accept": "application/json",
               "Content-Type": "application/json",
             },
-            body: jsonEncode({"location_name": locationName}),
+            // the server checks the position itself, and refuses a position the phone says is a mock location
+            body: jsonEncode({
+              "location_name": locationName,
+              "userLat": lastClockInPosition?.latitude,
+              "userLong": lastClockInPosition?.longitude,
+              "mocked": lastClockInPosition?.isMocked ?? false,
+            }),
           )
           .timeout(const Duration(seconds: 15)); // a weak connection must not hang the button
       print('Clock-in response: ${response.statusCode} - ${response.body}');
+      lastRefusal = null;
+      if (response.statusCode == 403) {
+        try {
+          lastRefusal = jsonDecode(response.body)['message']?.toString();
+        } catch (_) {}
+      }
       return response.statusCode == 201;
     } catch (e) {
       print('Clock-in request failed: $e');

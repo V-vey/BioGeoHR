@@ -10,9 +10,6 @@ import 'Screens/LoginPage/text_box_email.dart';
 // import 'Screens/LoginPage/text_box_password.dart';
 import 'Screens/LoginPage/login_button.dart';
 
-//testin widget
-import 'Testing/testing_button.dart';
-
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _passwordController = TextEditingController();
 final Logintext logintext = Logintext();
@@ -38,7 +35,6 @@ class Loginpage extends StatelessWidget {
               passwordController: _passwordController,
               logintext: logintext,
             ),
-            // TestingButton(),
           ],
         ),
       ),

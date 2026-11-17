@@ -18,7 +18,6 @@ import '../../../../../Service/dialogs.dart';
 import '../../../../../Service/url.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:workmanager/workmanager.dart';
 import 'package:geolocator/geolocator.dart';
 
 class ClockIn extends StatefulWidget {
@@ -164,11 +163,6 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
     // when resuming after a restart the permission was already handled, so do not
     // send the employee to the settings screen again
     if (askLocation) requestBackgroundLocation();
-    Workmanager().registerPeriodicTask(
-      "geofence-check",
-      "geofenceCheckTask",
-      frequency: Duration(minutes: geofenceIntervalMinutes),
-    );
     startGeofenceService(geofenceIntervalMinutes); // keeps checking with the screen off
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() => addTimer());
@@ -215,7 +209,6 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
 
   /// Stop the clock and the location checks but keep the time on screen (clock-out).
   void pause() {
-    Workmanager().cancelByUniqueName("geofence-check");
     stopGeofenceService();
     _lastWarning = null;
     setState(() {
@@ -228,7 +221,6 @@ class _ClockInState extends State<ClockIn> with WidgetsBindingObserver{
 
   /// Stop the clock and go back to zero (a new day, or nothing clocked in).
   void reset() {
-    Workmanager().cancelByUniqueName("geofence-check");
     stopGeofenceService();
     _lastWarning = null;
     setState(() {

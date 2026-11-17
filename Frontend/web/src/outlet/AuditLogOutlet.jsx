@@ -10,6 +10,8 @@ const CATEGORIES = {
   login: "Login",
   check_in: "Check-in",
   admin: "HR actions",
+  leave: "Leave",
+  employee: "Employee",
 };
 
 const emptyFilters = { search: "", category: "", status: "", from: "", to: "" };

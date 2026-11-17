@@ -13,6 +13,7 @@ use App\Models\Location;
 use App\Models\Salary;
 use App\Models\SystemSetting;
 use App\Models\Users;
+use App\Rules\StrongPassword;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Model;
@@ -36,13 +37,14 @@ use Illuminate\Support\Facades\DB;
  *   - last month's two payroll cutoffs already run;
  *   - approved leave in the past, pending leave in the next working days.
  *
- * Every demo account uses the password below. The same random seed is used every time, so a run on
- * the same day gives the same data.
+ * Every demo account uses one password: the one in SEED_PASSWORD (.env), or a random one that is made and shown
+ * when the seeder ends (no password is written in the code: this repository is public). The same random seed is
+ * used every time, so a run on the same day gives the same data.
  */
 class DemoDataSeeder extends Seeder
 {
-    /** Password of every account this seeder creates. */
-    const PASSWORD = 'password123';
+    /** Password of every account this seeder creates (set in run()). */
+    private string $password = '';
 
     /** The phone test account: no record today, so a clock-in can be demonstrated. */
     const PHONE_TEST = 'test@test.com';
@@ -61,6 +63,7 @@ class DemoDataSeeder extends Seeder
     {
         Model::unguard(); // a seeder writes any column
         mt_srand(20261008); // same "random" attendance every run
+        $this->password = env('SEED_PASSWORD') ?: StrongPassword::generate(14);
 
         $this->now = now('Asia/Manila');
         $this->today = $this->now->copy()->startOfDay();
@@ -80,6 +83,8 @@ class DemoDataSeeder extends Seeder
         $this->payroll();
         $this->audit($people);
         Model::reguard();
+
+        $this->command?->warn("Every demo account (hr@biogeohr.test and the others) has this password: {$this->password}   (write it down; set SEED_PASSWORD in .env to choose your own)");
     }
 
     private function settings(): void
@@ -189,7 +194,7 @@ class DemoDataSeeder extends Seeder
         foreach ($rows as $i => [$name, $email, $contact, $dept, $position, $call, $contract, $dob, $gender, $address, $salary, $active]) {
             $user = Users::create([
                 'name' => $name, 'email' => $email, 'contact_number' => $contact,
-                'password' => self::PASSWORD,
+                'password' => $this->password,
                 'department' => $dept, 'position' => $position, 'call_time' => $call,
                 'contract_type' => $contract, 'date_of_birth' => $dob, 'gender' => $gender,
                 'nationality' => 'Filipino', 'address' => $address, 'is_active' => $active,

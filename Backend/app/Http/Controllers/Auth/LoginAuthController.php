@@ -15,10 +15,15 @@ class LoginAuthController extends Controller{
     protected $email; 
     protected $password;
     protected $platform;   // 'Web' or 'Mobile' (null when it cannot be told)
+    protected $passwordOk = false;
+
+    // a real bcrypt hash that matches nothing, checked when the email does not exist so that an unknown email
+    // takes as long to answer as a wrong password
+    private const NO_ACCOUNT_HASH = '$2y$12$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
 
     //checking password
     public function checkPassword($request){ //Check The Password
-        if (Hash::check($request->password, $this->password)){
+        if ($this->passwordOk){
 
             $token = $this->user->createToken($this->platform ?? 'Mobile')->plainTextToken;
             AuditLog::record('login', 'login', 'success', $this->platform ? "Logged in via {$this->platform}" : null, $this->user->id, $this->user->email);
@@ -41,8 +46,13 @@ class LoginAuthController extends Controller{
 
             return $response;
         }
-        AuditLog::record('login', 'login', 'failed', $this->label('Wrong Credential'), $this->user->id, $this->user->email);
-        //Wrong password
+        // not reached: auth() only calls this after the password was right
+        return $this->wrongCredential();
+    }
+
+    /** The same answer for an email that does not exist and for a wrong password, so the login does not tell which emails are real. */
+    private function wrongCredential()
+    {
         return response()->json(['authenticated' => 'Password Incorrect'], 301);
     }
     /**
@@ -70,14 +80,21 @@ class LoginAuthController extends Controller{
     //authenticate
     public function auth(Request $request){
         $this->platform = $this->platformOf($request);
-        $this->user = Users::where("email", $request->email)->first();
-        
-        if (!$this->user){ 
-            AuditLog::record('login', 'login', 'failed', $this->label('Wrong Credential'), null, $request->email);
-            return response()->json([
-                'authenticated' => 'User Not Found'
-            ], 300);
+
+        // only text is accepted: a list or an object sent as the email or the password is the same as nothing
+        $email = is_string($request->input('email')) ? trim($request->input('email')) : '';
+        $password = is_string($request->input('password')) ? $request->input('password') : '';
+
+        $this->user = $email === '' ? null : Users::where("email", $email)->first();
+
+        // the password is checked first, also for an email that does not exist (against a hash that matches nothing)
+        $this->passwordOk = Hash::check($password, $this->user?->password ?? self::NO_ACCOUNT_HASH) && $this->user !== null;
+
+        if (!$this->user || !$this->passwordOk) {
+            AuditLog::record('login', 'login', 'failed', $this->label('Wrong Credential'), $this->user?->id, $email !== '' ? $email : null);
+            return $this->wrongCredential();
         }
+        // a deactivated account is only told so after the right password, so the answer does not reveal who has an account
         if (!$this->user->is_active) {
             AuditLog::record('login', 'login', 'failed', $this->label('Account deactivated'), $this->user->id, $this->user->email);
             return response()->json(['authenticated' => 'Account Deactivated'], 403);
@@ -92,6 +109,7 @@ class LoginAuthController extends Controller{
     //log out
     public function logout(Request $request){
         $request->user()->currentAccessToken()->delete();
+        AuditLog::record('login', 'logout', 'success', null, $request->user()->id, $request->user()->email);
 
         return response()->json([
             'message' => 'Logged out'

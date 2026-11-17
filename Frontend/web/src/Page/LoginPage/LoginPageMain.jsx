@@ -56,7 +56,13 @@ function LoginPageMain() {
         }
       });
     } catch (error) {
-      if (error.response?.status === 300) {
+      if (error.response?.status === 429) {
+        // too many wrong passwords in a minute: the server refuses every try until it has passed
+        notifyError(
+          "Too many login attempts. Please wait a minute and try again.",
+          "Please wait",
+        );
+      } else if (error.response?.status === 300) {
         notifyError("Invalid credential please try again.", "Could not log in");
       } else if (error.response?.status === 301) {
         notifyError("Invalid credential please try again.", "Could not log in");

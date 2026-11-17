@@ -21,7 +21,14 @@ class GeoFenceController extends Controller
     }
 
     public function validationLocation(Request $request){
-        
+
+        // bad or missing input is a message, not a server error
+        $request->validate([
+            'locationName' => 'required|string|exists:locations,name',
+            'userLat' => 'required|numeric|between:-90,90',
+            'userLong' => 'required|numeric|between:-180,180',
+        ]);
+
         // $request->validate([
         //     'userLong' => 'required',
         //     'userLat' => 'required',
@@ -59,7 +66,8 @@ class GeoFenceController extends Controller
             return response()->json(['message' => 'No active attendance session found'], 404);
         }
 
-        $location = Location::find($attendance->location_id);
+        // the place of the session that is running now, not of the day's first clock-in
+        $location = Location::find($attendance->currentLocationId());
 
         $distance = $this->geofence->calculateDistance(
             $location->latitude,
@@ -122,7 +130,7 @@ class GeoFenceController extends Controller
                 'attendance_id' => $attendance->id,
                 'out_at' => now(),
             ]);
-            $place = Location::find($attendance->location_id)?->name;
+            $place = Location::find($attendance->currentLocationId())?->name;
             AuditLog::record('check_in', 'gps_off', 'failed', "GPS/Location turned off while clocked in at {$place} (Mobile)");
         }
 

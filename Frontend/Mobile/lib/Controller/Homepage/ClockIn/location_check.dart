@@ -16,6 +16,9 @@ bool _checkPosition(int statusCode) {
 
 final Url _api = Url();
 
+/// The position the last successful check used, so the clock-in can send it to the server (which checks it again).
+Position? lastClockInPosition;
+
 Future<Position> determinePosition() async {
   bool serviceEnabled;
   LocationPermission permission;
@@ -49,6 +52,7 @@ Future<Position> determinePosition() async {
 Future<bool> verifyUserCoordinates() async {
   try {
     Position position = await determinePosition();
+    lastClockInPosition = position;
 
     // print(position.longitude);
     // print(position.latitude);

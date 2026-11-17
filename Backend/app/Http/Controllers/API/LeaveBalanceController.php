@@ -69,7 +69,11 @@ class LeaveBalanceController extends Controller
             return response()->json(['message' => 'Leave balance record not found'], 404);
         }
         else{
-            $leaveBalance->update($request->all());
+            // the seven credits, whole days: a request can not move the balance to another employee (user_id)
+            $credits = ['sick', 'vacation', 'emergency', 'birthday', 'solo_parent', 'paternity', 'maternity'];
+            $request->validate(array_fill_keys($credits, 'sometimes|required|integer|min:0|max:365'));
+            $leaveBalance->update($request->only($credits));
+            AuditLog::record('admin', 'leave_balance_updated', 'success', "Leave balance #{$leaveBalance->id} (user {$leaveBalance->user_id}): changed " . implode(', ', array_keys($request->only($credits))));
             return response()->json($leaveBalance);
         }
     }
@@ -85,6 +89,7 @@ class LeaveBalanceController extends Controller
             return response()->json(['message' => 'Leave balance record not found'], 404);
         }
         else{
+            AuditLog::record('admin', 'leave_balance_deleted', 'success', "Leave balance #{$leaveBalance->id} (user {$leaveBalance->user_id})");
             $leaveBalance->delete();
             return response()->json(['message' => 'Leave balance record deleted successfully']);
         }

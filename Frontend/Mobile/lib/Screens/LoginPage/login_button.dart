@@ -59,13 +59,15 @@ class _LoginbuttonState extends State<Loginbutton> {
                     emailController.text,
                     passwordController.text,
                   );
+                } catch (_) {
+                  isSuccessful = null; // no connection, or an answer that is not a login answer
                 } finally {
                   if (mounted) setState(() => _loading = false);
                 }
 
                 if (!context.mounted) return;
 
-                if (isSuccessful["authenticated"] == "User Not Found") {
+                if (isSuccessful?["authenticated"] == "User Not Found") {
                   await showError(
                     'Invalid credential please try again.',
                     title: 'Login failed',
@@ -73,7 +75,7 @@ class _LoginbuttonState extends State<Loginbutton> {
                   return;
                 }
 
-                if (isSuccessful["authenticated"] == "Password Incorrect") {
+                if (isSuccessful?["authenticated"] == "Password Incorrect") {
                   await showError(
                     'Invalid credential please try again.',
                     title: 'Login failed',
@@ -81,10 +83,29 @@ class _LoginbuttonState extends State<Loginbutton> {
                   return;
                 }
 
-                if (isSuccessful["authenticated"] == "Account Deactivated") {
+                if (isSuccessful?["authenticated"] == "Account Deactivated") {
                   await showError(
                     'Your account has been deactivated. Please contact HR.',
                     title: 'Account deactivated',
+                  );
+                  return;
+                }
+
+                // too many wrong passwords in a minute: the server refuses every try until it has passed
+                if (isSuccessful?["authenticated"] == "Too Many Attempts") {
+                  await showError(
+                    'Too many login attempts. Please wait a minute and try again.',
+                    title: 'Please wait',
+                  );
+                  return;
+                }
+
+                // only a successful login opens the app: any other answer (a server error, no connection,
+                // something unexpected) stays on this screen
+                if (isSuccessful?["authenticated"] != "Log in Success") {
+                  await showError(
+                    'Could not log in. Please check your connection and try again.',
+                    title: 'Login failed',
                   );
                   return;
                 }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
 
 import '../../Service/url.dart';
 import '../Homepage/ClockIn/geofence_service.dart';
@@ -38,7 +37,6 @@ class Logout {
     }
 
     // no one is logged in to check: stop every location check
-    Workmanager().cancelByUniqueName("geofence-check");
     await stopGeofenceService();
 
     //Removing global var

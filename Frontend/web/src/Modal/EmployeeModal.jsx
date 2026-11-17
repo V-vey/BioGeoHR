@@ -392,6 +392,18 @@ export default function EmployeeModal({ emp, onClose, onSaved }) {
                           : "—"
                       }
                     />
+                    {/* the daily wage: the monthly salary divided by the working days per month (the same figure payroll uses) */}
+                    <SalaryRow
+                      icon={Calendar}
+                      iconColor="#8a6d10"
+                      bg={"#FCF7E2"}
+                      label="Salary per day"
+                      value={
+                        salary
+                          ? `₱${(empData.salary?.salary_basis / empData.salary?.working_days_per_month).toFixed(2)} / day`
+                          : "—"
+                      }
+                    />
                     {/* overtime Comment */}
                     {/* <SalaryRow
                       icon={Hourglass}

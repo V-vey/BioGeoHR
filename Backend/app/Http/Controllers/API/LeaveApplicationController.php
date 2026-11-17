@@ -51,6 +51,7 @@ class LeaveApplicationController extends Controller
                 'reason' => $request->reason,
                 'status' => "Pending",
             ]);
+        AuditLog::record('leave', 'leave_requested', 'success', "{$request->leave_type}, {$days} day(s), {$request->start_date} to {$request->end_date}", $userId);
         return response()->json(['message' => 'Leave Application Success Please Wait To Be Approved']);
     }
 
@@ -129,6 +130,7 @@ class LeaveApplicationController extends Controller
             return response()->json(['message' => 'Leave application not found'], 404);
         }
         else{
+            AuditLog::record('admin', 'leave_deleted', 'success', "Leave #{$leaveApplication->id} (user {$leaveApplication->user_id}), status {$leaveApplication->status}");
             $leaveApplication->delete();
             return response()->json(['message' => 'Leave application deleted successfully']);
         }

@@ -261,6 +261,7 @@ class LoanController extends Controller
         }
 
         $loan->update($data);
+        AuditLog::record('admin', 'loan_updated', 'success', "Loan #{$loan->id} (user {$loan->user_id}): changed " . implode(', ', array_keys($data)));
 
         return response()->json($loan);
     }
@@ -271,6 +272,7 @@ class LoanController extends Controller
         if (!$loan) {
             return response()->json(['message' => 'Loan not found'], 404);
         }
+        AuditLog::record('admin', 'loan_deleted', 'success', "Loan #{$loan->id} (user {$loan->user_id}), {$loan->loan_type}, status {$loan->status}");
         $loan->delete();
         return response()->json(['message' => 'Loan deleted successfully']);
     }
@@ -293,6 +295,8 @@ class LoanController extends Controller
             $loan->status = 'Paid';
             $loan->save();
         }
+
+        AuditLog::record('admin', 'loan_deducted', 'success', "Loan #{$loan->id} (user {$loan->user_id}): {$amount} taken, balance " . $loan->fresh()->remaining_balance);
 
         return response()->json([
             'deducted' => $amount,

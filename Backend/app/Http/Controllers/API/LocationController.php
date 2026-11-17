@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\AuditLog;
 use App\Models\Location;
 
 class LocationController extends Controller
@@ -36,6 +37,8 @@ class LocationController extends Controller
             'radius' => $request->radius,
         ]);
 
+        AuditLog::record('admin', 'location_added', 'success', "{$locations->name}, radius {$locations->radius} m");
+
         return response()->json($locations, 201);
     }
 
@@ -64,9 +67,15 @@ class LocationController extends Controller
             return response()->json(['message' => 'Location not found'], 404);
         }
         $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'latitude' => 'sometimes|required|numeric|between:-90,90',
+            'longitude' => 'sometimes|required|numeric|between:-180,180',
             'radius' => 'sometimes|numeric|min:10|max:50',
         ]);
-        $locations->update($request->all());
+        $fields = $request->only(['name', 'latitude', 'longitude', 'radius']);
+        $locations->update($fields);
+        // a place moving or its radius changing decides who can clock in, so it is on record
+        AuditLog::record('admin', 'location_updated', 'success', "{$locations->name}: changed " . implode(', ', array_keys($fields)) . ", radius now {$locations->radius} m");
         return response()->json($locations);
         
         
@@ -82,6 +91,7 @@ class LocationController extends Controller
             return response()->json(['message' => 'Location not found'], 404);
         }
         else{
+        AuditLog::record('admin', 'location_deleted', 'success', $locations->name);
         $locations->delete();
         return response()->json(['message' => 'Location deleted successfully']);
         }

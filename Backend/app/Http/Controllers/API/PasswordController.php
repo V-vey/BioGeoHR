@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\AuditLog;
 use App\Rules\StrongPassword;
 
 
@@ -22,6 +23,16 @@ class PasswordController extends Controller
         $request->user()->update([
             'password' => Hash::make($request->password),
         ]);
+
+        // every other session (another phone, a stolen login) ends with the old password; this one stays
+        $others = $request->user()->tokens();
+        if ($currentId = $request->user()->currentAccessToken()?->id) {
+            $others->where('id', '!=', $currentId);
+        }
+        $ended = $others->delete();
+
+        // the new password itself is never written down, only that it was changed
+        AuditLog::record('login', 'password_changed', 'success', "Password changed; {$ended} other session(s) ended");
 
         return response()->json([
             'success' => true,

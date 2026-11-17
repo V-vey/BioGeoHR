@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
 
 import '../Controller/Homepage/ClockIn/geofence_service.dart';
 import 'dialogs.dart';
@@ -13,7 +12,6 @@ final messengerKey = GlobalKey<ScaffoldMessengerState>();
 bool _handling = false;
 
 Future<void> sessionExpired() async {
-  Workmanager().cancelByUniqueName("geofence-check");
   stopGeofenceService();
   if (_handling) return; // five cards fail at once -> only the first one acts
   _handling = true;

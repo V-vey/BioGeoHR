@@ -131,7 +131,7 @@ it('a late clock-in is Late on a special working day, and On-Time on a regular o
         $token = $u->createToken('t')->plainTextToken;   // the clock-in reads the user from the token (made under the test clock)
 
         app('auth')->forgetGuards();
-        $this->withHeader('Authorization', 'Bearer ' . $token)->postJson('/api/clockIn', ['location_name' => $location->name])->assertCreated();
+        $this->withHeader('Authorization', 'Bearer ' . $token)->postJson('/api/clockIn', ['location_name' => $location->name, 'userLat' => 15.47, 'userLong' => 120.6])->assertCreated();
 
         expect(Attendance::where('user_id', $u->id)->whereDate('date', $date)->value('status'))->toBe($expected, "$type on $date");
     }

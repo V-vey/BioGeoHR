@@ -38,12 +38,7 @@
 	<string>BioGeoHR lets you choose a profile photo from your library.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>fetch</string>
 		<string>location</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>geofence-check</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

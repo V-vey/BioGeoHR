@@ -187,7 +187,7 @@ class UsersController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'regex:' . Users::NAME_REGEX],
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|max:255|unique:users,email',
             'contact_number' => ['required', 'regex:' . Users::PHONE_REGEX],
             'department' => 'required',
             'position' => 'required',
@@ -306,6 +306,13 @@ class UsersController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // the fields HR can change on an employee
+    private const EDITABLE = [
+        'name', 'email', 'contact_number', 'department', 'position', 'call_time', 'contract_type',
+        'employment_status', 'date_of_birth', 'gender', 'nationality', 'address',
+        'tin', 'sss_number', 'philhealth_number', 'pagibig_number',
+    ];
+
     public function update(Request $request, string $id)
     {
         $users = Users::find($id);
@@ -319,6 +326,13 @@ class UsersController extends Controller
         [$govRules, $govMessages] = $this->govIdValidation($users->id);
 
         $request->validate([
+            'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($users->id)],
+            'department' => 'sometimes|required|string|max:255',
+            'position' => 'sometimes|required|string|max:255',
+            'call_time' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'contract_type' => 'sometimes|required|string|max:50',
+            'gender' => 'sometimes|required|string|max:50',
+            'address' => 'sometimes|required|string|max:1000',
             'image' => 'nullable|image|max:2048',
             'name' => ['sometimes', 'required', 'string', 'max:255', 'regex:' . Users::NAME_REGEX],
             'nationality' => ['sometimes', 'required', 'string', 'max:100', 'regex:' . Users::NATIONALITY_REGEX],
@@ -335,7 +349,8 @@ class UsersController extends Controller
             return response()->json(['message' => $familyError, 'errors' => ['family' => [$familyError]]], 422);
         }
 
-        $data = $request->except(['image', '_method', 'family']);
+        // only the fields of the edit form: a request can not slip in a password, is_active or image_path
+        $data = $request->only(self::EDITABLE);
 
         if ($request->hasFile('image')) {
             if ($users->image_path) {

@@ -56,8 +56,21 @@ class Attendance extends Model
     public function ensureFirstSession(): void
     {
         if ($this->time_in && !$this->sessions()->exists()) {
-            $this->sessions()->create(['time_in' => $this->time_in, 'time_out' => $this->time_out]);
+            $this->sessions()->create(['location_id' => $this->location_id, 'time_in' => $this->time_in, 'time_out' => $this->time_out]);
         }
+    }
+
+    /**
+     * Where the employee is clocked in now: the place of the running session, or of the last one when
+     * clocked out. The day's own location_id is only the place of the first clock-in, and also covers a day
+     * with no sessions.
+     */
+    public function currentLocationId(): ?int
+    {
+        $session = $this->sessions()->whereNull('time_out')->latest('id')->first()
+            ?? $this->sessions()->latest('id')->first();
+
+        return $session?->location_id ?? $this->location_id;
     }
 
     /**

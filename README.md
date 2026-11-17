@@ -35,7 +35,7 @@ and out from an Android app that checks their location and their fingerprint or 
 | ----------- | --------------------------------------------------------------------------------------------- |
 | Backend API | Laravel 12 (PHP 8.2+), Laravel Sanctum, MySQL, Pest                                           |
 | Web admin   | React 19, Vite, Tailwind CSS 4, Axios, jsPDF, Turf.js (maps)                                  |
-| Mobile app  | Flutter (Dart), geolocator, local_auth (biometrics), workmanager (background geo-fence check) |
+| Mobile app  | Flutter (Dart), geolocator, local_auth (biometrics), flutter_foreground_task (background geo-fence check) |
 
 ## Repository layout
 
@@ -81,8 +81,11 @@ Create the database first (`CREATE DATABASE biogeohr_backend;`). In `.env`, set 
 (`DB_DATABASE=biogeohr_backend`, `DB_USERNAME`, `DB_PASSWORD`) and the mail settings. New employees
 get their login by email, so use a real SMTP account (the example file only logs mail; for Gmail use
 an app password). To put a download link in that email, set `APP_DOWNLOAD_URL`. The seeded HR
-account and the demo accounts are defined in `database/seeders/`. Change their passwords for any
-real use.
+account and the demo accounts are defined in `database/seeders/`. They get the password in
+`SEED_PASSWORD` (`.env`), or a random one that the seeder prints once when it ends. No password is
+written in the code. To find and replace any account that still uses a well-known default password,
+run `php artisan accounts:reset-weak-passwords --dry-run` (a list only), then without `--dry-run`.
+On the real server set `APP_ENV=production` and `APP_DEBUG=false`.
 
 After pulling new changes, run `php artisan migrate` again. Newer migrations add the loan cutoff
 and the absence figures on payslips.
@@ -200,8 +203,15 @@ phone's own operating system. BioGeoHR clocks the employee in only when the phon
 - A login expires after 60 minutes without use (the server deletes the token). The website then
   returns to the login page, and the app shows "Session expired". The website cookie also lasts at
   most 8 hours.
+- The login is limited to 5 tries a minute for one email from one address (20 for one email from
+  anywhere), then answers 429 until the minute has passed. A wrong email and a wrong password get the
+  same answer.
 - Employees set their own password with at least 8 characters, an uppercase letter, a lowercase letter,
-  and a number. HR never chooses it. A forgotten password is reset by HR and emailed.
+  and a number. HR never chooses it. A forgotten password is reset by HR and emailed. Changing a
+  password ends the account's other sessions.
+- The server checks the clock-in position itself (the phone sends it with the clock-in), and refuses a
+  position the phone reports as a mock location. While testing on an emulator or with a fake-GPS app,
+  set `CLOCKIN_REFUSE_MOCK_LOCATION=false` in `.env` (never on the real server).
 - Every sensitive action is recorded in the audit log without the secret itself.
 - For a real deployment, put the API behind HTTPS. A tunnel address already provides it for testing.
 

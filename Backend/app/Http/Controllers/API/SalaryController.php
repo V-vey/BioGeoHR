@@ -40,6 +40,8 @@ class SalaryController extends Controller
             'working_days_per_month' => $request->working_days_per_month,
         ]);
 
+        AuditLog::record('admin', 'salary_created', 'success', "Salary record #{$salary->id} (user {$salary->user_id})");
+
         return response()->json($salary, 201);
     }
 
@@ -68,10 +70,13 @@ class SalaryController extends Controller
         }else{
             // the daily wage is salary / this number, so a wrong value would make every payslip wrong
             $request->validate([
+                'salary_basis' => 'sometimes|required|numeric|min:0|max:99999999',
+                'working_hours_per_day' => 'sometimes|required|numeric|min:1|max:24',
                 'working_days_per_month' => 'sometimes|required|numeric|min:1|max:31',
             ]);
             AuditLog::record('admin', 'salary_updated', 'success', "Salary record #{$id}");
-            $salary->update($request->all());
+            // only the pay figures: a request can not move the record to another employee (user_id)
+            $salary->update($request->only(['salary_basis', 'working_hours_per_day', 'working_days_per_month']));
             return response()->json($salary);
         }
     }
@@ -112,6 +117,7 @@ class SalaryController extends Controller
         if (!$salary) {
             return response()->json(['message' => 'Salary record not found'], 404);
         }else {
+            AuditLog::record('admin', 'salary_deleted', 'success', "Salary record #{$salary->id} (user {$salary->user_id})");
             $salary->delete();
             return response()->json(['message' => 'Salary record deleted successfully']);
         }
