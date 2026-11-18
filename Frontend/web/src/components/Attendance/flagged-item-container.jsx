@@ -52,11 +52,11 @@ export default function FlaggedItemContainer({
                 key={ex.id}
                 className="flex justify-between text-[13px] text-[#3A3A3A]"
               >
-                <span>{format(new Date(ex.out_at), "h:mm a")}</span>
+                <span>Out: {format(new Date(ex.out_at), "h:mm a")}</span>
                 <span>→</span>
                 <span>
                   {ex.in_at
-                    ? format(new Date(ex.in_at), "h:mm a")
+                    ? `In: ${format(new Date(ex.in_at), "h:mm a")}`
                     : "Still out"}
                 </span>
               </div>
